@@ -61,23 +61,29 @@ namespace garnet
  * (see configs/network/Network.py)
  */
 
+// GarnetNetwork class constructor
 GarnetNetwork::GarnetNetwork(const Params &p)
     : Network(p)
 {
-    m_num_rows = p.num_rows;
-    m_ni_flit_size = p.ni_flit_size;
-    m_max_vcs_per_vnet = 0;
-    m_buffers_per_data_vc = p.buffers_per_data_vc;
-    m_buffers_per_ctrl_vc = p.buffers_per_ctrl_vc;
-    m_routing_algorithm = p.routing_algorithm;
-    m_next_packet_id = 0;
+    m_num_rows = p.num_rows; // number of rows
+    m_num_cols = p.num_columns; // number of columns
+    m_num_layers = p.num_layers; // number of layers
+    m_ni_flit_size = p.ni_flit_size; // flit size
+    m_max_vcs_per_vnet = 0; // maximum number of VCs per Vnet
+    m_buffers_per_data_vc = p.buffers_per_data_vc; // num of buffers per data VC
+    m_buffers_per_ctrl_vc = p.buffers_per_ctrl_vc; // num of buffers per cntrl VC
+    m_routing_algorithm = p.routing_algorithm; // routing algorithm for NoC
+    m_next_packet_id = 0; //id of the next packet
 
+    // fault_model enable or disable
     m_enable_fault_model = p.enable_fault_model;
     if (m_enable_fault_model)
         fault_model = p.fault_model;
 
+    // for each virtual network, we have a Vnet type (they're equal)
     m_vnet_type.resize(m_virtual_networks);
 
+    // setting the Vnet types for different virtual networks
     for (int i = 0 ; i < m_virtual_networks ; i++) {
         if (m_vnet_type_names[i] == "response")
             m_vnet_type[i] = DATA_VNET_; // carries data (and ctrl) packets
@@ -85,21 +91,26 @@ GarnetNetwork::GarnetNetwork(const Params &p)
             m_vnet_type[i] = CTRL_VNET_; // carries only ctrl packets
     }
 
-    // record the routers
+    // record the routers (setting the routers for the network)
     for (std::vector<BasicRouter*>::const_iterator i =  p.routers.begin();
-         i != p.routers.end(); ++i) {
+         i != p.routers.end(); ++i) { // for each router
+        // get the router
         Router* router = safe_cast<Router*>(*i);
+        // push the router in m_routers vector
         m_routers.push_back(router);
 
         // initialize the router's network pointers
         router->init_net_ptr(this);
     }
 
-    // record the network interfaces
+    // record the network interfaces (setting the NIs for the network)
     for (std::vector<ClockedObject*>::const_iterator i = p.netifs.begin();
-         i != p.netifs.end(); ++i) {
+         i != p.netifs.end(); ++i) { // for each NI
+        // get the NI
         NetworkInterface *ni = safe_cast<NetworkInterface *>(*i);
+        // push the NI into m_nis vector
         m_nis.push_back(ni);
+        // initialize the NI's network pointers
         ni->init_net_ptr(this);
     }
 
@@ -110,8 +121,11 @@ GarnetNetwork::GarnetNetwork(const Params &p)
 void
 GarnetNetwork::init()
 {
+    // call the init function of the Network class
     Network::init();
 
+    // for every node in the network, set the m_toNetQueues and
+    // m_fromNetQueues for the NI
     for (int i=0; i < m_nodes; i++) {
         m_nis[i]->addNode(m_toNetQueues[i], m_fromNetQueues[i]);
     }
@@ -119,17 +133,32 @@ GarnetNetwork::init()
     // The topology pointer should have already been initialized in the
     // parent network constructor
     assert(m_topology_ptr != NULL);
+    // create the links for the GarnetNetwork object
     m_topology_ptr->createLinks(this);
 
     // Initialize topology specific parameters
-    if (getNumRows() > 0) {
+    if (getNumRows() > 0)
+    {
         // Only for Mesh topology
         // m_num_rows and m_num_cols are only used for
         // implementing XY or custom routing in RoutingUnit.cc
         m_num_rows = getNumRows();
-        m_num_cols = m_routers.size() / m_num_rows;
-        assert(m_num_rows * m_num_cols == m_routers.size());
-    } else {
+        m_num_layers = getNumLayers();
+        // if we have a 2D NoC
+        if (m_num_layers == 1)
+        {
+            m_num_cols = m_routers.size() / m_num_rows;
+            // make sure that num_rows * num_cols = num_routers
+            assert(m_num_rows * m_num_cols == m_routers.size());
+        }
+        else
+        { // we have a 3D NoC
+            m_num_cols = getNumCols();
+            assert(m_num_rows * m_num_cols * m_num_layers == m_routers.size());
+        }
+    }
+    else
+    {
         m_num_rows = -1;
         m_num_cols = -1;
     }
@@ -137,16 +166,22 @@ GarnetNetwork::init()
     // FaultModel: declare each router to the fault model
     if (isFaultModelEnabled()) {
         for (std::vector<Router*>::const_iterator i= m_routers.begin();
-             i != m_routers.end(); ++i) {
+             i != m_routers.end(); ++i) { // for each router
+            // get the router
             Router* router = safe_cast<Router*>(*i);
+            // get the router_id from the fault_model
             [[maybe_unused]] int router_id =
                 fault_model->declare_router(router->get_num_inports(),
                                             router->get_num_outports(),
                                             router->get_vc_per_vnet(),
                                             getBuffersPerDataVC(),
                                             getBuffersPerCtrlVC());
+            // make sure the router_id of the fault_model and the real
+            // id of the router are the same
             assert(router_id == router->get_id());
+            // print the aggregate fault probability for the router
             router->printAggregateFaultProbability(std::cout);
+            // print the fault vector for the router
             router->printFaultVector(std::cout);
         }
     }
@@ -163,21 +198,27 @@ void
 GarnetNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
                              std::vector<NetDest>& routing_table_entry)
 {
+    // get the local_id of the Node (or NI)
+    // local_id may be equal with global_id if we only have one network
     NodeID local_src = getLocalNodeID(global_src);
+    // make sure the local_id is less than the total number of nodes
     assert(local_src < m_nodes);
 
+    // create a garnet external link
     GarnetExtLink* garnet_link = safe_cast<GarnetExtLink*>(link);
 
-    // GarnetExtLink is bi-directional
+    // GarnetExtLink is bi-directional (EXT_IN_ means from NI to Router)
     NetworkLink* net_link = garnet_link->m_network_links[LinkDirection_In];
-    net_link->setType(EXT_IN_);
+    net_link->setType(EXT_IN_); // set the type of the network link to EXT_IN_
     CreditLink* credit_link = garnet_link->m_credit_links[LinkDirection_In];
 
-    m_networklinks.push_back(net_link);
-    m_creditlinks.push_back(credit_link);
+    m_networklinks.push_back(net_link); // add net_link to network links
+    m_creditlinks.push_back(credit_link); // add credit_link to credit links
 
+    // destination inport direction: means the dest of the link is router
     PortDirection dst_inport_dirn = "Local";
 
+    // set the maximum number of VCs per Vnet
     m_max_vcs_per_vnet = std::max(m_max_vcs_per_vnet,
                              m_routers[dest]->get_vc_per_vnet());
 
@@ -194,6 +235,8 @@ GarnetNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
      * bridge is enabled, we would connect:
      * NI--->NetworkBridge--->GarnetExtLink---->Router
      */
+
+    // add an outport at the side of the NI (for the GarnetExtLink)
     if (garnet_link->extBridgeEn) {
         DPRINTF(RubyNetwork, "Enable external bridge for %s\n",
             garnet_link->name());
@@ -204,10 +247,12 @@ GarnetNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
                    dest, m_routers[dest]->get_vc_per_vnet());
         m_networkbridges.push_back(n_bridge);
     } else {
+        // without NetworkBridge
         m_nis[local_src]->addOutPort(net_link, credit_link, dest,
             m_routers[dest]->get_vc_per_vnet());
     }
 
+    // add an inport at the side of the router (for the GarnetExtLink)
     if (garnet_link->intBridgeEn) {
         DPRINTF(RubyNetwork, "Enable internal bridge for %s\n",
             garnet_link->name());
@@ -218,6 +263,7 @@ GarnetNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
                       garnet_link->intCredBridge[LinkDirection_In]);
         m_networkbridges.push_back(n_bridge);
     } else {
+        // without NetworkBridge
         m_routers[dest]->addInPort(dst_inport_dirn, net_link, credit_link);
     }
 
@@ -228,29 +274,35 @@ GarnetNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
  * It creates a Network Link from a Router to the NI and
  * a Credit Link from NI to the Router
 */
-
 void
 GarnetNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
                               BasicLink* link,
                               std::vector<NetDest>& routing_table_entry)
 {
+    // get the local_id of the node (or NI)
     NodeID local_dest = getLocalNodeID(global_dest);
+    // make sure the local_id is less than the total number of nodes
     assert(local_dest < m_nodes);
+    // id of the router must be less than total number of routers
     assert(src < m_routers.size());
+    // make sure we have a router object for the id, and not a NULL
     assert(m_routers[src] != NULL);
 
+    // create a garnet external link
     GarnetExtLink* garnet_link = safe_cast<GarnetExtLink*>(link);
 
-    // GarnetExtLink is bi-directional
+    // GarnetExtLink is bi-directional (EXT_OUT_ means from Router to NI)
     NetworkLink* net_link = garnet_link->m_network_links[LinkDirection_Out];
-    net_link->setType(EXT_OUT_);
+    net_link->setType(EXT_OUT_); // set the type of the network link to EXT_OUT_
     CreditLink* credit_link = garnet_link->m_credit_links[LinkDirection_Out];
 
-    m_networklinks.push_back(net_link);
-    m_creditlinks.push_back(credit_link);
+    m_networklinks.push_back(net_link); // add net_link to network links
+    m_creditlinks.push_back(credit_link); // add credit_link to credit links
 
+    // source outport direction: means the src of the link is router
     PortDirection src_outport_dirn = "Local";
 
+    // set the maximum number of VCs per Vnet
     m_max_vcs_per_vnet = std::max(m_max_vcs_per_vnet,
                              m_routers[src]->get_vc_per_vnet());
 
@@ -267,6 +319,8 @@ GarnetNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
      * bridge is enabled, we would connect:
      * NI<---NetworkBridge<---GarnetExtLink<----Router
      */
+
+    // add an inport at the side of the NI (for the GarnetExtLink)
     if (garnet_link->extBridgeEn) {
         DPRINTF(RubyNetwork, "Enable external bridge for %s\n",
             garnet_link->name());
@@ -275,9 +329,11 @@ GarnetNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
             addInPort(n_bridge, garnet_link->extCredBridge[LinkDirection_Out]);
         m_networkbridges.push_back(n_bridge);
     } else {
+        // without NetworkBridge
         m_nis[local_dest]->addInPort(net_link, credit_link);
     }
 
+    // add an outport at the side of the router (for the GarnetExtLink)
     if (garnet_link->intBridgeEn) {
         DPRINTF(RubyNetwork, "Enable internal bridge for %s\n",
             garnet_link->name());
@@ -290,6 +346,7 @@ GarnetNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
                        m_routers[src]->get_vc_per_vnet());
         m_networkbridges.push_back(n_bridge);
     } else {
+        // without NetworkBridge
         m_routers[src]->
             addOutPort(src_outport_dirn, net_link,
                        routing_table_entry,
@@ -302,23 +359,24 @@ GarnetNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
  * This function creates an internal network link between two routers.
  * It adds both the network link and an opposite credit link.
 */
-
 void
 GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
                                 std::vector<NetDest>& routing_table_entry,
                                 PortDirection src_outport_dirn,
                                 PortDirection dst_inport_dirn)
 {
+    // create a garnet internal link
     GarnetIntLink* garnet_link = safe_cast<GarnetIntLink*>(link);
 
-    // GarnetIntLink is unidirectional
+    // GarnetIntLink is unidirectional (INT_ means from router to router)
     NetworkLink* net_link = garnet_link->m_network_link;
     net_link->setType(INT_);
     CreditLink* credit_link = garnet_link->m_credit_link;
 
-    m_networklinks.push_back(net_link);
-    m_creditlinks.push_back(credit_link);
+    m_networklinks.push_back(net_link); // add net_link to network links
+    m_creditlinks.push_back(credit_link); // add credit_link to credit links
 
+    // set the maximum number of VCs per Vnet
     m_max_vcs_per_vnet = std::max(m_max_vcs_per_vnet,
                              std::max(m_routers[dest]->get_vc_per_vnet(),
                              m_routers[src]->get_vc_per_vnet()));
@@ -336,6 +394,8 @@ GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
      * bridge is enabled, we would connect:
      * Router--->NetworkBridge--->GarnetIntLink---->Router
      */
+
+    // add an inport to the destination router (for the GarnetIntLink)
     if (garnet_link->dstBridgeEn) {
         DPRINTF(RubyNetwork, "Enable destination bridge for %s\n",
             garnet_link->name());
@@ -344,9 +404,11 @@ GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
                                    garnet_link->dstCredBridge);
         m_networkbridges.push_back(n_bridge);
     } else {
+        // without NetworkBridge
         m_routers[dest]->addInPort(dst_inport_dirn, net_link, credit_link);
     }
 
+    // add an outport to the source router (for the GarnetIntLink)
     if (garnet_link->srcBridgeEn) {
         DPRINTF(RubyNetwork, "Enable source bridge for %s\n",
             garnet_link->name());
@@ -358,6 +420,7 @@ GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
                        m_routers[dest]->get_vc_per_vnet());
         m_networkbridges.push_back(n_bridge);
     } else {
+        // without NetworkBridge
         m_routers[src]->addOutPort(src_outport_dirn, net_link,
                         routing_table_entry,
                         link->m_weight, credit_link,
@@ -376,14 +439,18 @@ GarnetNetwork::getNumRouters()
 int
 GarnetNetwork::get_router_id(int global_ni, int vnet)
 {
+    // get the local_id of the NI that has global_ni global_id
     NodeID local_ni = getLocalNodeID(global_ni);
-
+    // return the router_id of the router connected to this NI
+    // for the given vnet
     return m_nis[local_ni]->get_router_id(vnet);
 }
 
+// for registering the GarnetNetwork stats
 void
 GarnetNetwork::regStats()
 {
+    // call the regStats() function from the parent class
     Network::regStats();
 
     // Packets
@@ -508,7 +575,7 @@ GarnetNetwork::regStats()
         m_avg_flit_network_latency + m_avg_flit_queueing_latency;
 
 
-    // Hops
+    // Hops (avg_hops= total_hops/total_received_flits)
     m_avg_hops.name(name() + ".average_hops");
     m_avg_hops = m_total_hops / sum(m_flits_received);
 
@@ -521,6 +588,10 @@ GarnetNetwork::regStats()
         .name(name() + ".int_link_utilization");
     m_average_link_utilization
         .name(name() + ".avg_link_utilization");
+    m_average_ext_link_utilization
+        .name(name() + ".avg_ext_link_utilization");
+    m_average_int_link_utilization
+        .name(name() + ".avg_int_link_utilization");
     m_average_vc_load
         .init(m_virtual_networks * m_max_vcs_per_vnet)
         .name(name() + ".avg_vc_load")
@@ -550,31 +621,57 @@ GarnetNetwork::regStats()
     }
 }
 
+// Function for updating statistics of GarnetNetwork in stats.txt
 void
 GarnetNetwork::collateStats()
 {
+    // get the ruby_system
     RubySystem *rs = params().ruby_system;
+    // the time that has passed from the start of the simulation
     double time_delta = double(curCycle() - rs->getStartCycle());
 
+    int ext_links_count = 0;
+    int int_links_count = 0;
+    int total_extlink_activity = 0;
+    int total_intlink_activity = 0;
+    // for every network link
     for (int i = 0; i < m_networklinks.size(); i++) {
         link_type type = m_networklinks[i]->getType();
         int activity = m_networklinks[i]->getLinkUtilization();
 
-        if (type == EXT_IN_)
+        // update link utilization stats
+        if (type == EXT_IN_) {
             m_total_ext_in_link_utilization += activity;
-        else if (type == EXT_OUT_)
+            total_extlink_activity += activity;
+            ext_links_count++;
+        }
+        else if (type == EXT_OUT_) {
             m_total_ext_out_link_utilization += activity;
-        else if (type == INT_)
+            total_extlink_activity += activity;
+            ext_links_count++;
+        }
+        else if (type == INT_) {
             m_total_int_link_utilization += activity;
+            total_intlink_activity += activity;
+            int_links_count++;
+        }
 
+        //utilization of links over time
         m_average_link_utilization +=
             (double(activity) / time_delta);
 
+        // update the vc_load stats for vcs
         std::vector<unsigned int> vc_load = m_networklinks[i]->getVcLoad();
         for (int j = 0; j < vc_load.size(); j++) {
+            // average vc load for a vc over time
             m_average_vc_load[j] += ((double)vc_load[j] / time_delta);
         }
     }
+
+    //Average utilization of an external link
+    m_average_ext_link_utilization = total_extlink_activity/ext_links_count;
+    //Average utilization of an internal link
+    m_average_int_link_utilization = total_intlink_activity/int_links_count;
 
     // Ask the routers to collate their statistics
     for (int i = 0; i < m_routers.size(); i++) {
@@ -582,6 +679,8 @@ GarnetNetwork::collateStats()
     }
 }
 
+// Reset statistics for routers, network links, and credit links
+// in GarnetNetwork
 void
 GarnetNetwork::resetStats()
 {
@@ -596,25 +695,30 @@ GarnetNetwork::resetStats()
     }
 }
 
+// for printing the GarnetNetwork object
 void
 GarnetNetwork::print(std::ostream& out) const
 {
     out << "[GarnetNetwork]";
 }
 
+// Keep track of the data traffic and control traffic
 void
 GarnetNetwork::update_traffic_distribution(RouteInfo route)
 {
-    int src_node = route.src_router;
-    int dest_node = route.dest_router;
-    int vnet = route.vnet;
+    int src_node = route.src_router; // source router
+    int dest_node = route.dest_router; // destination router
+    int vnet = route.vnet; // Vnet in which the traffic goes
 
+    // the type of the Vnet is either DATA or Cntrl
     if (m_vnet_type[vnet] == DATA_VNET_)
         (*m_data_traffic_distribution[src_node][dest_node])++;
     else
         (*m_ctrl_traffic_distribution[src_node][dest_node])++;
 }
 
+// Function for performing a functional read. The return value
+// indicates the number of messages that were read.
 bool
 GarnetNetwork::functionalRead(Packet *pkt, WriteMask &mask)
 {
@@ -642,6 +746,8 @@ GarnetNetwork::functionalRead(Packet *pkt, WriteMask &mask)
     return read;
 }
 
+// Function for performing a functional write. The return value
+// indicates the number of messages that were written.
 uint32_t
 GarnetNetwork::functionalWrite(Packet *pkt)
 {

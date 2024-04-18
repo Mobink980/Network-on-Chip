@@ -53,6 +53,19 @@ def define_options(parser):
         help="the number of rows in the mesh topology",
     )
     parser.add_argument(
+        "--mesh-columns", 
+        type=int, 
+        default=0,
+        help="the number of columns in the 3D mesh topology"
+    )
+    parser.add_argument(
+        "--mesh-layers", 
+        type=int, 
+        default=1,
+        help="the number of layers in the 3D mesh topology"
+    )
+    
+    parser.add_argument(
         "--network",
         default="simple",
         choices=["simple", "garnet"],
@@ -168,6 +181,8 @@ def create_network(options, ruby):
 def init_network(options, network, InterfaceClass):
     if options.network == "garnet":
         network.num_rows = options.mesh_rows
+        network.num_columns = options.mesh_columns
+        network.num_layers = options.mesh_layers
         network.vcs_per_vnet = options.vcs_per_vnet
         network.ni_flit_size = options.link_width_bits / 8
         network.routing_algorithm = options.routing_algorithm

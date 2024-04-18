@@ -45,62 +45,80 @@ namespace gem5
 
 namespace ruby
 {
-
+//for fault modeling simulation
 class FaultModel;
+//NetDest specifies the network destination of a Message
 class NetDest;
 
 namespace garnet
 {
+//We need these classes to create the network
+class NetworkInterface; //Network Interface (NI)
+class Router; //Router
+class NetworkLink; //Network Link for forwarding flits
+class NetworkBridge; //Network Bridge for heterogenous architectures
+class CreditLink; //Credit Link for flow-control information
 
-class NetworkInterface;
-class Router;
-class NetworkLink;
-class NetworkBridge;
-class CreditLink;
-
+//GarnetNetwork inherites from Network (in Network.hh)
 class GarnetNetwork : public Network
 {
   public:
     typedef GarnetNetworkParams Params;
-    GarnetNetwork(const Params &p);
-    ~GarnetNetwork() = default;
+    //GarnetNetwork constructor and destructor
+    GarnetNetwork(const Params &p); //constructor declaration
+    ~GarnetNetwork() = default; //destructor declaration
 
-    void init();
+    void init(); //initializing the network
 
-    const char *garnetVersion = "3.0";
+    const char *garnetVersion = "3.0"; //use Heterogarnet
 
     // Configuration (set externally)
 
-    // for 2D topology
+    // for 2D topology (getter functions for rows and cols of NoC)
     int getNumRows() const { return m_num_rows; }
     int getNumCols() { return m_num_cols; }
+    int getNumLayers() { return m_num_layers; }
 
     // for network
+    //get the flit size for NetworkInterface
     uint32_t getNiFlitSize() const { return m_ni_flit_size; }
+    //how many buffers per data virtual channel (VC)
     uint32_t getBuffersPerDataVC() { return m_buffers_per_data_vc; }
+    //how many buffers per control virtual channel (VC)
     uint32_t getBuffersPerCtrlVC() { return m_buffers_per_ctrl_vc; }
+    //get the routing algorithm (XY, custom, or weight-table)
     int getRoutingAlgorithm() const { return m_routing_algorithm; }
-
+    //check whether fault model is enabled
     bool isFaultModelEnabled() const { return m_enable_fault_model; }
-    FaultModel* fault_model;
+    FaultModel* fault_model; //create an object of the class FaultModel
 
 
     // Internal configuration
+    //check whether a Vnet is ordered
+    //In an ordered vnet, the flit that was enqueued first, should be 
+    //sent first (FIFO).
     bool isVNetOrdered(int vnet) const { return m_ordered[vnet]; }
+    //get the type of a vnet (control, data, etc.)
     VNET_type
     get_vnet_type(int vnet)
     {
         return m_vnet_type[vnet];
     }
+    //get the number of routers
     int getNumRouters();
+    //get the id of a router by NetworkInterface and vnet 
     int get_router_id(int ni, int vnet);
 
 
     // Methods used by Topology to setup the network
+    //create an external link from router to NI 
     void makeExtOutLink(SwitchID src, NodeID dest, BasicLink* link,
                      std::vector<NetDest>& routing_table_entry);
+    //create an external link from NI to router
     void makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
                     std::vector<NetDest>& routing_table_entry);
+    //create an internal link between two routers (from src_outport 
+    //to dst_inport)
     void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
                           std::vector<NetDest>& routing_table_entry,
                           PortDirection src_outport_dirn,
@@ -112,102 +130,144 @@ class GarnetNetwork : public Network
     uint32_t functionalWrite(Packet *pkt);
 
     // Stats
-    void collateStats();
-    void regStats();
-    void resetStats();
+    void collateStats(); //for collating the GarnetNetwork stats
+    void regStats(); //for registering the GarnetNetwork stats
+    void resetStats(); //reset the GarnetNetwork stats
+    //for printing a GarnetNetwork object 
     void print(std::ostream& out) const;
 
     // increment counters
+    //update the number of injected packets for a vnet
     void increment_injected_packets(int vnet) { m_packets_injected[vnet]++; }
+    //update the number of received packets for a vnet 
     void increment_received_packets(int vnet) { m_packets_received[vnet]++; }
-
+    //increment the packet_network_latency for a vnet
     void
     increment_packet_network_latency(Tick latency, int vnet)
     {
         m_packet_network_latency[vnet] += latency;
     }
-
+    //increment the packet_queuing_latency for a vnet
     void
     increment_packet_queueing_latency(Tick latency, int vnet)
     {
         m_packet_queueing_latency[vnet] += latency;
     }
-
+    //update the number of injected flits for a vnet
     void increment_injected_flits(int vnet) { m_flits_injected[vnet]++; }
+    //update the number of received flits for a vnet
     void increment_received_flits(int vnet) { m_flits_received[vnet]++; }
-
+    //increment the flit_network_latency for a vnet
     void
     increment_flit_network_latency(Tick latency, int vnet)
     {
         m_flit_network_latency[vnet] += latency;
     }
-
+    //increment the flit_queuing_latency for a vnet
     void
     increment_flit_queueing_latency(Tick latency, int vnet)
     {
         m_flit_queueing_latency[vnet] += latency;
     }
 
+    //update the total number of hops in the network 
     void
     increment_total_hops(int hops)
     {
         m_total_hops += hops;
     }
 
+    //update traffic distribution based on a RouteInfo
     void update_traffic_distribution(RouteInfo route);
+    //getting the id of the next packet
     int getNextPacketID() { return m_next_packet_id++; }
 
   protected:
     // Configuration
-    int m_num_rows;
-    int m_num_cols;
-    uint32_t m_ni_flit_size;
-    uint32_t m_max_vcs_per_vnet;
-    uint32_t m_buffers_per_ctrl_vc;
-    uint32_t m_buffers_per_data_vc;
+    int m_num_rows; //number of rows in the network
+    int m_num_cols; //number of columns in the network
+    int m_num_layers; //number of layers in the network
+    uint32_t m_ni_flit_size; //flit size for NetworkInterface
+    uint32_t m_max_vcs_per_vnet; //maximum number of vcs per vnet
+    uint32_t m_buffers_per_ctrl_vc; //number of buffers per control vc
+    uint32_t m_buffers_per_data_vc; //number of buffers per data vc
+    //network routing algorithm (0:weight-based, 1:XY, 2:custom)
     int m_routing_algorithm;
+    //for enabling fault model
     bool m_enable_fault_model;
 
     // Statistical variables
+    //number of packets received
     statistics::Vector m_packets_received;
+    //number of packets injected
     statistics::Vector m_packets_injected;
+    //packet network latency
     statistics::Vector m_packet_network_latency;
+    //packet queuing latency
     statistics::Vector m_packet_queueing_latency;
 
+    //average packet vnet latency
     statistics::Formula m_avg_packet_vnet_latency;
+    //average packet queuing latency for a vnet
     statistics::Formula m_avg_packet_vqueue_latency;
+    //average packet network latency
     statistics::Formula m_avg_packet_network_latency;
+    //average packet queuing latency
     statistics::Formula m_avg_packet_queueing_latency;
+    //average packet latency
     statistics::Formula m_avg_packet_latency;
 
+    //number of flits received
     statistics::Vector m_flits_received;
+    //number of flits injected
     statistics::Vector m_flits_injected;
+    //flit network latency
     statistics::Vector m_flit_network_latency;
+    //flit queuing latency
     statistics::Vector m_flit_queueing_latency;
 
+    //average flit vnet latency
     statistics::Formula m_avg_flit_vnet_latency;
+    //average flit queuing latency for a vnet
     statistics::Formula m_avg_flit_vqueue_latency;
+    //average flit network latency
     statistics::Formula m_avg_flit_network_latency;
+    //average flit queuing latency
     statistics::Formula m_avg_flit_queueing_latency;
+    //average flit latency
     statistics::Formula m_avg_flit_latency;
 
+    //total utilization of ext_in (from NI to router) links
     statistics::Scalar m_total_ext_in_link_utilization;
+    //total utilization of ext_out (from router to NI) links
     statistics::Scalar m_total_ext_out_link_utilization;
+    //total utilization of internal (from router to router) links
     statistics::Scalar m_total_int_link_utilization;
+    //average link utilization
     statistics::Scalar m_average_link_utilization;
+    //average load of virtual channels (VC)
     statistics::Vector m_average_vc_load;
+    //average external link utilization
+    statistics::Scalar m_average_ext_link_utilization;
+    //average internal link utilization
+    statistics::Scalar m_average_int_link_utilization;
 
+    //total number of hops
     statistics::Scalar  m_total_hops;
+    //average number of hops
     statistics::Formula m_avg_hops;
 
+    //traffic distribution of data messages
     std::vector<std::vector<statistics::Scalar *>> m_data_traffic_distribution;
+    //traffic distribution of control messages
     std::vector<std::vector<statistics::Scalar *>> m_ctrl_traffic_distribution;
 
   private:
+    //GarnetNetwork constructor for instantiation
     GarnetNetwork(const GarnetNetwork& obj);
     GarnetNetwork& operator=(const GarnetNetwork& obj);
 
-    std::vector<VNET_type > m_vnet_type;
+    std::vector<VNET_type > m_vnet_type; // type of vnet (control, data, etc.)
     std::vector<Router *> m_routers;   // All Routers in Network
     std::vector<NetworkLink *> m_networklinks; // All flit links in the network
     std::vector<NetworkBridge *> m_networkbridges; // All network bridges
@@ -216,6 +276,7 @@ class GarnetNetwork : public Network
     int m_next_packet_id; // static vairable for packet id allocation
 };
 
+//for printing a GarnetNetwork object
 inline std::ostream&
 operator<<(std::ostream& out, const GarnetNetwork& obj)
 {
