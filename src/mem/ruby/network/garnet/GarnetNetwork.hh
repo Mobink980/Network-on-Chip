@@ -95,7 +95,7 @@ class GarnetNetwork : public Network
 
     // Internal configuration
     //check whether a Vnet is ordered
-    //In an ordered vnet, the flit that was enqueued first, should be 
+    //In an ordered vnet, the flit that was enqueued first, should be
     //sent first (FIFO).
     bool isVNetOrdered(int vnet) const { return m_ordered[vnet]; }
     //get the type of a vnet (control, data, etc.)
@@ -106,18 +106,18 @@ class GarnetNetwork : public Network
     }
     //get the number of routers
     int getNumRouters();
-    //get the id of a router by NetworkInterface and vnet 
+    //get the id of a router by NetworkInterface and vnet
     int get_router_id(int ni, int vnet);
 
 
     // Methods used by Topology to setup the network
-    //create an external link from router to NI 
+    //create an external link from router to NI
     void makeExtOutLink(SwitchID src, NodeID dest, BasicLink* link,
                      std::vector<NetDest>& routing_table_entry);
     //create an external link from NI to router
     void makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
                     std::vector<NetDest>& routing_table_entry);
-    //create an internal link between two routers (from src_outport 
+    //create an internal link between two routers (from src_outport
     //to dst_inport)
     void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
                           std::vector<NetDest>& routing_table_entry,
@@ -133,13 +133,13 @@ class GarnetNetwork : public Network
     void collateStats(); //for collating the GarnetNetwork stats
     void regStats(); //for registering the GarnetNetwork stats
     void resetStats(); //reset the GarnetNetwork stats
-    //for printing a GarnetNetwork object 
+    //for printing a GarnetNetwork object
     void print(std::ostream& out) const;
 
     // increment counters
     //update the number of injected packets for a vnet
     void increment_injected_packets(int vnet) { m_packets_injected[vnet]++; }
-    //update the number of received packets for a vnet 
+    //update the number of received packets for a vnet
     void increment_received_packets(int vnet) { m_packets_received[vnet]++; }
     //increment the packet_network_latency for a vnet
     void
@@ -170,7 +170,7 @@ class GarnetNetwork : public Network
         m_flit_queueing_latency[vnet] += latency;
     }
 
-    //update the total number of hops in the network 
+    //update the total number of hops in the network
     void
     increment_total_hops(int hops)
     {

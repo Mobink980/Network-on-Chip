@@ -53,18 +53,18 @@ def define_options(parser):
         help="the number of rows in the mesh topology",
     )
     parser.add_argument(
-        "--mesh-columns", 
-        type=int, 
+        "--mesh-columns",
+        type=int,
         default=0,
-        help="the number of columns in the 3D mesh topology"
+        help="the number of columns in the 3D mesh topology",
     )
     parser.add_argument(
-        "--mesh-layers", 
-        type=int, 
+        "--mesh-layers",
+        type=int,
         default=1,
-        help="the number of layers in the 3D mesh topology"
+        help="the number of layers in the 3D mesh topology",
     )
-    
+
     parser.add_argument(
         "--network",
         default="simple",

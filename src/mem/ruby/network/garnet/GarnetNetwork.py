@@ -35,15 +35,20 @@ from m5.objects.Network import RubyNetwork
 from m5.params import *
 from m5.proxy import *
 
-#GarnetNetwork inherites from RubyNetwork class (in Network.py)
+
+# GarnetNetwork inherites from RubyNetwork class (in Network.py)
 class GarnetNetwork(RubyNetwork):
     type = "GarnetNetwork"
     cxx_header = "mem/ruby/network/garnet/GarnetNetwork.hh"
     cxx_class = "gem5::ruby::garnet::GarnetNetwork"
 
     num_rows = Param.Int(0, "number of rows if 2D (mesh/torus/..) topology")
-    num_columns = Param.Int(0, "number of columns if 3D (mesh/torus/..) topology")
-    num_layers = Param.Int(1, "number of layers if 3D (mesh/torus/..) topology")
+    num_columns = Param.Int(
+        0, "number of columns if 3D (mesh/torus/..) topology"
+    )
+    num_layers = Param.Int(
+        1, "number of layers if 3D (mesh/torus/..) topology"
+    )
     ni_flit_size = Param.UInt32(16, "network interface flit size in bytes")
     vcs_per_vnet = Param.UInt32(4, "virtual channels per virtual network")
     buffers_per_data_vc = Param.UInt32(4, "buffers per data virtual channel")
@@ -55,7 +60,8 @@ class GarnetNetwork(RubyNetwork):
         50000, "network-level deadlock threshold"
     )
 
-#GarnetNetworkInterface inherites from ClockedObject
+
+# GarnetNetworkInterface inherites from ClockedObject
 class GarnetNetworkInterface(ClockedObject):
     type = "GarnetNetworkInterface"
     cxx_class = "gem5::ruby::garnet::NetworkInterface"
@@ -72,7 +78,8 @@ class GarnetNetworkInterface(ClockedObject):
         Parent.garnet_deadlock_threshold, "network-level deadlock threshold"
     )
 
-#GarnetRouter inherites from BasicRouter
+
+# GarnetRouter inherites from BasicRouter
 class GarnetRouter(BasicRouter):
     type = "GarnetRouter"
     cxx_class = "gem5::ruby::garnet::Router"
