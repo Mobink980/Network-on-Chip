@@ -59,11 +59,19 @@ namespace DSENT
     Model *initialize(const char *config_file_name,
                       std::map<String, String> &config);
 
-    void finalize(std::map<String, String> &config,
-                  Model *ms_model);
+    // TechModel* constructTechModel(const std::map<String, String>& params);
+
+    Model *buildModel(const std::map<String, String> &config, TechModel *tech_model);
 
     void run(const std::map<String, String> &config, Model *ms_model,
              std::map<std::string, double> &outputs);
+
+    void finalize(std::map<String, String> &config,
+                  Model *ms_model);
+
+    
+
+    
 } // namespace DSENT
 
 #endif // __DSENT_DSENT_H__

@@ -113,14 +113,36 @@ namespace DSENT
         cout << "==============" << endl;
     }
 
-    static Model *buildModel(const map<String, String> &params,
-                             TechModel *tech_model)
+    static TechModel* constructTechModel(const map<String, String>& params)
+    {
+        // Allocate static TechModel instance
+        const String& electrical_tech_model_filename =
+            params.at("ElectricalTechModelFilename");
+
+        TechModel* tech_model = new TechModel();
+        tech_model->readFile(electrical_tech_model_filename);
+
+        if (params.count("PhotonicTechModelFilename") != 0) {
+            const String& photonic_tech_model_filename =
+                params.at("PhotonicTechModelFilename");
+            tech_model->readFile(photonic_tech_model_filename);
+        }
+
+        // Allocate static StdCellLib instance
+        StdCellLib* std_cell_lib = new StdCellLib(tech_model);
+
+        // Set the StdCellLib pointer in static TechModel instance
+        tech_model->setStdCellLib(std_cell_lib);
+        return tech_model;
+    }
+
+    Model *buildModel(const map<String, String> &params,
+                      TechModel *tech_model)
     {
         // Create the model specified
         const String& model_name = params.at("ModelName");
         Model *ms_model = ModelGen::createModel(model_name, model_name,
                                                 tech_model);
-
         // Construct the model
         // Read all parameters the model requires
         const vector<String>* parameter_names = ms_model->getParameterNames();
@@ -251,28 +273,6 @@ namespace DSENT
         }
     }
 
-    static TechModel* constructTechModel(const map<String, String>& params)
-    {
-        // Allocate static TechModel instance
-        const String& electrical_tech_model_filename =
-            params.at("ElectricalTechModelFilename");
-
-        TechModel* tech_model = new TechModel();
-        tech_model->readFile(electrical_tech_model_filename);
-
-        if (params.count("PhotonicTechModelFilename") != 0) {
-            const String& photonic_tech_model_filename =
-                params.at("PhotonicTechModelFilename");
-            tech_model->readFile(photonic_tech_model_filename);
-        }
-
-        // Allocate static StdCellLib instance
-        StdCellLib* std_cell_lib = new StdCellLib(tech_model);
-
-        // Set the StdCellLib pointer in static TechModel instance
-        tech_model->setStdCellLib(std_cell_lib);
-        return tech_model;
-    }
 
     Model *initialize(const char *config_file_name, map<String, String> &config)
     {

@@ -353,7 +353,9 @@ namespace DSENT
     {
         // Get parameters
         unsigned int number_input_ports = getParameter("NumberInputPorts").toUInt();
+        // unsigned int number_input_ports = 1; //in case of RLInterface
         unsigned int number_output_ports = getParameter("NumberOutputPorts").toUInt();
+        // unsigned int number_output_ports = 2; //for RLInterface crossbar
         unsigned int total_number_vcs = getGenProperties()->get("TotalNumberVirtualChannels").toUInt();
         const String& arb_model = getParameter("SwitchAllocator->ArbiterModel");
 
@@ -380,7 +382,9 @@ namespace DSENT
         // Get parameters
         const String& crossbar_model = getParameter("CrossbarModel");
         unsigned int number_input_ports = getParameter("NumberInputPorts").toUInt();
+        // unsigned int number_input_ports = 1; //in case of RLInterface
         unsigned int number_output_ports = getParameter("NumberOutputPorts").toUInt();
+        // unsigned int number_output_ports = 2; //for RLInterface crossbar
         unsigned int number_bits_per_flit = getParameter("NumberBitsPerFlit").toUInt();
         unsigned int number_input_port_outputs = getGenProperties()->get("InputPort->NumberOutputs").toUInt();
 

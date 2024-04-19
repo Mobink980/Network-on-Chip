@@ -24,7 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required(VERSION 2.6...3.20)
 
 project (DSENT)
 # find out all the file that need to be compiled
@@ -35,6 +35,12 @@ add_library(dsent MODULE ${SRCS})
 
 SET(PYTHON_CONFIG "python-config")
 
+# TODO - add path to C and C++ compiler 
+# (can be found using which command: which gcc/g++/cc)
+SET(CMAKE_C_COMPILER "/usr/bin/gcc")
+SET(CMAKE_CXX_COMPILER "/usr/bin/g++")
+
+
 # add the binary tree to the search path for include files
 include_directories("${CMAKE_SOURCE_DIR}" "`${PYTHON_CONFIG} --includes`")
 EXEC_PROGRAM(${PYTHON_CONFIG} ARGS --cflags OUTPUT_VARIABLE PYTHON_CFLAGS)
@@ -44,3 +50,9 @@ set_target_properties(dsent PROPERTIES
         PREFIX ""
         COMPILE_FLAGS "${PYTHON_CFLAGS} -std=c++11"
         LINK_FLAGS "${PYTHON_LFLAGS}")
+        
+        
+        
+# suppress the warnings for now!
+# set(CMAKE_POLICY_DEFAULT_CMP0153 NEW)
+
