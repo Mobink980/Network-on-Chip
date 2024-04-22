@@ -41,6 +41,7 @@
 #include "mem/ruby/network/garnet/NetworkLink.hh"
 #include "params/GarnetExtLink.hh"
 #include "params/GarnetIntLink.hh"
+#include "params/GarnetBusLink.hh"
 
 namespace gem5
 {
@@ -156,6 +157,59 @@ operator<<(std::ostream& out, const GarnetExtLink& obj)
     out << std::flush;
     return out;
 }
+
+//===============================================================
+//GarnetBusLink is inherited from BasicBusLink
+class GarnetBusLink : public BasicBusLink
+{
+  public:
+    typedef GarnetBusLinkParams Params;
+    GarnetBusLink(const Params &p); //constructor
+
+    void init(); //initializing bridge for int links
+
+    void print(std::ostream& out) const;
+
+    //Make the GarnetNetwork class a friend of GarnetIntLink.
+    //This gives GarnetNetwork access to all private members 
+    //of GarnetIntLink class.
+    friend class GarnetNetwork;
+
+  protected:
+    NetworkLink* m_network_link; //network link
+    CreditLink* m_credit_link; //credit link
+
+    //automatically enabled when either SerDes or
+    //CDC is enabled.
+    bool srcBridgeEn;
+    bool dstBridgeEn;
+
+    //enabling Serializer-Deserializer units
+    bool srcSerdesEn;
+    bool dstSerdesEn;
+
+    //enabling Clock Domain Crossing units
+    bool srcCdcEn;
+    bool dstCdcEn;
+
+    //src and dst nodes of bridge for network link
+    NetworkBridge* srcNetBridge;
+    NetworkBridge* dstNetBridge;
+
+    //src and dst nodes of bridge for credit link
+    NetworkBridge* srcCredBridge;
+    NetworkBridge* dstCredBridge;
+};
+
+//printing properties of a garnet bus link
+inline std::ostream&
+operator<<(std::ostream& out, const GarnetBusLink& obj)
+{
+    obj.print(out);
+    out << std::flush;
+    return out;
+}
+//===============================================================
 
 } // namespace garnet
 } // namespace ruby

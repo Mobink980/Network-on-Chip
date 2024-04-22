@@ -194,6 +194,75 @@ GarnetExtLink::print(std::ostream& out) const
     out << name();
 }
 
+
+//===============================================================
+//GarnetBusLink constructor
+GarnetBusLink::GarnetBusLink(const Params &p)
+    : BasicBusLink(p)
+{
+    // Uni-directional
+    //initialize network and credit links
+    m_network_link = p.network_link;
+    m_credit_link = p.credit_link;
+
+    //initialize cdc enable
+    srcCdcEn = p.src_cdc;
+    dstCdcEn = p.dst_cdc;
+
+    //initialize SerDes enable
+    srcSerdesEn = p.src_serdes;
+    dstSerdesEn = p.dst_serdes;
+
+    //bridge units for int links (disabled by default)
+    srcBridgeEn = false;
+    dstBridgeEn = false;
+
+    //if either cdc or SerDes is enabled at the
+    //src node, enable the srcBridge
+    if (srcCdcEn || srcSerdesEn) {
+        srcBridgeEn = true;
+        //initialize the net & cred bridge at src
+        srcNetBridge = p.src_net_bridge;
+        srcCredBridge = p.src_cred_bridge;
+    }
+    //if either cdc or SerDes is enabled at the
+    //dst node, enable the dstBridge
+    if (dstCdcEn || dstSerdesEn) {
+        dstBridgeEn = true;
+        //initialize the net & cred bridge at dst
+        dstNetBridge = p.dst_net_bridge;
+        dstCredBridge = p.dst_cred_bridge;
+    }
+}
+
+void
+GarnetBusLink::init()
+{
+    if (srcBridgeEn) { 
+        //make sure both srcNetBridge and srcCredBridge is set
+        assert(srcNetBridge && srcCredBridge);
+        //call the initBridge function for both srcNetBridge & srcCredBridge
+        srcNetBridge->initBridge(srcCredBridge, srcCdcEn, srcSerdesEn);
+        srcCredBridge->initBridge(srcNetBridge, srcCdcEn, srcSerdesEn);
+    }
+
+    if (dstBridgeEn) {
+        //make sure both dstNetBridge and dstCredBridge is set
+        assert(dstNetBridge && dstCredBridge);
+        //call the initBridge function for both dstNetBridge & dstCredBridge
+        dstNetBridge->initBridge(dstCredBridge, dstCdcEn, dstSerdesEn);
+        dstCredBridge->initBridge(dstNetBridge, dstCdcEn, dstSerdesEn);
+    }
+}
+
+//print the GarnetBusLink
+void
+GarnetBusLink::print(std::ostream& out) const
+{
+    out << name();
+}
+//===============================================================
+
 } // namespace garnet
 } // namespace ruby
 } // namespace gem5

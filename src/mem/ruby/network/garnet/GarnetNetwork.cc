@@ -428,6 +428,83 @@ GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
     }
 }
 
+
+//=======================================================================
+/*
+ * This function creates a bus link between a router and a bus.
+ * It adds both the network link and an opposite credit link.
+*/
+void
+GarnetNetwork::makeBusLink(SwitchID src, SwitchID dest, BasicLink* link,
+                                std::vector<NetDest>& routing_table_entry,
+                                PortDirection src_outport_dirn,
+                                PortDirection dst_inport_dirn)
+{
+    // create a garnet bus link
+    GarnetBusLink* garnet_link = safe_cast<GarnetBusLink*>(link);
+
+    // GarnetIntLink is unidirectional (INT_ means from router to router)
+    NetworkLink* net_link = garnet_link->m_network_link;
+    net_link->setType(BUS_);
+    CreditLink* credit_link = garnet_link->m_credit_link;
+
+    m_networklinks.push_back(net_link); // add net_link to network links
+    m_creditlinks.push_back(credit_link); // add credit_link to credit links
+
+    // set the maximum number of VCs per Vnet
+    m_max_vcs_per_vnet = std::max(m_max_vcs_per_vnet,
+                             std::max(m_routers[dest]->get_vc_per_vnet(),
+                             m_routers[src]->get_vc_per_vnet()));
+
+    /*
+     * We check if a bridge was enabled at any end of the link.
+     * The bridge is enabled if either of clock domain
+     * crossing (CDC) or Serializer-Deserializer(SerDes) unit is
+     * enabled for the link at each end. The bridge encapsulates
+     * the functionality for both CDC and SerDes and is a Consumer
+     * object similiar to a NetworkLink.
+     *
+     * If a bridge was enabled we connect the NI and Routers to
+     * bridge before connecting the link. Example, if a source
+     * bridge is enabled, we would connect:
+     * Router--->NetworkBridge--->GarnetIntLink---->Router
+     */
+
+    // add an inport to the destination router (for the GarnetIntLink)
+    if (garnet_link->dstBridgeEn) {
+        DPRINTF(RubyNetwork, "Enable destination bridge for %s\n",
+            garnet_link->name());
+        NetworkBridge *n_bridge = garnet_link->dstNetBridge;
+        m_routers[dest]->addInPort(dst_inport_dirn, n_bridge,
+                                   garnet_link->dstCredBridge);
+        m_networkbridges.push_back(n_bridge);
+    } else {
+        // without NetworkBridge (fix later with bridge too)
+        m_routers[dest]->addInPort(dst_inport_dirn, net_link, credit_link);
+    }
+
+    // add an outport to the source router (for the GarnetIntLink)
+    if (garnet_link->srcBridgeEn) {
+        DPRINTF(RubyNetwork, "Enable source bridge for %s\n",
+            garnet_link->name());
+        NetworkBridge *n_bridge = garnet_link->srcNetBridge;
+        m_routers[src]->
+            addOutPort(src_outport_dirn, n_bridge,
+                       routing_table_entry,
+                       link->m_weight, garnet_link->srcCredBridge,
+                       m_routers[dest]->get_vc_per_vnet());
+        m_networkbridges.push_back(n_bridge);
+    } else {
+        // without NetworkBridge (fix later, for bridge too)
+        m_routers[src]->addOutPort(src_outport_dirn, net_link,
+                        routing_table_entry,
+                        link->m_weight, credit_link,
+                        m_routers[dest]->get_vc_per_vnet());
+    }
+}
+//=======================================================================
+
+
 // Total routers in the network
 int
 GarnetNetwork::getNumRouters()

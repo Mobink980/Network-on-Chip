@@ -123,6 +123,14 @@ class Network : public ClockedObject
                                   PortDirection src_outport,
                                   PortDirection dst_inport) = 0;
 
+    //==========================================================================
+    //make a bus link between a router and a bus
+    virtual void makeBusLink(SwitchID src, SwitchID dest, BasicLink* link,
+                                  std::vector<NetDest>& routing_table_entry,
+                                  PortDirection src_outport,
+                                  PortDirection dst_inport) = 0;
+    //==========================================================================
+
     //for collating Network stats
     virtual void collateStats() = 0;
     //for printing the Network

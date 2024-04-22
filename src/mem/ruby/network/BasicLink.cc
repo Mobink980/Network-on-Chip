@@ -69,5 +69,15 @@ BasicIntLink::BasicIntLink(const Params &p)
     //std::cout<<"BasicIntLink constructor called."<<std::endl;
 }
 
+
+//=====================================================================
+//BasicBusLink constructor calling BasicLink constructor
+BasicBusLink::BasicBusLink(const Params &p)
+    : BasicLink(p)
+{
+    //std::cout<<"BasicIntLink constructor called."<<std::endl;
+}
+//======================================================================
+
 } // namespace ruby
 } // namespace gem5

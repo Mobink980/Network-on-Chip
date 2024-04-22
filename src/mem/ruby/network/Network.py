@@ -52,6 +52,10 @@ class RubyNetwork(ClockedObject):
     netifs = VectorParam.ClockedObject("Network Interfaces")
     ext_links = VectorParam.BasicExtLink("Links to external nodes")
     int_links = VectorParam.BasicIntLink("Links between internal nodes")
+    #==================================================================
+    # fix BasicIntLink to BasicBusLink later
+    bus_links = VectorParam.BasicBusLink("Bus Links between routers and busses")
+    #==================================================================
 
     in_port = VectorResponsePort("CPU input port")
     slave = DeprecatedParam(in_port, '`slave` is now called `in_port`')

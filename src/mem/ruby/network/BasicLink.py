@@ -55,18 +55,31 @@ class BasicIntLink(BasicLink):
     cxx_header = "mem/ruby/network/BasicLink.hh"
     cxx_class = 'gem5::ruby::BasicIntLink'
 
-    src_node = Param.BasicRouter("RLInterface or Router on src end")
-    dst_node = Param.BasicRouter("RLInterface or Router on dst end")
+    src_node = Param.BasicRouter("Router on src end")
+    dst_node = Param.BasicRouter("Router on dst end")
 
     # only used by Garnet.
     src_outport = Param.String("", "Outport direction at src router")
     dst_inport = Param.String("", "Inport direction at dst router")
 
-    # only used by Routerless. It's not unique. It's between 0 to 5
-    # in 4x4 NoC (we have 6 RLInterface ports in a 4x4 NoC)
-    src_port = Param.Int(-1, "Port number at src RLInterface")
-    dst_port = Param.Int(-1, "Port number at dst RLInterface")
+    # only used by simple network
+    bandwidth_factor = 16
+
+#===========================================================================
+class BasicBusLink(BasicLink):
+    type = 'BasicBusLink'
+    cxx_header = "mem/ruby/network/BasicLink.hh"
+    cxx_class = 'gem5::ruby::BasicBusLink'
+
+    # This needs fixing later (after I create the bus module)
+    src_node = Param.BasicRouter("Router on src end")
+    dst_node = Param.BasicRouter("Router on dst end")
+
+    # only used by Garnet.
+    src_outport = Param.String("", "Outport direction at src router or bus")
+    dst_inport = Param.String("", "Inport direction at dst router or bus")
 
     # only used by simple network
     bandwidth_factor = 16
+#===========================================================================
 

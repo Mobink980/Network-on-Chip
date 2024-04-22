@@ -55,13 +55,25 @@ const int INFINITE_LATENCY = 10000; // Yes, this is a big hack
 // the second m_nodes set of SwitchIDs represent the the output queues
 // of the network.
 
+// Topology::Topology(uint32_t num_nodes, uint32_t num_routers,
+//                    uint32_t num_vnets,
+//                    const std::vector<BasicExtLink *> &ext_links,
+//                    const std::vector<BasicIntLink *> &int_links)
+//     : m_nodes(MachineType_base_number(MachineType_NUM)),
+//       m_number_of_switches(num_routers), m_vnets(num_vnets),
+//       m_ext_link_vector(ext_links), m_int_link_vector(int_links)
+
+//=============================================================
 Topology::Topology(uint32_t num_nodes, uint32_t num_routers,
                    uint32_t num_vnets,
                    const std::vector<BasicExtLink *> &ext_links,
-                   const std::vector<BasicIntLink *> &int_links)
+                   const std::vector<BasicIntLink *> &int_links,
+                   const std::vector<BasicBusLink *> &bus_links)
     : m_nodes(MachineType_base_number(MachineType_NUM)),
       m_number_of_switches(num_routers), m_vnets(num_vnets),
-      m_ext_link_vector(ext_links), m_int_link_vector(int_links)
+      m_ext_link_vector(ext_links), m_int_link_vector(int_links),
+      m_bus_link_vector(bus_links)
+//=============================================================
 {
     //std::cout<<"Topology constructor called."<<std::endl;
     // Total nodes/controllers in network
@@ -129,6 +141,36 @@ Topology::Topology(uint32_t num_nodes, uint32_t num_routers,
         // create the internal uni-directional link from src to dst
         addLink(src, dst, int_link, src_outport, dst_inport);
     }
+
+    //=================================================================
+    // Bus Links
+    for (std::vector<BasicBusLink*>::const_iterator i = bus_links.begin();
+         i != bus_links.end(); ++i) { //for each bus_link
+        //get the bus_link
+        BasicBusLink *bus_link = (*i);
+        //the src_node for that bus_link (router_src)
+        BasicRouter *router_src = bus_link->params().src_node;
+        //the dst_node for that bus_link (router_dst)
+        BasicRouter *router_dst = bus_link->params().dst_node;
+
+        //the src_outport for that bus_link (e.g., South)
+        PortDirection src_outport = bus_link->params().src_outport;
+        //the dst_inport for that bus_link (e.g., East)
+        PortDirection dst_inport = bus_link->params().dst_inport;
+
+        // Store the IntLink pointers for later
+        //push the bus_link into m_bus_link_vector 
+        m_bus_link_vector.push_back(bus_link); 
+
+        //the source_router id
+        int src = router_src->params().router_id + 2*m_nodes;
+        //the destination_router id
+        int dst = router_dst->params().router_id + 2*m_nodes;
+
+        // create the internal uni-directional link from src to dst
+        addLink(src, dst, bus_link, src_outport, dst_inport);
+    }
+    //=================================================================
 }
 
 //create links for the network
