@@ -50,7 +50,7 @@ enum flit_type {HEAD_, BODY_, TAIL_, HEAD_TAIL_,
 enum VC_state_type {IDLE_, VC_AB_, ACTIVE_, NUM_VC_STATE_TYPE_};
 //Vnets are used to avoid deadlock by eliminating message dependence
 enum VNET_type {CTRL_VNET_, DATA_VNET_, NULL_VNET_, NUM_VNET_TYPE_};
-//I:Invalid , VA:VC_Allocation, SA:Switch_Allocation, 
+//I:Invalid , VA:VC_Allocation, SA:Switch_Allocation,
 //ST:Switch_Traversal, LT:Link_Traversal
 enum flit_stage {I_, VA_, SA_, ST_, LT_, NUM_FLIT_STAGE_};
 //EXT_IN_: from NI to the network
@@ -94,4 +94,3 @@ struct RouteInfo
 } // namespace gem5
 
 #endif //__MEM_RUBY_NETWORK_GARNET_0_COMMONTYPES_HH__
-

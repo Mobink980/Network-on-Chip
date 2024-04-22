@@ -153,9 +153,9 @@ def create_network(options, ruby):
     if options.network == "garnet":
         NetworkClass = GarnetNetwork
         IntLinkClass = GarnetIntLink
-        #========================================================
+        # ========================================================
         BusLinkClass = GarnetBusLink
-        #========================================================
+        # ========================================================
         ExtLinkClass = GarnetExtLink
         RouterClass = GarnetRouter
         InterfaceClass = GarnetNetworkInterface
@@ -163,9 +163,9 @@ def create_network(options, ruby):
     else:
         NetworkClass = SimpleNetwork
         IntLinkClass = SimpleIntLink
-        #========================================================
+        # ========================================================
         BusLinkClass = None
-        #========================================================
+        # ========================================================
         ExtLinkClass = SimpleExtLink
         RouterClass = Switch
         InterfaceClass = None
@@ -178,16 +178,23 @@ def create_network(options, ruby):
         routers=[],
         ext_links=[],
         int_links=[],
-        #===================================================
+        # ===================================================
         bus_links=[],
-        #===================================================
+        # ===================================================
         netifs=[],
     )
 
     # return (network, IntLinkClass, ExtLinkClass, RouterClass, InterfaceClass)
-    #===============================================================
-    return (network, IntLinkClass, BusLinkClass, ExtLinkClass, RouterClass, InterfaceClass)
-    #===============================================================
+    # ===============================================================
+    return (
+        network,
+        IntLinkClass,
+        BusLinkClass,
+        ExtLinkClass,
+        RouterClass,
+        InterfaceClass,
+    )
+    # ===============================================================
 
 
 def init_network(options, network, InterfaceClass):
@@ -223,7 +230,7 @@ def init_network(options, network, InterfaceClass):
                 width=intLink.dst_node.width,
             )
 
-        #====================================================================
+        # ====================================================================
         for busLink in network.bus_links:
             busLink.src_net_bridge = NetworkBridge(
                 link=busLink.network_link,
@@ -245,7 +252,7 @@ def init_network(options, network, InterfaceClass):
                 vtype="OBJECT_LINK",
                 width=busLink.dst_node.width,
             )
-        #====================================================================
+        # ====================================================================
 
         for extLink in network.ext_links:
             ext_net_bridges = []

@@ -141,7 +141,7 @@ class Network : public ClockedObject
      * the network. Each network needs to implement these for functional
      * accesses to work correctly.
      */
-    //for functionally reading a packet in the network  
+    //for functionally reading a packet in the network
     virtual bool functionalRead(Packet *pkt)
     { fatal("Functional read not implemented.\n"); }
     //for functionally reading a packet in the network with mask
@@ -169,7 +169,7 @@ class Network : public ClockedObject
     Port &
     getPort(const std::string &, PortID idx=InvalidPortID) override
     {
-        //return an instance of the RubyDummyPort 
+        //return an instance of the RubyDummyPort
         return RubyDummyPort::instance();
     }
 
@@ -200,7 +200,7 @@ class Network : public ClockedObject
     std::vector<std::vector<MessageBuffer*> > m_fromNetQueues;
     //to check whether a virtual network (vnet) is ordered or not
     //In an ordered vnet, among several flits that want the same outport,
-    //the flit with the lowest enqueue_time should be sent first. 
+    //the flit with the lowest enqueue_time should be sent first.
     std::vector<bool> m_ordered;
 
   private:

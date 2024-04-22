@@ -26,13 +26,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.BasicLink import (
+    BasicBusLink,
     BasicExtLink,
     BasicIntLink,
-    BasicBusLink
 )
 from m5.objects.ClockedObject import ClockedObject
 from m5.params import *
 from m5.proxy import *
+
 
 # CLOCK DOMAIN CROSSING
 class CDCType(Enum):
@@ -57,11 +58,13 @@ class NetworkLink(ClockedObject):
     )
     width = Param.UInt32(Parent.width, "bit-width of the link")
 
+
 # CreditLink is inherited from the NetworkLink
 class CreditLink(NetworkLink):
     type = "CreditLink"
     cxx_header = "mem/ruby/network/garnet/CreditLink.hh"
     cxx_class = "gem5::ruby::garnet::CreditLink"
+
 
 # NetworkBridge is inherited from the CreditLink
 class NetworkBridge(CreditLink):
@@ -181,12 +184,13 @@ class GarnetExtLink(BasicExtLink):
         Parent.ni_flit_size, "bit width supported by the router"
     )
 
-#==========================================================================
-#=================================================================
+
+# ==========================================================================
+# =================================================================
 # This is supposed to be a bus that connects several routers.
 # Bus traversal only takes one cycle, just like a GarnetIntLink.
 # But only one router can send per cycle on the bus.
-#=================================================================
+# =================================================================
 # GarnetBusLink is inherited from BasicBusLink
 class GarnetBusLink(BasicBusLink):
     type = "GarnetBusLink"
@@ -226,5 +230,6 @@ class GarnetBusLink(BasicBusLink):
     width = Param.UInt32(
         Parent.ni_flit_size, "bit width supported by the router"
     )
-#==========================================================================
 
+
+# ==========================================================================

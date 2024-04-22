@@ -64,7 +64,7 @@ class GarnetIntLink : public BasicIntLink
     void print(std::ostream& out) const;
 
     //Make the GarnetNetwork class a friend of GarnetIntLink.
-    //This gives GarnetNetwork access to all private members 
+    //This gives GarnetNetwork access to all private members
     //of GarnetIntLink class.
     friend class GarnetNetwork;
 
@@ -115,7 +115,7 @@ class GarnetExtLink : public BasicExtLink
     void print(std::ostream& out) const;
 
     //Make the GarnetNetwork class a friend of GarnetExtLink.
-    //This gives GarnetNetwork access to all private members 
+    //This gives GarnetNetwork access to all private members
     //of GarnetExtLink class.
     friend class GarnetNetwork;
 
@@ -135,7 +135,7 @@ class GarnetExtLink : public BasicExtLink
 
     //external links are bi-directional.
     //we have two network_links and two
-    //credit_links. 
+    //credit_links.
     NetworkLink* m_network_links[2];
     CreditLink* m_credit_links[2];
 
@@ -171,7 +171,7 @@ class GarnetBusLink : public BasicBusLink
     void print(std::ostream& out) const;
 
     //Make the GarnetNetwork class a friend of GarnetIntLink.
-    //This gives GarnetNetwork access to all private members 
+    //This gives GarnetNetwork access to all private members
     //of GarnetIntLink class.
     friend class GarnetNetwork;
 
@@ -216,4 +216,3 @@ operator<<(std::ostream& out, const GarnetBusLink& obj)
 } // namespace gem5
 
 #endif //__MEM_RUBY_NETWORK_GARNET_0_GARNETLINK_HH__
-

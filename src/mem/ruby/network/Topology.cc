@@ -100,8 +100,8 @@ Topology::Topology(uint32_t num_nodes, uint32_t num_routers,
         int machine_base_idx = MachineType_base_number(abs_cntrl->getType());
         //get the port_id of the ext_node that sends link into the network
         int ext_idx1 = machine_base_idx + abs_cntrl->getVersion();
-        //get the port_id of the ext_node that represent the output 
-        //queue of the network (queue that stores network flits to 
+        //get the port_id of the ext_node that represent the output
+        //queue of the network (queue that stores network flits to
         //be sent to the ext_node)
         int ext_idx2 = ext_idx1 + m_nodes;
         //get the port_id of the int_node for the ext_link
@@ -130,8 +130,8 @@ Topology::Topology(uint32_t num_nodes, uint32_t num_routers,
         PortDirection dst_inport = int_link->params().dst_inport;
 
         // Store the IntLink pointers for later
-        //push the int_link into m_int_link_vector 
-        m_int_link_vector.push_back(int_link); 
+        //push the int_link into m_int_link_vector
+        m_int_link_vector.push_back(int_link);
 
         //the source_router id
         int src = router_src->params().router_id + 2*m_nodes;
@@ -159,8 +159,8 @@ Topology::Topology(uint32_t num_nodes, uint32_t num_routers,
         PortDirection dst_inport = bus_link->params().dst_inport;
 
         // Store the IntLink pointers for later
-        //push the bus_link into m_bus_link_vector 
-        m_bus_link_vector.push_back(bus_link); 
+        //push the bus_link into m_bus_link_vector
+        m_bus_link_vector.push_back(bus_link);
 
         //the source_router id
         int src = router_src->params().router_id + 2*m_nodes;
@@ -183,10 +183,10 @@ Topology::createLinks(Network *net)
          i != m_link_map.end(); ++i) {
         //get the src_dst switch (router) pair
         std::pair<SwitchID, SwitchID> src_dest = (*i).first;
-        //if the id of the first router in the pair is higher, 
+        //if the id of the first router in the pair is higher,
         //update max_switch_id
         max_switch_id = std::max(max_switch_id, src_dest.first);
-        //if the id of the second router in the pair is higher, 
+        //if the id of the second router in the pair is higher,
         //update max_switch_id
         max_switch_id = std::max(max_switch_id, src_dest.second);
     }
@@ -206,7 +206,7 @@ Topology::createLinks(Network *net)
             std::vector<std::vector<int>>(num_switches,
             std::vector<int>(m_vnets, 0)));
 
-    // Set identity weights to zero 
+    // Set identity weights to zero
     //(weight from a component to itself is 0)
     for (int i = 0; i < topology_weights[0].size(); i++) {
         for (int v = 0; v < m_vnets; v++) {
@@ -298,9 +298,9 @@ Topology::addLink(SwitchID src, SwitchID dest, BasicLink* link,
 
     //a pair to save the src and dst SwitchIDs
     std::pair<int, int> src_dest_pair;
-    src_dest_pair.first = src; 
+    src_dest_pair.first = src;
     src_dest_pair.second = dest;
-    //to hold the link, and the direction of src_outport 
+    //to hold the link, and the direction of src_outport
     //and dst_inport
     LinkEntry link_entry;
 
@@ -310,9 +310,9 @@ Topology::addLink(SwitchID src, SwitchID dest, BasicLink* link,
 
     //find our src_dest_pair in m_link_map
     auto lit = m_link_map.find(src_dest_pair);
-    //if you could find it (there's already a link between 
+    //if you could find it (there's already a link between
     //this src and dest)
-    if (lit != m_link_map.end()) { 
+    if (lit != m_link_map.end()) {
         // HeteroGarnet allows multiple links between
         // same source-destination pair supporting
         // different vnets. If there is a link already
@@ -321,9 +321,9 @@ Topology::addLink(SwitchID src, SwitchID dest, BasicLink* link,
         lit->second.push_back(link_entry);
     } else { //no previous links for this src_dest_pair
         //a vector of type LinkEntry
-        std::vector<LinkEntry> links; 
+        std::vector<LinkEntry> links;
         //add this link_entry to the created vector
-        links.push_back(link_entry); 
+        links.push_back(link_entry);
         //update m_link_map for the src_dest_pair
         m_link_map[src_dest_pair] = links;
     }
@@ -465,7 +465,7 @@ Topology::extend_shortest_path(Matrix &current_dist, Matrix &latencies,
                     }
                     if (current_dist[v][i][j] != minimum) {
                         change = true;
-                        //update current_dist between nodes i and j 
+                        //update current_dist between nodes i and j
                         //for vnet v in the current_dist Matrix
                         current_dist[v][i][j] = minimum;
                         assert(intermediate_switch >= 0);
@@ -493,7 +493,7 @@ Topology::shortest_path(const Matrix &weights, Matrix &latencies,
     //find the shortest path for all pairs of source and destinations
     extend_shortest_path(dist, latencies, inter_switches);
     //return the shortest_path (updated current_dist) matrix
-    return dist; 
+    return dist;
 }
 
 //check if a link is in the shortest path to the given node

@@ -67,7 +67,7 @@ class Network;
  * represent the source ID, destination ID, and vnet number.
  */
 //3D Matrix of type int
-typedef std::vector<std::vector<std::vector<int>>> Matrix; 
+typedef std::vector<std::vector<std::vector<int>>> Matrix;
 //port number in an RLInterface
 typedef int PortNumber;
 //PortDirection is a string
@@ -130,7 +130,7 @@ class Topology
     Matrix shortest_path(const Matrix &weights,
             Matrix &latencies, Matrix &inter_switches);
 
-    //check if a link is in the shortest path to the given node   
+    //check if a link is in the shortest path to the given node
     bool link_is_shortest_path_to_node(SwitchID src, SwitchID next,
             SwitchID final, const Matrix &weights, const Matrix &dist,
             int vnet);
@@ -142,7 +142,7 @@ class Topology
 
     //number of nodes in the network topology
     const uint32_t m_nodes;
-    //number of switches in the network topology 
+    //number of switches in the network topology
     const uint32_t m_number_of_switches;
     //number of vnets in the network (depends on the cache coherence protocol)
     int m_vnets;

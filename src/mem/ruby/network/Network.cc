@@ -59,7 +59,7 @@ uint32_t Network::m_control_msg_size;
 uint32_t Network::m_data_msg_size;
 
 //Network constructor (for creating a Network instance)
-//This is the parent. GarnetNetwork uses this to build 
+//This is the parent. GarnetNetwork uses this to build
 //the main network.
 Network::Network(const Params &p)
     : ClockedObject(p)
@@ -70,7 +70,7 @@ Network::Network(const Params &p)
     //set the size of the control message
     m_control_msg_size = p.control_msg_size;
 
-    //Size of the data message sould be less than or equal to the 
+    //Size of the data message sould be less than or equal to the
     //size of the CacheLine.
     fatal_if(p.data_msg_size > p.ruby_system->getBlockSizeBytes(),
              "%s: data message size > cache line size", name());
@@ -89,10 +89,10 @@ Network::Network(const Params &p)
     for (auto &it : params().ext_links) {
         //get the AbstractController for the ext_link
         AbstractController *cntrl = it->params().ext_node;
-        //add the version of cntrl (the controller connected to the 
+        //add the version of cntrl (the controller connected to the
         //external link) to localNodeVersions unordered_map
         localNodeVersions[cntrl->getType()].push_back(cntrl->getVersion());
-        //register the MachineID for this controller (to compute a global 
+        //register the MachineID for this controller (to compute a global
         //to local id)
         params().ruby_system->registerMachineID(cntrl->getMachineID(), this);
     }
@@ -105,7 +105,7 @@ Network::Network(const Params &p)
             for (auto &ver : localNodeVersions.at(mach)) {
                 // Get the global ID, Ruby will pass around
                 NodeID global_node_id = MachineType_base_number(mach) + ver;
-                //globalToLocalMap has the local_id and global_id for each 
+                //globalToLocalMap has the local_id and global_id for each
                 //node in the network.
                 globalToLocalMap.emplace(global_node_id, local_node_id);
                 ++local_node_id; //find the global_id for the next local_id
@@ -120,7 +120,7 @@ Network::Network(const Params &p)
     //the network should have nodes and vnets
     assert(m_nodes != 0);
     assert(m_virtual_networks != 0);
-    
+
     //calling the router-based topology constructor
     // m_topology_ptr = new Topology(m_nodes, p.routers.size(),
     //                               m_virtual_networks,
@@ -130,7 +130,7 @@ Network::Network(const Params &p)
                                   m_virtual_networks,
                                   p.ext_links, p.int_links, p.bus_links);
     //================================================================
-    
+
 
     // Allocate to and from queues
     // Queues that are getting messages from protocol
@@ -141,7 +141,7 @@ Network::Network(const Params &p)
 
     //set the size of m_ordered to the number of vnets
     m_ordered.resize(m_virtual_networks);
-    //set the size of m_vnet_type_names (e.g., Cntrl, Data, etc.) 
+    //set the size of m_vnet_type_names (e.g., Cntrl, Data, etc.)
     //to the number of vnets
     m_vnet_type_names.resize(m_virtual_networks);
 
@@ -165,14 +165,14 @@ Network::Network(const Params &p)
         if (!ranges.empty()) {
             //get the machine_id for the abs_cntrl
             MachineID mid = abs_cntrl->getMachineID();
-            //set the machine_id and address ranges for the 
+            //set the machine_id and address ranges for the
             //controller or machine
             AddrMapNode addr_map_node = {
                 .id = mid.getNum(),
                 .ranges = ranges
             };
-            //emplace the mid_type and addr_map_node (to know the 
-            //global_id and local_id for each node, and that each address 
+            //emplace the mid_type and addr_map_node (to know the
+            //global_id and local_id for each node, and that each address
             //refers to which node)
             addrMap.emplace(mid.getType(), addr_map_node);
         }
@@ -181,7 +181,7 @@ Network::Network(const Params &p)
     // Register a callback function for combining the statistics
     statistics::registerDumpCallback([this]() { collateStats(); });
 
-    //initialize the message buffers for each ext_link external node 
+    //initialize the message buffers for each ext_link external node
     for (auto &it : dynamic_cast<Network *>(this)->params().ext_links) {
         it->params().ext_node->initNetQueues();
     }
@@ -247,7 +247,7 @@ Network::checkNetworkAllocation(NodeID local_id, bool ordered,
     fatal_if(local_id >= m_nodes, "Node ID is out of range");
     fatal_if(network_num >= m_virtual_networks, "Network id is out of range");
 
-    //if the vnet is ordered, update m_ordered for that 
+    //if the vnet is ordered, update m_ordered for that
     //vnet number (network_num)
     if (ordered) {
         m_ordered[network_num] = true;
@@ -322,7 +322,7 @@ Network::addressToNodeID(Addr addr, MachineType mtype)
 NodeID
 Network::getLocalNodeID(NodeID global_id) const
 {
-    //make sure the given global_id can be found in globalToLocalMap 
+    //make sure the given global_id can be found in globalToLocalMap
     assert(globalToLocalMap.count(global_id));
     //return the local_id of the node, for the given global_id
     return globalToLocalMap.at(global_id);

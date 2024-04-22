@@ -27,10 +27,11 @@
 from m5.params import *
 from m5.SimObject import SimObject
 
+
 class BasicLink(SimObject):
-    type = 'BasicLink'
+    type = "BasicLink"
     cxx_header = "mem/ruby/network/BasicLink.hh"
-    cxx_class = 'gem5::ruby::BasicLink'
+    cxx_class = "gem5::ruby::BasicLink"
 
     link_id = Param.Int("ID in relation to other links")
     latency = Param.Cycles(1, "latency")
@@ -41,19 +42,21 @@ class BasicLink(SimObject):
     weight = Param.Int(1, "used to restrict routing in shortest path analysis")
     supported_vnets = VectorParam.Int([], "Vnets supported Default:All([])")
 
+
 class BasicExtLink(BasicLink):
-    type = 'BasicExtLink'
+    type = "BasicExtLink"
     cxx_header = "mem/ruby/network/BasicLink.hh"
-    cxx_class = 'gem5::ruby::BasicExtLink'
+    cxx_class = "gem5::ruby::BasicExtLink"
 
     ext_node = Param.RubyController("External node")
     int_node = Param.BasicRouter("ID of internal node")
-    bandwidth_factor = 16 # only used by simple network
+    bandwidth_factor = 16  # only used by simple network
+
 
 class BasicIntLink(BasicLink):
-    type = 'BasicIntLink'
+    type = "BasicIntLink"
     cxx_header = "mem/ruby/network/BasicLink.hh"
-    cxx_class = 'gem5::ruby::BasicIntLink'
+    cxx_class = "gem5::ruby::BasicIntLink"
 
     src_node = Param.BasicRouter("Router on src end")
     dst_node = Param.BasicRouter("Router on dst end")
@@ -65,11 +68,12 @@ class BasicIntLink(BasicLink):
     # only used by simple network
     bandwidth_factor = 16
 
-#===========================================================================
+
+# ===========================================================================
 class BasicBusLink(BasicLink):
-    type = 'BasicBusLink'
+    type = "BasicBusLink"
     cxx_header = "mem/ruby/network/BasicLink.hh"
-    cxx_class = 'gem5::ruby::BasicBusLink'
+    cxx_class = "gem5::ruby::BasicBusLink"
 
     # This needs fixing later (after I create the bus module)
     src_node = Param.BasicRouter("Router on src end")
@@ -81,5 +85,6 @@ class BasicBusLink(BasicLink):
 
     # only used by simple network
     bandwidth_factor = 16
-#===========================================================================
 
+
+# ===========================================================================

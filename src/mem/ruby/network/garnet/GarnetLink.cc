@@ -86,7 +86,7 @@ GarnetIntLink::GarnetIntLink(const Params &p)
 void
 GarnetIntLink::init()
 {
-    if (srcBridgeEn) { 
+    if (srcBridgeEn) {
         //make sure both srcNetBridge and srcCredBridge is set
         assert(srcNetBridge && srcCredBridge);
         //call the initBridge function for both srcNetBridge & srcCredBridge
@@ -238,7 +238,7 @@ GarnetBusLink::GarnetBusLink(const Params &p)
 void
 GarnetBusLink::init()
 {
-    if (srcBridgeEn) { 
+    if (srcBridgeEn) {
         //make sure both srcNetBridge and srcCredBridge is set
         assert(srcNetBridge && srcCredBridge);
         //call the initBridge function for both srcNetBridge & srcCredBridge
@@ -266,4 +266,3 @@ GarnetBusLink::print(std::ostream& out) const
 } // namespace garnet
 } // namespace ruby
 } // namespace gem5
-
