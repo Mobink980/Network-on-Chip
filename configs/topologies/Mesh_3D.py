@@ -44,7 +44,12 @@ class Mesh_3D(SimpleTopology):
     # Makes a generic mesh
     # assuming an equal number of cache and directory cntrls
 
-    def makeTopology(self, options, network, IntLink, ExtLink, Router):
+    # def makeTopology(self, options, network, IntLink, ExtLink, Router):
+    #========================================================================
+    def makeTopology(
+        self, options, network, IntLink, BusLink, ExtLink, Router
+    ):
+    #========================================================================
 
         nodes = self.nodes
         num_routers = options.num_cpus # num_routers = num_cpus

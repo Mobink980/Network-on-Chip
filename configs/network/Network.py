@@ -153,21 +153,27 @@ def create_network(options, ruby):
     if options.network == "garnet":
         NetworkClass = GarnetNetwork
         IntLinkClass = GarnetIntLink
-        # ========================================================
+        #========================================================
         BusLinkClass = GarnetBusLink
-        # ========================================================
+        #========================================================
         ExtLinkClass = GarnetExtLink
         RouterClass = GarnetRouter
+        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        BusClass = GarnetBus
+        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         InterfaceClass = GarnetNetworkInterface
 
     else:
         NetworkClass = SimpleNetwork
         IntLinkClass = SimpleIntLink
-        # ========================================================
+        #========================================================
         BusLinkClass = None
-        # ========================================================
+        #========================================================
         ExtLinkClass = SimpleExtLink
         RouterClass = Switch
+        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        BusClass = None
+        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         InterfaceClass = None
 
     # Instantiate the network object
@@ -176,11 +182,14 @@ def create_network(options, ruby):
         ruby_system=ruby,
         topology=options.topology,
         routers=[],
+        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        busses = [],
+        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         ext_links=[],
         int_links=[],
-        # ===================================================
+        #===================================================
         bus_links=[],
-        # ===================================================
+        #===================================================
         netifs=[],
     )
 
@@ -192,6 +201,9 @@ def create_network(options, ruby):
         BusLinkClass,
         ExtLinkClass,
         RouterClass,
+        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        BusClass,
+        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         InterfaceClass,
     )
     # ===============================================================

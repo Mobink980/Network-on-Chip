@@ -31,9 +31,13 @@ Import('*')
 if not env['CONF']['RUBY']:
     Return()
 
+#=================================================================
 SimObject('BasicLink.py', sim_objects=[
     'BasicLink', 'BasicExtLink', 'BasicIntLink', 'BasicBusLink'])
-SimObject('BasicRouter.py', sim_objects=['BasicRouter'])
+#=================================================================
+#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+SimObject('BasicRouter.py', sim_objects=['BasicRouter', 'BasicBus', 'BasicCrossbar'])
+#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 SimObject('MessageBuffer.py', sim_objects=['MessageBuffer'],
         enums=['MessageRandomization'])
 SimObject('Network.py', sim_objects=['RubyNetwork'])

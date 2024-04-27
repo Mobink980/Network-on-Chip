@@ -34,6 +34,12 @@
 #include <vector>
 
 #include "params/BasicRouter.hh"
+//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+#include "params/BasicBus.hh"
+//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+//*****************************************
+#include "params/BasicCrossbar.hh"
+//*****************************************
 #include "sim/clocked_object.hh"
 
 namespace gem5
@@ -70,6 +76,69 @@ operator<<(std::ostream& out, const BasicRouter& obj)
     out << std::flush;
     return out;
 }
+
+//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+//BasicBus inherites from ClockedObject
+class BasicBus : public ClockedObject
+{
+  public:
+    PARAMS(BasicBus);
+    BasicBus(const Params &p); //constructor
+
+    //to initialize BasicBus class variables 
+    void init();
+
+    //for printing a BasicBus
+    void print(std::ostream& out) const;
+  protected:
+    //
+    // ID in relation to other busses in the system
+    //
+    uint32_t m_id; //bus_id for this bus
+    uint32_t m_latency; //latency of this bus
+};
+
+//for printing a BasicBus
+inline std::ostream&
+operator<<(std::ostream& out, const BasicBus& obj)
+{
+    obj.print(out);
+    out << std::flush;
+    return out;
+}
+//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+
+//***************************************************************
+//BasicCrossbar inherites from ClockedObject
+class BasicCrossbar : public ClockedObject
+{
+  public:
+    PARAMS(BasicCrossbar);
+    BasicCrossbar(const Params &p); //constructor
+
+    //to initialize BasicCrossbar class variables 
+    void init();
+
+    //for printing a BasicCrossbar
+    void print(std::ostream& out) const;
+  protected:
+    //
+    // ID in relation to other crossbars in the system
+    //
+    uint32_t m_id; //crossbar_id for this crossbar
+    uint32_t m_latency; //latency of this crossbar
+};
+
+//for printing a BasicCrossbar
+inline std::ostream&
+operator<<(std::ostream& out, const BasicCrossbar& obj)
+{
+    obj.print(out);
+    out << std::flush;
+    return out;
+}
+//***************************************************************
 
 } // namespace ruby
 } // namespace gem5

@@ -47,11 +47,11 @@ class Mesh_Bus(SimpleTopology):
     # assuming an equal number of cache and directory cntrls
 
     # def makeTopology(self, options, network, IntLink, ExtLink, Router):
-    # ========================================================================
+    #========================================================================
     def makeTopology(
-        self, options, network, IntLink, BusLink, ExtLink, Router
+        self, options, network, IntLink, BusLink, ExtLink, Router, Bus
     ):
-        # ========================================================================
+    #========================================================================
 
         nodes = self.nodes  # controllers
         # getting num_cpus from the commandline (some options have default values)

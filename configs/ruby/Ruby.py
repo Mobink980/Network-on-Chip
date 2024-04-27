@@ -242,6 +242,9 @@ def create_system(
         # ============================================
         ExtLinkClass,
         RouterClass,
+        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        BusClass,
+        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         InterfaceClass,
     ) = Network.create_network(options, ruby)
     ruby.network = network
@@ -267,7 +270,7 @@ def create_system(
     # )
     # =====================================================
     topology.makeTopology(
-        options, network, IntLinkClass, BusLinkClass, ExtLinkClass, RouterClass
+        options, network, IntLinkClass, BusLinkClass, ExtLinkClass, RouterClass, BusClass
     )
     # =====================================================
 

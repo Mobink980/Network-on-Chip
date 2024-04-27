@@ -65,12 +65,15 @@ const int INFINITE_LATENCY = 10000; // Yes, this is a big hack
 
 //=============================================================
 Topology::Topology(uint32_t num_nodes, uint32_t num_routers,
+                   uint32_t num_busses,
                    uint32_t num_vnets,
                    const std::vector<BasicExtLink *> &ext_links,
                    const std::vector<BasicIntLink *> &int_links,
                    const std::vector<BasicBusLink *> &bus_links)
     : m_nodes(MachineType_base_number(MachineType_NUM)),
-      m_number_of_switches(num_routers), m_vnets(num_vnets),
+      m_number_of_switches(num_routers),
+      m_number_of_busses(num_busses), 
+      m_vnets(num_vnets),
       m_ext_link_vector(ext_links), m_int_link_vector(int_links),
       m_bus_link_vector(bus_links)
 //=============================================================

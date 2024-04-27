@@ -29,7 +29,12 @@
 #
 
 from m5.citations import add_citation
-from m5.objects.BasicRouter import BasicRouter
+#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+from m5.objects.BasicRouter import (
+    BasicRouter,
+    BasicBus
+)
+#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.Network import RubyNetwork
 from m5.params import *
@@ -93,6 +98,23 @@ class GarnetRouter(BasicRouter):
     width = Param.UInt32(
         Parent.ni_flit_size, "bit width supported by the router"
     )
+
+#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+# GarnetBus inherites from BasicBus
+class GarnetBus(BasicBus):
+    type = "GarnetBus"
+    cxx_class = "gem5::ruby::garnet::Bus"
+    cxx_header = "mem/ruby/network/garnet/Bus.hh"
+    vcs_per_vnet = Param.UInt32(
+        Parent.vcs_per_vnet, "virtual channels per virtual network"
+    )
+    virt_nets = Param.UInt32(
+        Parent.number_of_virtual_networks, "number of virtual networks"
+    )
+    width = Param.UInt32(
+        Parent.ni_flit_size, "bit width supported by the bus"
+    )
+#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&   
 
 
 add_citation(

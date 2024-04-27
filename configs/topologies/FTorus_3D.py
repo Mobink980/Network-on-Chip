@@ -44,7 +44,12 @@ class FTorus_3D(SimpleTopology):
     # Makes a generic folded Torus
     # assuming an equal number of cache and directory cntrls
 
-    def makeTopology(self, options, network, IntLink, ExtLink, Router):
+    # def makeTopology(self, options, network, IntLink, ExtLink, Router):
+    #========================================================================
+    def makeTopology(
+        self, options, network, IntLink, BusLink, ExtLink, Router
+    ):
+    #========================================================================
 
         nodes = self.nodes # controllers
         # getting num_cpus from the commandline (some options have default values)

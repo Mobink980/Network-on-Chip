@@ -96,7 +96,8 @@ class Topology
     //          const std::vector<BasicIntLink *> &int_links);
 
     //====================================================================
-    Topology(uint32_t num_nodes, uint32_t num_routers, uint32_t num_vnets,
+    Topology(uint32_t num_nodes, uint32_t num_routers, uint32_t num_busses,
+             uint32_t num_vnets,
              const std::vector<BasicExtLink *> &ext_links,
              const std::vector<BasicIntLink *> &int_links,
              const std::vector<BasicBusLink *> &bus_links); //fix BasicIntLink later
@@ -104,6 +105,10 @@ class Topology
 
     //returns the number of switches in the topology
     uint32_t numSwitches() const { return m_number_of_switches; }
+    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+    //returns the number of busses in the topology
+    uint32_t numBusses() const { return m_number_of_busses; }
+    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     //create links for the network
     void createLinks(Network *net);
     //print the name of the topology (ex: Mesh)
@@ -144,6 +149,10 @@ class Topology
     const uint32_t m_nodes;
     //number of switches in the network topology
     const uint32_t m_number_of_switches;
+    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+    //number of busses in the network topology
+    const uint32_t m_number_of_busses;
+    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     //number of vnets in the network (depends on the cache coherence protocol)
     int m_vnets;
     //vector containing external links of the topology
