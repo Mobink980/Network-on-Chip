@@ -83,6 +83,17 @@ class Mesh_Bus(SimpleTopology):
         ]
         network.routers = routers  # Add the created routers to the network
 
+        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        # Create the busses
+        num_busses = 4
+        busses = [
+            Bus(bus_id=i, latency=router_latency)
+            for i in range(num_busses)
+        ]
+        network.busses = busses  # Add the created busses to the network
+        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+
         # link counter to set unique link ids
         link_count = 0
         # ========================================

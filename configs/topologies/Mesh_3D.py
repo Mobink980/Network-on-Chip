@@ -47,7 +47,7 @@ class Mesh_3D(SimpleTopology):
     # def makeTopology(self, options, network, IntLink, ExtLink, Router):
     #========================================================================
     def makeTopology(
-        self, options, network, IntLink, BusLink, ExtLink, Router
+        self, options, network, IntLink, BusLink, ExtLink, Router, Bus
     ):
     #========================================================================
 
