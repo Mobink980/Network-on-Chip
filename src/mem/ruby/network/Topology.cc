@@ -151,10 +151,10 @@ Topology::Topology(uint32_t num_nodes, uint32_t num_routers,
          i != bus_links.end(); ++i) { //for each bus_link
         //get the bus_link
         BasicBusLink *bus_link = (*i);
-        //the src_node for that bus_link (router_src)
-        BasicRouter *router_src = bus_link->params().src_node;
-        //the dst_node for that bus_link (router_dst)
-        BasicRouter *router_dst = bus_link->params().dst_node;
+        //the bus part of the link
+        BasicBus *bus_node = bus_link->params().src_node;
+        //the router part of the link
+        BasicRouter *router_node = bus_link->params().dst_node;
 
         //the src_outport for that bus_link (e.g., South)
         PortDirection src_outport = bus_link->params().src_outport;
@@ -165,13 +165,16 @@ Topology::Topology(uint32_t num_nodes, uint32_t num_routers,
         //push the bus_link into m_bus_link_vector
         m_bus_link_vector.push_back(bus_link);
 
-        //the source_router id
-        int src = router_src->params().router_id + 2*m_nodes;
-        //the destination_router id
-        int dst = router_dst->params().router_id + 2*m_nodes;
+        //the bus id
+        int bus_node_id = bus_node->params().bus_id + 3*m_nodes;
+        //the router id
+        int router_node_id = router_node->params().router_id + 3*m_nodes;
 
-        // create the internal uni-directional link from src to dst
-        addLink(src, dst, bus_link, src_outport, dst_inport);
+        // create the bus uni-directional links
+        // from Bus to Router
+        addLink(bus_node_id, router_node_id, bus_link, src_outport, dst_inport);
+        // from Router to Bus
+        addLink(router_node_id, bus_node_id, bus_link, src_outport, dst_inport);
     }
     //=================================================================
 }
@@ -296,8 +299,12 @@ Topology::addLink(SwitchID src, SwitchID dest, BasicLink* link,
                   PortDirection dst_inport_dirn)
 {
     //make sure src and dst SwitchIDs are valid
-    assert(src <= m_number_of_switches+m_nodes+m_nodes);
-    assert(dest <= m_number_of_switches+m_nodes+m_nodes);
+    // assert(src <= m_number_of_switches+m_nodes+m_nodes);
+    // assert(dest <= m_number_of_switches+m_nodes+m_nodes);
+    //=========================================================
+    assert(src <= m_number_of_switches+m_nodes+m_nodes+m_nodes);
+    assert(dest <= m_number_of_switches+m_nodes+m_nodes+m_nodes);
+    //=========================================================
 
     //a pair to save the src and dst SwitchIDs
     std::pair<int, int> src_dest_pair;
@@ -365,7 +372,7 @@ Topology::makeLink(Network *net, SwitchID src, SwitchID dest,
                                 linkRoute);
             }
         }
-    } else if (dest < 2*m_nodes) {
+    } else if (dest < 2*m_nodes) { 
         assert(dest >= m_nodes);
         NodeID node = dest - m_nodes;
         src_dest.first = src;
@@ -388,6 +395,44 @@ Topology::makeLink(Network *net, SwitchID src, SwitchID dest,
                                 linkRoute);
             }
         }
+    } else if ((src >= 3*m_nodes) && (dest >= 3*m_nodes)) { //bus links
+        //==============================================================
+        src_dest.first = src;
+        src_dest.second = dest;
+        std::vector<LinkEntry> links = m_link_map[src_dest];
+        for (int l = 0; l < links.size(); l++) {
+            link_entry = links[l];
+            std::vector<NetDest> linkRoute;
+            linkRoute.resize(m_vnets);
+            BasicLink *link = link_entry.link;
+            if (link->mVnets.size() == 0) {
+                net->makeBusToRouterLink(src - (3 * m_nodes),
+                              dest - (3 * m_nodes), link, routing_table_entry,
+                              link_entry.src_outport_dirn,
+                              link_entry.dst_inport_dirn);
+
+                net->makeRouterToBusLink(dest - (3 * m_nodes),
+                              src - (3 * m_nodes), link, routing_table_entry,
+                              link_entry.src_outport_dirn,
+                              link_entry.dst_inport_dirn);
+            } else {
+                for (int v = 0; v< link->mVnets.size(); v++) {
+                    int vnet = link->mVnets[v];
+                    linkRoute[vnet] = routing_table_entry[vnet];
+                }
+                net->makeBusToRouterLink(src - (3 * m_nodes),
+                              dest - (3 * m_nodes), link, linkRoute,
+                              link_entry.src_outport_dirn,
+                              link_entry.dst_inport_dirn);
+
+                net->makeRouterToBusLink(dest - (3 * m_nodes),
+                              src - (3 * m_nodes), link, linkRoute,
+                              link_entry.src_outport_dirn,
+                              link_entry.dst_inport_dirn);
+            }
+        }
+        //==============================================================
+    
     } else {
         assert((src >= 2 * m_nodes) && (dest >= 2 * m_nodes));
         src_dest.first = src;

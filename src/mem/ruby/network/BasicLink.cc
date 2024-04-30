@@ -75,7 +75,7 @@ BasicIntLink::BasicIntLink(const Params &p)
 BasicBusLink::BasicBusLink(const Params &p)
     : BasicLink(p)
 {
-    //std::cout<<"BasicIntLink constructor called."<<std::endl;
+    
 }
 //======================================================================
 

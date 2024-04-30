@@ -125,10 +125,15 @@ class Network : public ClockedObject
 
     //==========================================================================
     //make a bus link between a router and a bus
-    virtual void makeBusLink(SwitchID src, SwitchID dest, BasicLink* link,
+    virtual void makeBusToRouterLink(SwitchID src, SwitchID dest, BasicLink* link,
                                   std::vector<NetDest>& routing_table_entry,
                                   PortDirection src_outport,
-                                  PortDirection dst_inport) = 0;
+                                  PortDirection dest_inport) = 0;
+
+    virtual void makeRouterToBusLink(SwitchID src, SwitchID dest, BasicLink* link,
+                                  std::vector<NetDest>& routing_table_entry,
+                                  PortDirection src_outport,
+                                  PortDirection dest_inport) = 0;
     //==========================================================================
 
     //for collating Network stats

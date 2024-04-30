@@ -134,7 +134,12 @@ class GarnetNetwork : public Network
                           PortDirection src_outport_dirn,
                           PortDirection dest_inport_dirn);
     //=================================================================
-    void makeBusLink(SwitchID src, SwitchID dest, BasicLink* link,
+    void makeBusToRouterLink(SwitchID src, SwitchID dest, BasicLink* link,
+                          std::vector<NetDest>& routing_table_entry,
+                          PortDirection src_outport_dirn,
+                          PortDirection dest_inport_dirn);
+
+    void makeRouterToBusLink(SwitchID src, SwitchID dest, BasicLink* link,
                           std::vector<NetDest>& routing_table_entry,
                           PortDirection src_outport_dirn,
                           PortDirection dest_inport_dirn);

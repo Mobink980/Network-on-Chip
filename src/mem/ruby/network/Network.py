@@ -60,7 +60,6 @@ class RubyNetwork(ClockedObject):
     ext_links = VectorParam.BasicExtLink("Links to external nodes")
     int_links = VectorParam.BasicIntLink("Links between internal nodes")
     # ==================================================================
-    # fix BasicIntLink to BasicBusLink later
     bus_links = VectorParam.BasicBusLink(
         "Bus Links between routers and busses"
     )

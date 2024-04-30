@@ -65,6 +65,10 @@ class Mesh_Bus(SimpleTopology):
         link_latency = options.link_latency  # used by simple and garnet
         router_latency = options.router_latency  # only used by garnet
 
+        #==============================================================
+        bus_latency = 1
+        #==============================================================
+
         # There must be an evenly divisible number of cntrls to routers
         # Also, obviously the number or rows must be <= the number of routers
         # The following divides the number of controllers by number of routers
@@ -85,9 +89,9 @@ class Mesh_Bus(SimpleTopology):
 
         #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         # Create the busses
-        num_busses = 4
+        num_busses = 1
         busses = [
-            Bus(bus_id=i, latency=router_latency)
+            Bus(bus_id=i, latency=bus_latency)
             for i in range(num_busses)
         ]
         network.busses = busses  # Add the created busses to the network
@@ -148,155 +152,140 @@ class Mesh_Bus(SimpleTopology):
 
         # Create the 2D mesh links.
         int_links = []
-        # ====================================
+        #====================================
         bus_links = []
-        # ====================================
+        #====================================
 
-        # East output to West input links (weight = 1)
-        # It means link from east output port of the left router
-        # to the west input port of the right router.
-        for row in range(num_rows):
-            for col in range(num_columns):
-                if col + 1 < num_columns:
-                    # id of the left router
-                    east_out = col + (row * num_columns)
-                    # id of the right router
-                    west_in = (col + 1) + (row * num_columns)
-                    int_links.append(
-                        IntLink(
-                            link_id=link_count,
-                            src_node=routers[east_out],
-                            dst_node=routers[west_in],
-                            src_outport="East",
-                            dst_inport="West",
-                            latency=link_latency,
-                            weight=1,
-                        )
-                    )
-                    link_count += 1
-
-        # =================================================================
-        bus_links.append(
-            BusLink(
-                link_id=bus_count,
+        int_links.append(
+            IntLink(
+                link_id=link_count,
                 src_node=routers[0],
-                dst_node=routers[5],
+                dst_node=routers[1],
                 src_outport="East",
                 dst_inport="West",
                 latency=link_latency,
                 weight=1,
             )
         )
-        bus_count += 1
+        link_count += 1
 
-        bus_links.append(
-            BusLink(
-                link_id=bus_count,
+        int_links.append(
+            IntLink(
+                link_id=link_count,
+                src_node=routers[1],
+                dst_node=routers[0],
+                src_outport="East",
+                dst_inport="West",
+                latency=link_latency,
+                weight=1,
+            )
+        )
+        link_count += 1
+
+        int_links.append(
+            IntLink(
+                link_id=link_count,
+                src_node=routers[0],
+                dst_node=routers[2],
+                src_outport="East",
+                dst_inport="West",
+                latency=link_latency,
+                weight=1,
+            )
+        )
+        link_count += 1
+
+        int_links.append(
+            IntLink(
+                link_id=link_count,
                 src_node=routers[2],
-                dst_node=routers[7],
+                dst_node=routers[0],
                 src_outport="East",
                 dst_inport="West",
                 latency=link_latency,
                 weight=1,
             )
         )
-        bus_count += 1
+        link_count += 1
 
-        bus_links.append(
-            BusLink(
-                link_id=bus_count,
-                src_node=routers[4],
-                dst_node=routers[9],
+        int_links.append(
+            IntLink(
+                link_id=link_count,
+                src_node=routers[1],
+                dst_node=routers[3],
                 src_outport="East",
                 dst_inport="West",
                 latency=link_latency,
                 weight=1,
             )
         )
-        bus_count += 1
+        link_count += 1
 
-        bus_links.append(
-            BusLink(
-                link_id=bus_count,
-                src_node=routers[11],
-                dst_node=routers[13],
+        int_links.append(
+            IntLink(
+                link_id=link_count,
+                src_node=routers[3],
+                dst_node=routers[1],
                 src_outport="East",
                 dst_inport="West",
                 latency=link_latency,
                 weight=1,
             )
         )
-        bus_count += 1
-        # =================================================================
+        link_count += 1
+        #=================================================================
+        # bus_links.append(
+        #     BusLink(
+        #         link_id=bus_count,
+        #         src_node=busses[0],
+        #         dst_node=routers[2],
+        #         src_outport="North",
+        #         dst_inport="South",
+        #         latency=link_latency,
+        #         weight=1,
+        #     )
+        # )
+        # bus_count += 1
 
-        # West output to East input links (weight = 1)
-        # It means link from west output port of the right router
-        # to the east input port of the left router.
-        for row in range(num_rows):
-            for col in range(num_columns):
-                if col + 1 < num_columns:
-                    # id of the left router
-                    east_in = col + (row * num_columns)
-                    # id of the right router
-                    west_out = (col + 1) + (row * num_columns)
-                    int_links.append(
-                        IntLink(
-                            link_id=link_count,
-                            src_node=routers[west_out],
-                            dst_node=routers[east_in],
-                            src_outport="West",
-                            dst_inport="East",
-                            latency=link_latency,
-                            weight=1,
-                        )
-                    )
-                    link_count += 1
+        # bus_links.append(
+        #     BusLink(
+        #         link_id=bus_count,
+        #         bus_node=routers[2],
+        #         router_node=busses[0],
+        #         src_outport="North",
+        #         dst_inport="South",
+        #         latency=link_latency,
+        #         weight=1,
+        #     )
+        # )
+        # bus_count += 1
 
-        # North output to South input links (weight = 2)
-        # It means link from north output port of the down router
-        # to the south input port of the up router.
-        for col in range(num_columns):
-            for row in range(num_rows):
-                if row + 1 < num_rows:
-                    # id of the up router
-                    north_out = col + (row * num_columns)
-                    # id of the down router
-                    south_in = col + ((row + 1) * num_columns)
-                    int_links.append(
-                        IntLink(
-                            link_id=link_count,
-                            src_node=routers[north_out],
-                            dst_node=routers[south_in],
-                            src_outport="North",
-                            dst_inport="South",
-                            latency=link_latency,
-                            weight=2,
-                        )
-                    )
-                    link_count += 1
+        # bus_links.append(
+        #     BusLink(
+        #         link_id=bus_count,
+        #         bus_node=busses[0],
+        #         router_node=routers[3],
+        #         src_outport="North",
+        #         dst_inport="South",
+        #         latency=link_latency,
+        #         weight=1,
+        #     )
+        # )
+        # bus_count += 1
 
-        # South output to North input links (weight = 2)
-        # It means link from south output port of the up router
-        # to the north input port of the down router.
-        for col in range(num_columns):
-            for row in range(num_rows):
-                if row + 1 < num_rows:
-                    # id of the up router
-                    north_in = col + (row * num_columns)
-                    # id of the down router
-                    south_out = col + ((row + 1) * num_columns)
-                    int_links.append(
-                        IntLink(
-                            link_id=link_count,
-                            src_node=routers[south_out],
-                            dst_node=routers[north_in],
-                            src_outport="South",
-                            dst_inport="North",
-                            latency=link_latency,
-                            weight=2,
-                        )
-                    )
-                    link_count += 1
+        # bus_links.append(
+        #     BusLink(
+        #         link_id=bus_count,
+        #         bus_node=routers[3],
+        #         router_node=busses[0],
+        #         src_outport="North",
+        #         dst_inport="South",
+        #         latency=link_latency,
+        #         weight=1,
+        #     )
+        # )
+        # bus_count += 1
+        #=================================================================
 
         network.int_links = int_links  # Add the internal links to the network
 

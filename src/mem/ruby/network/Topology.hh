@@ -161,7 +161,7 @@ class Topology
     std::vector<BasicIntLink*> m_int_link_vector;
     //================================================================
     //vector containing bus links of the topology
-    std::vector<BasicBusLink*> m_bus_link_vector; //fix BasicIntLink* later
+    std::vector<BasicBusLink*> m_bus_link_vector; 
     //================================================================
 
     //LinkMap for finding the shortest path
