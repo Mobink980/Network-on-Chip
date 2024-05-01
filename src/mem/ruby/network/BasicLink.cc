@@ -57,26 +57,24 @@ BasicLink::print(std::ostream& out) const
 
 //BasicExtLink constructor calling BasicLink constructor
 BasicExtLink::BasicExtLink(const Params &p)
-    : BasicLink(p)
-{
-    //std::cout<<"BasicExtLink constructor called."<<std::endl;
-}
+    : BasicLink(p) {}
+
 
 //BasicIntLink constructor calling BasicLink constructor
 BasicIntLink::BasicIntLink(const Params &p)
-    : BasicLink(p)
-{
-    //std::cout<<"BasicIntLink constructor called."<<std::endl;
-}
+    : BasicLink(p) {}
+
 
 
 //=====================================================================
-//BasicBusLink constructor calling BasicLink constructor
-BasicBusLink::BasicBusLink(const Params &p)
-    : BasicLink(p)
-{
-    
-}
+//BasicBusToRouterLink constructor calling BasicLink constructor
+BasicBusToRouterLink::BasicBusToRouterLink(const Params &p)
+    : BasicLink(p) {}
+
+//BasicRouterToBusLink constructor calling BasicLink constructor
+BasicRouterToBusLink::BasicRouterToBusLink(const Params &p)
+    : BasicLink(p) {}
+
 //======================================================================
 
 } // namespace ruby

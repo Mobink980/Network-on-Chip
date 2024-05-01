@@ -39,6 +39,10 @@
 #include "mem/ruby/network/garnet/NetworkLink.hh"
 #include "mem/ruby/network/garnet/BusOutputUnit.hh"
 
+//=====================================
+#include <iostream>
+//=====================================
+
 namespace gem5
 {
 
@@ -113,6 +117,14 @@ void
 Bus::addInPort(PortDirection inport_dirn,
                   NetworkLink *in_link, CreditLink *credit_link)
 {
+    //======================================================
+    std::cout << "name of the link (from addInPort in Bus.cc): " << in_link->name() <<"\n";
+    std::cout << "width of the link (from addInPort in Bus.cc): " << in_link->bitWidth <<"\n";
+    std::cout << "id of the bus (from addInPort in Bus.cc): " << m_id <<"\n";
+    std::cout << "width of the bus (from addInPort in Bus.cc): " << m_bit_width <<"\n";
+    std::cout << "=================================================\n";
+    //======================================================
+
     fatal_if(in_link->bitWidth != m_bit_width, "Widths of link %s(%d)does"
             " not match that of Bus%d(%d). Consider inserting SerDes "
             "Units.", in_link->name(), in_link->bitWidth, m_id, m_bit_width);
@@ -153,6 +165,14 @@ Bus::addOutPort(PortDirection outport_dirn,
                    std::vector<NetDest>& routing_table_entry, int link_weight,
                    CreditLink *credit_link, uint32_t consumerVcs)
 {
+    //======================================================
+    std::cout << "name of the link (from addOutPort in Bus.cc): " << out_link->name() <<"\n";
+    std::cout << "width of the link (from addOutPort in Bus.cc): " << out_link->bitWidth <<"\n";
+    std::cout << "id of the bus (from addOutPort in Bus.cc): " << m_id <<"\n";
+    std::cout << "width of the bus (from addOutPort in Bus.cc): " << m_bit_width <<"\n";
+    std::cout << "=================================================\n";
+    //======================================================
+
     fatal_if(out_link->bitWidth != m_bit_width, "Widths of units do not match."
             " Consider inserting SerDes Units");
 

@@ -49,7 +49,9 @@ class Mesh_Bus(SimpleTopology):
     # def makeTopology(self, options, network, IntLink, ExtLink, Router):
     #========================================================================
     def makeTopology(
-        self, options, network, IntLink, BusLink, ExtLink, Router, Bus
+        self, options, network, IntLink, 
+        BusToRouterLink, RouterToBusLink, ExtLink, 
+        Router, Bus
     ):
     #========================================================================
 
@@ -101,7 +103,8 @@ class Mesh_Bus(SimpleTopology):
         # link counter to set unique link ids
         link_count = 0
         # ========================================
-        bus_count = 0
+        bus_to_router_count = 0
+        router_to_bus_count = 0
         # ========================================
 
         # Add all but the remainder nodes to the list of nodes to be uniformly
@@ -153,7 +156,8 @@ class Mesh_Bus(SimpleTopology):
         # Create the 2D mesh links.
         int_links = []
         #====================================
-        bus_links = []
+        bus_to_router_links = []
+        router_to_bus_links = []
         #====================================
 
         int_links.append(
@@ -234,63 +238,27 @@ class Mesh_Bus(SimpleTopology):
         )
         link_count += 1
         #=================================================================
-        # bus_links.append(
-        #     BusLink(
-        #         link_id=bus_count,
-        #         src_node=busses[0],
-        #         dst_node=routers[2],
-        #         src_outport="North",
-        #         dst_inport="South",
-        #         latency=link_latency,
-        #         weight=1,
-        #     )
-        # )
-        # bus_count += 1
-
-        # bus_links.append(
-        #     BusLink(
-        #         link_id=bus_count,
-        #         bus_node=routers[2],
-        #         router_node=busses[0],
-        #         src_outport="North",
-        #         dst_inport="South",
-        #         latency=link_latency,
-        #         weight=1,
-        #     )
-        # )
-        # bus_count += 1
-
-        # bus_links.append(
-        #     BusLink(
-        #         link_id=bus_count,
-        #         bus_node=busses[0],
-        #         router_node=routers[3],
-        #         src_outport="North",
-        #         dst_inport="South",
-        #         latency=link_latency,
-        #         weight=1,
-        #     )
-        # )
-        # bus_count += 1
-
-        # bus_links.append(
-        #     BusLink(
-        #         link_id=bus_count,
-        #         bus_node=routers[3],
-        #         router_node=busses[0],
-        #         src_outport="North",
-        #         dst_inport="South",
-        #         latency=link_latency,
-        #         weight=1,
-        #     )
-        # )
-        # bus_count += 1
+        bus_to_router_links.append(
+            BusToRouterLink(
+                link_id=bus_to_router_count,
+                src_node=busses[0],
+                dst_node=routers[2],
+                src_outport="North",
+                dst_inport="South",
+                latency=link_latency,
+                weight=1,
+            )
+        )
+        bus_to_router_count += 1
         #=================================================================
 
         network.int_links = int_links  # Add the internal links to the network
 
         # ================================================================
-        network.bus_links = bus_links  # Add the bus links to the network
+        # Add the bus to router links to the network
+        network.bus_to_router_links = bus_to_router_links  
+        # Add the router to bus links to the network
+        network.router_to_bus_links = router_to_bus_links 
         # ================================================================
 
     # Register nodes with filesystem

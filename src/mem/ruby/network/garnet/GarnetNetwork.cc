@@ -485,7 +485,7 @@ GarnetNetwork::makeBusToRouterLink(SwitchID src, SwitchID dest, BasicLink* link,
                                    PortDirection dst_inport_dirn)
 {
     // create a garnet bus link
-    GarnetBusLink* garnet_link = safe_cast<GarnetBusLink*>(link);
+    GarnetBusToRouterLink* garnet_link = safe_cast<GarnetBusToRouterLink*>(link);
 
     // GarnetIntLink is unidirectional (INT_ means from router to router)
     NetworkLink* net_link = garnet_link->m_network_link;
@@ -550,7 +550,7 @@ GarnetNetwork::makeRouterToBusLink(SwitchID src, SwitchID dest, BasicLink* link,
                                    PortDirection dst_inport_dirn)
 {
     // create a garnet bus link
-    GarnetBusLink* garnet_link = safe_cast<GarnetBusLink*>(link);
+    GarnetRouterToBusLink* garnet_link = safe_cast<GarnetRouterToBusLink*>(link);
 
     // GarnetIntLink is unidirectional (INT_ means from router to router)
     NetworkLink* net_link = garnet_link->m_network_link;

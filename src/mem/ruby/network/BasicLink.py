@@ -70,18 +70,35 @@ class BasicIntLink(BasicLink):
 
 
 # ===========================================================================
-class BasicBusLink(BasicLink):
-    type = "BasicBusLink"
+class BasicBusToRouterLink(BasicLink):
+    type = "BasicBusToRouterLink"
     cxx_header = "mem/ruby/network/BasicLink.hh"
-    cxx_class = "gem5::ruby::BasicBusLink"
+    cxx_class = "gem5::ruby::BasicBusToRouterLink"
 
-    # This needs fixing later (after I create the bus module)
+    # src node is a bus and dst node is a router
     src_node = Param.BasicBus("ID of the bus")
     dst_node = Param.BasicRouter("ID of the router")
 
     # only used by Garnet.
-    src_outport = Param.String("", "Outport direction at src router or src bus")
-    dst_inport = Param.String("", "Inport direction at dst router dst bus")
+    src_outport = Param.String("", "Outport direction at src bus")
+    dst_inport = Param.String("", "Inport direction at dst router")
+
+    # only used by simple network
+    bandwidth_factor = 16
+
+
+class BasicRouterToBusLink(BasicLink):
+    type = "BasicRouterToBusLink"
+    cxx_header = "mem/ruby/network/BasicLink.hh"
+    cxx_class = "gem5::ruby::BasicRouterToBusLink"
+
+    # src node is a router and dst node is a bus
+    src_node = Param.BasicRouter("ID of the router")
+    dst_node = Param.BasicBus("ID of the bus")
+
+    # only used by Garnet.
+    src_outport = Param.String("", "Outport direction at src router")
+    dst_inport = Param.String("", "Inport direction at dst bus")
 
     # only used by simple network
     bandwidth_factor = 16
