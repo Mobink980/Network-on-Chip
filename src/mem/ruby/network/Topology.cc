@@ -39,6 +39,10 @@
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 
+//=====================================
+#include <iostream>
+//=====================================
+
 
 namespace gem5
 {
@@ -422,8 +426,16 @@ Topology::makeLink(Network *net, SwitchID src, SwitchID dest,
                                 linkRoute);
             }
         }
-    } else if ((src >= 2 * m_nodes) && (dest >= 2 * m_nodes)) {
-        
+    } else if ((src >= 4 * m_nodes) && (dest >= 4 * m_nodes)) {
+        //======================================================
+        std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++\n";
+        std::cout << "m_nodes: " << m_nodes <<"\n";
+        std::cout << "SwitchID src is (router_id): " << src <<"\n";
+        std::cout << "SwitchID dest is (bus_id): " << dest <<"\n";
+        std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++\n";
+        //======================================================
+        //router to bus links
+        //==============================================================
         src_dest.first = src;
         src_dest.second = dest;
         std::vector<LinkEntry> links = m_link_map[src_dest];
@@ -433,23 +445,32 @@ Topology::makeLink(Network *net, SwitchID src, SwitchID dest,
             linkRoute.resize(m_vnets);
             BasicLink *link = link_entry.link;
             if (link->mVnets.size() == 0) {
-                net->makeInternalLink(src - (2 * m_nodes),
-                              dest - (2 * m_nodes), link, routing_table_entry,
+                net->makeRouterToBusLink(src - (4 * m_nodes),
+                              dest - (4 * m_nodes), link, routing_table_entry,
                               link_entry.src_outport_dirn,
                               link_entry.dst_inport_dirn);
+
             } else {
                 for (int v = 0; v< link->mVnets.size(); v++) {
                     int vnet = link->mVnets[v];
                     linkRoute[vnet] = routing_table_entry[vnet];
                 }
-                net->makeInternalLink(src - (2 * m_nodes),
-                              dest - (2 * m_nodes), link, linkRoute,
+                net->makeRouterToBusLink(src - (4 * m_nodes),
+                              dest - (4 * m_nodes), link, linkRoute,
                               link_entry.src_outport_dirn,
                               link_entry.dst_inport_dirn);
             }
         }
+        //==============================================================
 
     } else if ((src >= 3*m_nodes) && (dest >= 3*m_nodes)) { 
+        //======================================================
+        std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
+        std::cout << "m_nodes: " << m_nodes <<"\n";
+        std::cout << "SwitchID src is (bus_id): " << src <<"\n";
+        std::cout << "SwitchID dest is (router_id): " << dest <<"\n";
+        std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
+        //======================================================
         //bus to router links
         //==============================================================
         src_dest.first = src;
@@ -477,12 +498,17 @@ Topology::makeLink(Network *net, SwitchID src, SwitchID dest,
                               link_entry.dst_inport_dirn);
             }
         }
-        //==============================================================
-    
+        //============================================================== 
     } else {
-        //router to bus links
-        //==============================================================
-        assert((src >= 4 * m_nodes) && (dest >= 4 * m_nodes));
+        //======================================================
+        std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n";
+        std::cout << "m_nodes: " << m_nodes <<"\n";
+        std::cout << "SwitchID src is (router_id): " << src <<"\n";
+        std::cout << "SwitchID dest is (router_id): " << dest <<"\n";
+        std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n";
+        //======================================================
+        assert((src >= 2 * m_nodes) && (dest >= 2 * m_nodes));
+        
         src_dest.first = src;
         src_dest.second = dest;
         std::vector<LinkEntry> links = m_link_map[src_dest];
@@ -492,24 +518,24 @@ Topology::makeLink(Network *net, SwitchID src, SwitchID dest,
             linkRoute.resize(m_vnets);
             BasicLink *link = link_entry.link;
             if (link->mVnets.size() == 0) {
-                net->makeRouterToBusLink(src - (3 * m_nodes),
-                              dest - (3 * m_nodes), link, routing_table_entry,
+                net->makeInternalLink(src - (2 * m_nodes),
+                              dest - (2 * m_nodes), link, routing_table_entry,
                               link_entry.src_outport_dirn,
                               link_entry.dst_inport_dirn);
-
             } else {
                 for (int v = 0; v< link->mVnets.size(); v++) {
                     int vnet = link->mVnets[v];
                     linkRoute[vnet] = routing_table_entry[vnet];
                 }
-                net->makeRouterToBusLink(src - (3 * m_nodes),
-                              dest - (3 * m_nodes), link, linkRoute,
+                net->makeInternalLink(src - (2 * m_nodes),
+                              dest - (2 * m_nodes), link, linkRoute,
                               link_entry.src_outport_dirn,
                               link_entry.dst_inport_dirn);
             }
         }
-        //==============================================================
-    }
+
+    } 
+    
 }
 
 // The following all-pairs shortest path algorithm is based on the

@@ -168,7 +168,7 @@ class Mesh_Bus(SimpleTopology):
                 src_outport="East",
                 dst_inport="West",
                 latency=link_latency,
-                weight=1,
+                weight=6,
             )
         )
         link_count += 1
@@ -181,7 +181,7 @@ class Mesh_Bus(SimpleTopology):
                 src_outport="East",
                 dst_inport="West",
                 latency=link_latency,
-                weight=1,
+                weight=6,
             )
         )
         link_count += 1
@@ -194,7 +194,7 @@ class Mesh_Bus(SimpleTopology):
                 src_outport="East",
                 dst_inport="West",
                 latency=link_latency,
-                weight=1,
+                weight=6,
             )
         )
         link_count += 1
@@ -207,36 +207,37 @@ class Mesh_Bus(SimpleTopology):
                 src_outport="East",
                 dst_inport="West",
                 latency=link_latency,
-                weight=1,
+                weight=6,
             )
         )
         link_count += 1
 
-        int_links.append(
-            IntLink(
-                link_id=link_count,
-                src_node=routers[1],
-                dst_node=routers[3],
-                src_outport="East",
-                dst_inport="West",
-                latency=link_latency,
-                weight=1,
-            )
-        )
-        link_count += 1
+        # int_links.append(
+        #     IntLink(
+        #         link_id=link_count,
+        #         src_node=routers[1],
+        #         dst_node=routers[3],
+        #         src_outport="East",
+        #         dst_inport="West",
+        #         latency=link_latency,
+        #         weight=6,
+        #     )
+        # )
+        # link_count += 1
 
-        int_links.append(
-            IntLink(
-                link_id=link_count,
-                src_node=routers[3],
-                dst_node=routers[1],
-                src_outport="East",
-                dst_inport="West",
-                latency=link_latency,
-                weight=1,
-            )
-        )
-        link_count += 1
+        # int_links.append(
+        #     IntLink(
+        #         link_id=link_count,
+        #         src_node=routers[3],
+        #         dst_node=routers[1],
+        #         src_outport="East",
+        #         dst_inport="West",
+        #         latency=link_latency,
+        #         weight=6,
+        #     )
+        # )
+        # link_count += 1
+
         #=================================================================
         bus_to_router_links.append(
             BusToRouterLink(
@@ -250,6 +251,46 @@ class Mesh_Bus(SimpleTopology):
             )
         )
         bus_to_router_count += 1
+
+        router_to_bus_links.append(
+            RouterToBusLink(
+                link_id=router_to_bus_count,
+                src_node=routers[2],
+                dst_node=busses[0],
+                src_outport="South",
+                dst_inport="North",
+                latency=link_latency,
+                weight=1,
+            )
+        )
+        router_to_bus_count += 1
+
+
+        bus_to_router_links.append(
+            BusToRouterLink(
+                link_id=bus_to_router_count,
+                src_node=busses[0],
+                dst_node=routers[3],
+                src_outport="North",
+                dst_inport="South",
+                latency=link_latency,
+                weight=1,
+            )
+        )
+        bus_to_router_count += 1
+
+        router_to_bus_links.append(
+            RouterToBusLink(
+                link_id=router_to_bus_count,
+                src_node=routers[3],
+                dst_node=busses[0],
+                src_outport="South",
+                dst_inport="North",
+                latency=link_latency,
+                weight=1,
+            )
+        )
+        router_to_bus_count += 1
         #=================================================================
 
         network.int_links = int_links  # Add the internal links to the network

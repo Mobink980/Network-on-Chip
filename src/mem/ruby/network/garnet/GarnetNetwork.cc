@@ -49,6 +49,10 @@
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 #include "mem/ruby/system/RubySystem.hh"
 
+//=====================================
+#include <iostream>
+//=====================================
+
 namespace gem5
 {
 
@@ -484,6 +488,14 @@ GarnetNetwork::makeBusToRouterLink(SwitchID src, SwitchID dest, BasicLink* link,
                                    PortDirection src_outport_dirn,
                                    PortDirection dst_inport_dirn)
 {
+    //======================================================
+    std::cout << "****************************************************\n";
+    std::cout << "****************************************************\n";
+    std::cout << "SwitchID src is (bus_id): " << src <<"\n";
+    std::cout << "SwitchID dest is (router_id): " << dest <<"\n";
+    std::cout << "****************************************************\n";
+    std::cout << "****************************************************\n";
+    //======================================================
     // create a garnet bus link
     GarnetBusToRouterLink* garnet_link = safe_cast<GarnetBusToRouterLink*>(link);
 
@@ -549,6 +561,14 @@ GarnetNetwork::makeRouterToBusLink(SwitchID src, SwitchID dest, BasicLink* link,
                                    PortDirection src_outport_dirn,
                                    PortDirection dst_inport_dirn)
 {
+    //======================================================
+    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+    std::cout << "SwitchID src is (router_id): " << src <<"\n";
+    std::cout << "SwitchID dest is (bus_id): " << dest <<"\n";
+    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+    //======================================================
     // create a garnet bus link
     GarnetRouterToBusLink* garnet_link = safe_cast<GarnetRouterToBusLink*>(link);
 
@@ -634,18 +654,6 @@ int
 GarnetNetwork::getNumBusses()
 {
     return m_busses.size();
-}
-
-// Get ID of bus connected to a router.
-int
-GarnetNetwork::get_bus_id(int global_ni, int vnet)
-{
-    // get the local_id of the NI that has global_ni global_id
-    // NodeID local_ni = getLocalNodeID(global_ni);
-    // return the router_id of the router connected to this NI
-    // for the given vnet
-    // return m_nis[local_ni]->get_router_id(vnet);
-    return -1;
 }
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
