@@ -97,6 +97,10 @@ InputUnit::wakeup()
         //for stats (number of hops the flit traveled so far)
         t_flit->increment_hops(); 
 
+        //=================================================
+
+        //=================================================
+
         //if our flit is of type HEAD_ or HEAD_TAIL_, then we need route
         //computation and must update the route in the VC 
         if ((t_flit->get_type() == HEAD_) ||

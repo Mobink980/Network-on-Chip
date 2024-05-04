@@ -149,7 +149,7 @@ RoutingUnit::lookupRoutingTable(int vnet, NetDest msg_destination)
     //if no link has an intersection with the message destination
     //(no candidate link was found)
     if (output_link_candidates.size() == 0) {
-        fatal("Fatal Error:: No Route exists from this Router.");
+        fatal("Fatal Error:: No Route exists from Router %d.", m_router->get_id());
         exit(0);
     }
 
@@ -269,6 +269,10 @@ RoutingUnit::outportComputeXY(RouteInfo route,
         if (x_dirn) { //if we need to go rightward
             //ensure the flit is either coming from the NI or the west inport
             assert(inport_dirn == "Local" || inport_dirn == "West");
+            //======================================================
+            //we either can reach to the next router directly, or we have
+            //a bus to reach it indirectly. Both cannot coexist.
+            //======================================================
             outport_dirn = "East"; //the outport to go is east
         } else { //if we need to go leftward
             //ensure the flit is either coming from the NI or the east inport

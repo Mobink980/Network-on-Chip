@@ -47,7 +47,9 @@ class Mesh_XY(SimpleTopology):
     # def makeTopology(self, options, network, IntLink, ExtLink, Router):
     #========================================================================
     def makeTopology(
-        self, options, network, IntLink, BusLink, ExtLink, Router, Bus
+        self, options, network, IntLink, 
+        BusToRouterLink, RouterToBusLink, ExtLink, 
+        Router, Bus
     ):
     #========================================================================
 

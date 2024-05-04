@@ -180,11 +180,10 @@ BusRoutingUnit::addOutDirection(PortDirection outport_dirn, int outport_idx)
     m_outports_idx2dirn[outport_idx]  = outport_dirn; //outport direction
 }
 
-// outportCompute() is called by the InputUnit.
-// It calls the routing table by default.
-// A template for adaptive topology-specific routing algorithm
-// implementations using port directions rather than a static routing
-// table is provided here.
+// Bus is never the destination of a packet. Bus is only supposed
+// to connect the routers together. Routers are the ones that 
+// have connection to an external node (e.g. NI) and are considered
+// edge nodes.
 int
 BusRoutingUnit::outportCompute(RouteInfo route, int inport,
                             PortDirection inport_dirn)
@@ -192,36 +191,9 @@ BusRoutingUnit::outportCompute(RouteInfo route, int inport,
     //the outport we want to send the flit to
     int outport = -1; 
 
-    //if the flit has reached to the destination router 
-    //(it needs to be ejected from the network)
-    if (route.dest_router == m_bus->get_id()) {
-
-        // Multiple NIs may be connected to this router,
-        // all with output port direction = "Local"
-        // Get exact outport id from table
-        //sending from the right router output_link to be received 
-        //by the right NI 
-        outport = lookupRoutingTable(route.vnet, route.net_dest);
-        return outport;
-    }
-
-    // Routing Algorithm set in GarnetNetwork.py
-    // Can be over-ridden from command line using --routing-algorithm = 1
-    RoutingAlgorithm routing_algorithm =
-        (RoutingAlgorithm) m_bus->get_net_ptr()->getRoutingAlgorithm();
-
-    switch (routing_algorithm) {
-        case TABLE_:  outport =
-            lookupRoutingTable(route.vnet, route.net_dest); break;
-        case XY_:     outport =
-            outportComputeXY(route, inport, inport_dirn); break;
-        // any custom algorithm
-        case CUSTOM_: outport =
-            outportComputeCustom(route, inport, inport_dirn); break;
-        default: outport =
-            lookupRoutingTable(route.vnet, route.net_dest); break;
-    }
-
+    //Regardless of the routing algorithm, bus just passes the packets
+    outport = outportComputeXY(route, inport, inport_dirn);
+             
     //make sure we chose an output_link (outport is computed)
     assert(outport != -1);
     return outport;
@@ -245,51 +217,14 @@ BusRoutingUnit::outportComputeXY(RouteInfo route,
     int num_cols = m_bus->get_net_ptr()->getNumCols();
     assert(num_rows > 0 && num_cols > 0); 
 
-    //router_id of the current router
-    int my_id = m_bus->get_id();
-    int my_x = my_id % num_cols; //x_position of the current router
-    int my_y = my_id / num_cols; //y_position of the current router
 
-    //router_id of the destination router
-    int dest_id = route.dest_router;
-    int dest_x = dest_id % num_cols; //x_position of the dest router
-    int dest_y = dest_id / num_cols; //y_position of the dest router
+    if (inport_dirn == "West") { 
+        outport_dirn = "East"; 
 
-    int x_hops = abs(dest_x - my_x); //how many hops in the x direction
-    int y_hops = abs(dest_y - my_y); //how many hops in the y direction
-
-    bool x_dirn = (dest_x >= my_x); //if true, we need to go to the right
-    bool y_dirn = (dest_y >= my_y); //if true, we need to go upward
-
-    // already checked that in outportCompute() function
-    //ensure we're not already in the destination router
-    assert(!(x_hops == 0 && y_hops == 0)); 
-
-    if (x_hops > 0) { //we have horizontal hops
-        if (x_dirn) { //if we need to go rightward
-            //ensure the flit is either coming from the NI or the west inport
-            assert(inport_dirn == "Local" || inport_dirn == "West");
-            outport_dirn = "East"; //the outport to go is east
-        } else { //if we need to go leftward
-            //ensure the flit is either coming from the NI or the east inport
-            assert(inport_dirn == "Local" || inport_dirn == "East");
-            outport_dirn = "West"; //the outport to go is west
-        }
-    } else if (y_hops > 0) { //we have vertical hops
-        if (y_dirn) { //if we need to go upward
-            // "Local" or "South" or "West" or "East"
-            assert(inport_dirn != "North");
-            outport_dirn = "North"; //the outport to go is north
-        } else { //if we need to go downward
-            // "Local" or "North" or "West" or "East"
-            assert(inport_dirn != "South");
-            outport_dirn = "South"; //the outport to go is south
-        }
-    } else { //we have neither horizontal nor vertical hops
-        // x_hops == 0 and y_hops == 0
-        // this is not possible
-        // already checked that in outportCompute() function
-        panic("x_hops == y_hops == 0");
+    } else if (inport_dirn == "East") {
+        outport_dirn = "West"; 
+    } else {
+        panic("Now, only west and east are avialable for bus!");
     }
 
     //return the outport we computed but in a dirn2idx format
