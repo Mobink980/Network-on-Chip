@@ -175,7 +175,8 @@ GarnetNetwork::init()
         else
         { // we have a 3D NoC
             m_num_cols = getNumCols();
-            assert(m_num_rows * m_num_cols * m_num_layers == m_routers.size());
+            //we check this in the config file
+            // assert(m_num_rows * m_num_cols * m_num_layers == m_routers.size());
         }
     }
     else
@@ -482,7 +483,7 @@ GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
  * This functions create bus links between a router and a bus.
  * They add both the network link and an opposite credit link.
 */
-void 
+void
 GarnetNetwork::makeBusToRouterLink(SwitchID src, SwitchID dest, BasicLink* link,
                                    std::vector<NetDest>& routing_table_entry,
                                    PortDirection src_outport_dirn,

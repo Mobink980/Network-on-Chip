@@ -37,8 +37,8 @@ from m5.params import *
 # to guarantee deadlock freedom.
 
 
-class Mesh_3D(SimpleTopology):
-    description = "Mesh_3D"
+class NoC_Crossbar_3D(SimpleTopology):
+    description = "NoC_Crossbar_3D"
 
     def __init__(self, controllers):
         self.nodes = controllers
@@ -62,10 +62,15 @@ class Mesh_3D(SimpleTopology):
         # ========================================================================
 
         nodes = self.nodes
-        num_routers = options.num_cpus  # num_routers = num_cpus
         num_rows = options.mesh_rows  # number of rows in 3D mesh
         num_columns = options.mesh_columns  # number of columns in 3D mesh
         num_layers = options.mesh_layers  # number of layers in 3D mesh
+        # ******************************************************
+        # Adding some extra middle routers (16 for 64 main routers)
+        # These extra routers connect routers in different layers
+        num_routers = options.num_cpus + (num_rows * num_columns)
+        num_routers_main = options.num_cpus  # routers with CPUs
+        # ******************************************************
 
         # default values for link latency and router latency.
         # Can be over-ridden on a per link/router basis
@@ -74,9 +79,11 @@ class Mesh_3D(SimpleTopology):
 
         # There must be an evenly divisible number of cntrls to routers
         # Also, obviously the number or rows must be <= the number of routers
-        cntrls_per_router, remainder = divmod(len(nodes), num_routers)
-        assert num_rows > 0 and num_rows <= num_routers
-        assert num_rows * num_columns * num_layers == num_routers
+        # ******************************************************
+        cntrls_per_router, remainder = divmod(len(nodes), num_routers_main)
+        assert num_rows > 0 and num_rows <= num_routers_main
+        assert num_rows * num_columns * num_layers == num_routers_main
+        # ******************************************************
 
         # Create the routers in the mesh
         routers = [
@@ -103,7 +110,7 @@ class Mesh_3D(SimpleTopology):
         for i, n in enumerate(network_nodes):
             # For each cache find its level, and id
             # of the router to connect to.
-            cntrl_level, router_id = divmod(i, num_routers)
+            cntrl_level, router_id = divmod(i, num_routers_main)
             assert cntrl_level < cntrls_per_router  # ex: 0,1,2<3
             ext_links.append(
                 ExtLink(
@@ -289,6 +296,43 @@ class Mesh_3D(SimpleTopology):
 
         return link_count
 
+    # For connecting two routers via an IntLink
+    def connect_routers(
+        self,
+        int_links,
+        IntLink,
+        link_latency,
+        link_count,
+        layer_number,
+        router_one,
+        router_two,
+    ):
+        # Add the internal link from router_one to router_two
+        int_links.append(
+            IntLink(
+                link_id=link_count,
+                src_node=router_one,
+                dst_node=router_two,
+                src_outport="Up" + str(layer_number),
+                dst_inport="Down" + str(layer_number),
+                latency=link_latency,
+                weight=3,
+            )
+        )
+
+        # Add the internal link from router_two to router_one
+        int_links.append(
+            IntLink(
+                link_id=link_count,
+                src_node=router_two,
+                dst_node=router_one,
+                src_outport="Down" + str(layer_number),
+                dst_inport="Up" + str(layer_number),
+                latency=link_latency,
+                weight=3,
+            )
+        )
+
     # For connecting routers in two adjacent layers with internal links.
     # The internal links act as vertical links or TSVs.
     def connectInterLayerLinks(
@@ -304,56 +348,21 @@ class Mesh_3D(SimpleTopology):
     ):
         # number of routers in one layer
         num_routers_layer = num_rows * num_columns
+        # total number of routers with directories (CPUs or NIs)
+        num_routers_main = num_rows * num_columns * num_layers
 
-        # Up outport to Down inport (upward links)
-        for layer in range(num_layers - 1):
-            for row in range(num_rows):
-                for col in range(num_columns):
-                    # id of the layer(n) router
-                    up_out = (col + (layer * num_routers_layer)) + (
-                        row * num_columns
-                    )
-                    # id of the layer(n+1) router
-                    down_in = (col + ((layer + 1) * num_routers_layer)) + (
-                        row * num_columns
-                    )
-                    int_links.append(
-                        IntLink(
-                            link_id=link_count,
-                            src_node=routers[up_out],
-                            dst_node=routers[down_in],
-                            src_outport="Up",
-                            dst_inport="Down",
-                            latency=link_latency,
-                            weight=3,
-                        )
-                    )
-                    link_count += 1
-
-        # Down outport to Up inport (downward links)
-        for layer in range(num_layers - 1):
-            for row in range(num_rows):
-                for col in range(num_columns):
-                    # id of the layer(n) router
-                    up_in = (col + (layer * num_routers_layer)) + (
-                        row * num_columns
-                    )
-                    # id of the layer(n+1) router
-                    down_out = (col + ((layer + 1) * num_routers_layer)) + (
-                        row * num_columns
-                    )
-                    int_links.append(
-                        IntLink(
-                            link_id=link_count,
-                            src_node=routers[down_out],
-                            dst_node=routers[up_in],
-                            src_outport="Down",
-                            dst_inport="Up",
-                            latency=link_latency,
-                            weight=3,
-                        )
-                    )
-                    link_count += 1
+        for i in range(num_routers_layer):
+            for j in range(num_layers):
+                self.connect_routers(
+                    int_links,
+                    IntLink,
+                    link_latency,
+                    link_count,
+                    j,
+                    routers[i + (j * num_routers_layer)],
+                    routers[num_routers_main + i],
+                )
+                link_count += 2
 
         return link_count
 
