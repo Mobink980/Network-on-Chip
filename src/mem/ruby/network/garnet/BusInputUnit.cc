@@ -95,7 +95,13 @@ BusInputUnit::wakeup()
         //get the VC from the flit that just arrived (VC identifier)
         int vc = t_flit->get_vc();
         //for stats (number of hops the flit traveled so far)
-        t_flit->increment_hops(); 
+        t_flit->increment_hops();
+
+        //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        //change the broadcast flag to one so the routers would know
+        //the flit is coming from a bus 
+        t_flit->set_broadcast(1);
+        //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
         //if our flit is of type HEAD_ or HEAD_TAIL_, then we need route
         //computation and must update the route in the VC 
@@ -108,15 +114,23 @@ BusInputUnit::wakeup()
             //the current tick
             set_vc_active(vc, curTick());
 
+            //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
             // Route computation for this vc 
-            //(determine the outport for the flit)
-            int outport = m_bus->route_compute(t_flit->get_route(),
-                m_id, m_direction);
+            // The flit is broadcasted to all the outports
+            std::vector<int> outports = m_bus->route_compute();
+
 
             // Update output port in VC
             // All flits in this packet will use this output port
             // The output port field in the flit is updated after it wins SA
-            grant_outport(vc, outport); //grant the outport to the VC
+
+            // Iterate through each outport and call grant_outport
+            for (int outport : outports) {
+                //grant the outport to the VC
+                grant_outport(vc, outport); 
+            }
+            //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
 
         } else { //the flit is of type BODY/TAIL
             //make sure the VC_state of the VC the flit is in, is ACTIVE_

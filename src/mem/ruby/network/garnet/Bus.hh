@@ -148,8 +148,10 @@ class Bus : public BasicBus, public Consumer
     //get the direction of an inport
     PortDirection getInportDirection(int inport);
 
-    //compute the route for the flit by having RouteInfo, inport, and PortDirection
-    int route_compute(RouteInfo route, int inport, PortDirection direction);
+    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+    //broadcast the received flits to all outports
+    std::vector<int> route_compute();
+    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     //This function grants the switch to an inport, so the flit could pass
     //the crossbar.
     void grant_switch(int inport, flit *t_flit);

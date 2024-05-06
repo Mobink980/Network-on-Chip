@@ -170,14 +170,14 @@ class Mesh_Bus(SimpleTopology):
                                     weight=2))
         link_count += 1
 
-        int_links.append(IntLink(link_id=link_count,
-                                    src_node=routers[2],
-                                    dst_node=routers[3],
-                                    src_outport="East",
-                                    dst_inport="West",
-                                    latency = link_latency,
-                                    weight=2))
-        link_count += 1
+        # int_links.append(IntLink(link_id=link_count,
+        #                             src_node=routers[2],
+        #                             dst_node=routers[3],
+        #                             src_outport="East",
+        #                             dst_inport="West",
+        #                             latency = link_latency,
+        #                             weight=2))
+        # link_count += 1
 
 
         int_links.append(IntLink(link_id=link_count,
@@ -189,14 +189,14 @@ class Mesh_Bus(SimpleTopology):
                                     weight=2))
         link_count += 1
 
-        int_links.append(IntLink(link_id=link_count,
-                                    src_node=routers[3],
-                                    dst_node=routers[2],
-                                    src_outport="West",
-                                    dst_inport="East",
-                                    latency = link_latency,
-                                    weight=2))
-        link_count += 1
+        # int_links.append(IntLink(link_id=link_count,
+        #                             src_node=routers[3],
+        #                             dst_node=routers[2],
+        #                             src_outport="West",
+        #                             dst_inport="East",
+        #                             latency = link_latency,
+        #                             weight=2))
+        # link_count += 1
 
 
         int_links.append(IntLink(link_id=link_count,
@@ -237,58 +237,59 @@ class Mesh_Bus(SimpleTopology):
         link_count += 1
 
         #=================================================================
-        # bus_to_router_links.append(
-        #     BusToRouterLink(
-        #         link_id=bus_to_router_count,
-        #         src_node=busses[0],
-        #         dst_node=routers[2],
-        #         src_outport="West", 
-        #         dst_inport="East",
-        #         latency=link_latency,
-        #         weight=1,
-        #     )
-        # )
-        # bus_to_router_count += 1
+        bus_to_router_links.append(
+            BusToRouterLink(
+                link_id=bus_to_router_count,
+                src_node=busses[0],
+                dst_node=routers[2],
+                src_outport="West", 
+                dst_inport="East",
+                latency=link_latency,
+                weight=1,
+            )
+        )
+        bus_to_router_count += 1
 
-        # router_to_bus_links.append(
-        #     RouterToBusLink(
-        #         link_id=router_to_bus_count,
-        #         src_node=routers[2],
-        #         dst_node=busses[0],
-        #         src_outport="East",
-        #         dst_inport="West",
-        #         latency=link_latency,
-        #         weight=1,
-        #     )
-        # )
-        # router_to_bus_count += 1
+        router_to_bus_links.append(
+            RouterToBusLink(
+                link_id=router_to_bus_count,
+                src_node=routers[2],
+                dst_node=busses[0],
+                src_outport="East",
+                dst_inport="West",
+                latency=link_latency,
+                weight=1,
+            )
+        )
+        router_to_bus_count += 1
 
 
-        # bus_to_router_links.append(
-        #     BusToRouterLink(
-        #         link_id=bus_to_router_count,
-        #         src_node=busses[0],
-        #         dst_node=routers[3],
-        #         src_outport="East",
-        #         dst_inport="West",
-        #         latency=link_latency,
-        #         weight=1,
-        #     )
-        # )
-        # bus_to_router_count += 1
+        bus_to_router_links.append(
+            BusToRouterLink(
+                link_id=bus_to_router_count,
+                src_node=busses[0],
+                dst_node=routers[3],
+                src_outport="East",
+                dst_inport="West",
+                latency=link_latency,
+                weight=1,
+            )
+        )
+        bus_to_router_count += 1
 
-        # router_to_bus_links.append(
-        #     RouterToBusLink(
-        #         link_id=router_to_bus_count,
-        #         src_node=routers[3],
-        #         dst_node=busses[0],
-        #         src_outport="West",
-        #         dst_inport="East",
-        #         latency=link_latency,
-        #         weight=1,
-        #     )
-        # )
-        # router_to_bus_count += 1
+        router_to_bus_links.append(
+            RouterToBusLink(
+                link_id=router_to_bus_count,
+                src_node=routers[3],
+                dst_node=busses[0],
+                src_outport="West",
+                dst_inport="East",
+                latency=link_latency,
+                weight=1,
+            )
+        )
+        router_to_bus_count += 1
+
         #=================================================================
 
         network.int_links = int_links  # Add the internal links to the network

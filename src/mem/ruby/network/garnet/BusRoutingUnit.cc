@@ -37,6 +37,11 @@
 #include "mem/ruby/network/garnet/Bus.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
+//=====================================
+#include <iostream>
+#include <vector> 
+//=====================================
+
 namespace gem5
 {
 
@@ -184,20 +189,71 @@ BusRoutingUnit::addOutDirection(PortDirection outport_dirn, int outport_idx)
 // to connect the routers together. Routers are the ones that 
 // have connection to an external node (e.g. NI) and are considered
 // edge nodes.
-int
-BusRoutingUnit::outportCompute(RouteInfo route, int inport,
-                            PortDirection inport_dirn)
+std::vector<int> 
+BusRoutingUnit::outportCompute()
 {
-    //the outport we want to send the flit to
-    int outport = -1; 
+    // Use a vector instead of an array
+    std::vector<int> outports(m_bus->get_num_outports());
 
-    //Regardless of the routing algorithm, bus just passes the packets
-    outport = outportComputeXY(route, inport, inport_dirn);
-             
-    //make sure we chose an output_link (outport is computed)
-    assert(outport != -1);
-    return outport;
+    // All the outports of the Bus are targets. We want to
+    // broadcast everything that arrives in an inport to all outports.
+    for (int i = 0; i < m_bus->get_num_outports(); ++i)
+    {
+        outports[i] = i;
+    }
+
+    // Ensure the outports vector isn't empty
+    assert(!outports.empty());
+
+    std::cout << "??????????????????????????????????????????????????\n";
+    std::cout << "Target outports are: ";
+    for (int i = 0; i < m_bus->get_num_outports(); ++i)
+    {
+        std::cout << outports[i] << " ";
+    }
+    std::cout << "\n";
+    std::cout << "??????????????????????????????????????????????????\n";
+
+    return outports;
 }
+
+
+
+// int 
+// BusRoutingUnit::outportCompute(RouteInfo route, int inport, 
+//                             PortDirection inport_dirn)
+// {
+//     // The outport we want to send the flit to
+//     int outport = -1;
+
+//     // Regardless of the routing algorithm, the bus just passes the packets
+//     outport = outportComputeXY(route, inport, inport_dirn);
+
+//     // Use a vector instead of an array
+//     std::vector<int> outports(m_bus->get_num_outports());
+
+//     // All the outports of the Bus are targets. We want to
+//     // broadcast everything that arrives in an inport to all outports.
+//     for (int i = 0; i < m_bus->get_num_outports(); ++i)
+//     {
+//         outports[i] = i;
+//     }
+
+//     // Print information (you can replace this with your actual logic)
+//     std::cout << "Flits of the packet are going to the outport: " << outport << "\n";
+//     std::cout << "Total number of outports: " << m_bus->get_num_outports() << "\n";
+//     std::cout << "Target outports are: ";
+//     for (int i = 0; i < m_bus->get_num_outports(); ++i)
+//     {
+//         std::cout << outports[i] << " ";
+//     }
+//     std::cout << "\n";
+
+//     // Make sure we chose an output link (outport is computed)
+//     assert(outport != -1);
+//     return outport;
+// }
+
 
 // XY routing implemented using port directions.
 // Only for reference purpose in a Mesh.

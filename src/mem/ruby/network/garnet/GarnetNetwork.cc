@@ -490,12 +490,12 @@ GarnetNetwork::makeBusToRouterLink(SwitchID src, SwitchID dest, BasicLink* link,
                                    PortDirection dst_inport_dirn)
 {
     //======================================================
-    std::cout << "****************************************************\n";
-    std::cout << "****************************************************\n";
-    std::cout << "SwitchID src is (bus_id): " << src <<"\n";
-    std::cout << "SwitchID dest is (router_id): " << dest <<"\n";
-    std::cout << "****************************************************\n";
-    std::cout << "****************************************************\n";
+    // std::cout << "****************************************************\n";
+    // std::cout << "****************************************************\n";
+    // std::cout << "SwitchID src is (bus_id): " << src <<"\n";
+    // std::cout << "SwitchID dest is (router_id): " << dest <<"\n";
+    // std::cout << "****************************************************\n";
+    // std::cout << "****************************************************\n";
     //======================================================
     // create a garnet bus link
     GarnetBusToRouterLink* garnet_link = safe_cast<GarnetBusToRouterLink*>(link);
@@ -563,12 +563,12 @@ GarnetNetwork::makeRouterToBusLink(SwitchID src, SwitchID dest, BasicLink* link,
                                    PortDirection dst_inport_dirn)
 {
     //======================================================
-    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-    std::cout << "SwitchID src is (router_id): " << src <<"\n";
-    std::cout << "SwitchID dest is (bus_id): " << dest <<"\n";
-    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+    // std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+    // std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+    // std::cout << "SwitchID src is (router_id): " << src <<"\n";
+    // std::cout << "SwitchID dest is (bus_id): " << dest <<"\n";
+    // std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+    // std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
     //======================================================
     // create a garnet bus link
     GarnetRouterToBusLink* garnet_link = safe_cast<GarnetRouterToBusLink*>(link);

@@ -82,6 +82,7 @@ void
 InputUnit::wakeup()
 {
     flit *t_flit; //define a flit
+    // std::unique_ptr<flit> t_flit = std::make_unique<flit>();
     //if the input link to the inport is ready at the current tick
     if (m_in_link->isReady(curTick())) {
         //update the flit with the link content
@@ -97,68 +98,79 @@ InputUnit::wakeup()
         //for stats (number of hops the flit traveled so far)
         t_flit->increment_hops(); 
 
-        //=================================================
+        //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        //if the flit is not coming from a bus or it is coming from a bus, but
+        //the destination router of the flit is this router, then do the normal stuff
+        if(!t_flit->is_broadcast() || t_flit->get_route().dest_router == m_router->get_id()){
 
-        //=================================================
+            //if our flit is of type HEAD_ or HEAD_TAIL_, then we need route
+            //computation and must update the route in the VC 
+            if ((t_flit->get_type() == HEAD_) ||
+                (t_flit->get_type() == HEAD_TAIL_)) {
 
-        //if our flit is of type HEAD_ or HEAD_TAIL_, then we need route
-        //computation and must update the route in the VC 
-        if ((t_flit->get_type() == HEAD_) ||
-            (t_flit->get_type() == HEAD_TAIL_)) {
+                //make sure the VC_state of the VC the flit is in, is IDLE_ 
+                assert(virtualChannels[vc].get_state() == IDLE_);
+                //change the state of vc from IDLE_ to ACTIVE_ at 
+                //the current tick
+                set_vc_active(vc, curTick());
 
-            //make sure the VC_state of the VC the flit is in, is IDLE_ 
-            assert(virtualChannels[vc].get_state() == IDLE_);
-            //change the state of vc from IDLE_ to ACTIVE_ at 
-            //the current tick
-            set_vc_active(vc, curTick());
+                // Route computation for this vc 
+                //(determine the outport for the flit)
+                int outport = m_router->route_compute(t_flit->get_route(),
+                    m_id, m_direction);
 
-            // Route computation for this vc 
-            //(determine the outport for the flit)
-            int outport = m_router->route_compute(t_flit->get_route(),
-                m_id, m_direction);
+                // Update output port in VC
+                // All flits in this packet will use this output port
+                // The output port field in the flit is updated after it wins SA
+                grant_outport(vc, outport); //grant the outport to the VC
 
-            // Update output port in VC
-            // All flits in this packet will use this output port
-            // The output port field in the flit is updated after it wins SA
-            grant_outport(vc, outport); //grant the outport to the VC
-
-        } else { //the flit is of type BODY/TAIL
-            //make sure the VC_state of the VC the flit is in, is ACTIVE_
-            //no need for route computation (the route is already set for vc)
-            assert(virtualChannels[vc].get_state() == ACTIVE_);
-        }
+            } else { //the flit is of type BODY/TAIL
+                //make sure the VC_state of the VC the flit is in, is ACTIVE_
+                //no need for route computation (the route is already set for vc)
+                assert(virtualChannels[vc].get_state() == ACTIVE_);
+            }
 
 
-        // Buffer the flit (insert the flit into vc)
-        virtualChannels[vc].insertFlit(t_flit);
+            // Buffer the flit (insert the flit into vc)
+            virtualChannels[vc].insertFlit(t_flit);
 
-        //determine the Vnet (vnet = vc_id/number_of_VCs_per_Vnet)
-        int vnet = vc/m_vc_per_vnet;
-        // number of writes same as reads
-        // any flit that is written will be read only once
-        m_num_buffer_writes[vnet]++;
-        m_num_buffer_reads[vnet]++;
+            //determine the Vnet (vnet = vc_id/number_of_VCs_per_Vnet)
+            int vnet = vc/m_vc_per_vnet;
+            // number of writes same as reads
+            // any flit that is written will be read only once
+            m_num_buffer_writes[vnet]++;
+            m_num_buffer_reads[vnet]++;
 
-        //get the number of pipeline stages (router latency)
-        Cycles pipe_stages = m_router->get_pipe_stages();
-        if (pipe_stages == 1) {
-            // 1-cycle router
-            // Flit goes for SA directly
-            t_flit->advance_stage(SA_, curTick());
+            //get the number of pipeline stages (router latency)
+            Cycles pipe_stages = m_router->get_pipe_stages();
+            if (pipe_stages == 1) {
+                // 1-cycle router
+                // Flit goes for SA directly
+                t_flit->advance_stage(SA_, curTick());
+            } else {
+                assert(pipe_stages > 1); 
+                // Router delay is modeled by making flit wait in buffer for
+                // (pipe_stages cycles - 1) cycles before going for SA
+
+                //wait_time before advancing to Switch_Allocation stage
+                Cycles wait_time = pipe_stages - Cycles(1);
+                //advance the flit stage to SA_ after m_latency-1 cycles,
+                //so the router latency becomes m_latncy cycles
+                t_flit->advance_stage(SA_, m_router->clockEdge(wait_time));
+
+                // Wakeup the router in that cycle to perform SA
+                m_router->schedule_wakeup(Cycles(wait_time));
+            }
+
         } else {
-            assert(pipe_stages > 1); 
-            // Router delay is modeled by making flit wait in buffer for
-            // (pipe_stages cycles - 1) cycles before going for SA
-
-            //wait_time before advancing to Switch_Allocation stage
-            Cycles wait_time = pipe_stages - Cycles(1);
-            //advance the flit stage to SA_ after m_latency-1 cycles,
-            //so the router latency becomes m_latncy cycles
-            t_flit->advance_stage(SA_, m_router->clockEdge(wait_time));
-
-            // Wakeup the router in that cycle to perform SA
-            m_router->schedule_wakeup(Cycles(wait_time));
+            //This means the flit is coming from a bus (a broadcast medium)
+            //and the flit is meant for another router. Thus, we need to drop it.
+            delete t_flit;
         }
+
+        //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+
 
         //if the input link to the inport is ready at the current tick
         if (m_in_link->isReady(curTick())) {

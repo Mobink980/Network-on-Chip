@@ -55,9 +55,7 @@ class BusRoutingUnit
     BusRoutingUnit(Bus *bus); //constructor
     //gets the route_info, inport, and port_direction (e.g., north), 
     //and computes the outport for the flit to go 
-    int outportCompute(RouteInfo route,
-                      int inport,
-                      PortDirection inport_dirn);
+    std::vector<int> outportCompute();
 
     // Topology-agnostic Routing Table based routing (default)
     //add a routing_table_entry (a route) to the routing table

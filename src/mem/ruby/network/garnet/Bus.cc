@@ -228,13 +228,14 @@ Bus::getInportDirection(int inport)
     return m_input_unit[inport]->get_direction();
 }
 
-//The following function of the Bus class computes which outport should
-//be chosen for the flits, based on route, inport, and inport direction.
-int
-Bus::route_compute(RouteInfo route, int inport, PortDirection inport_dirn)
+//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+//All the outports should be considered for sending (broadcast)
+std::vector<int> 
+Bus::route_compute()
 {
-    return routingUnit.outportCompute(route, inport, inport_dirn);
+    return routingUnit.outportCompute();
 }
+//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 //This function grants the switch to an inport, so the flit could pass
 //the crossbar.

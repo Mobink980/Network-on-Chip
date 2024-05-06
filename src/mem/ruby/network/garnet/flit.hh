@@ -97,6 +97,19 @@ class flit
     //time it takes to enqueue the flit into the FIFO 
     void set_enqueue_time(Tick time) { m_enqueue_time = time; }
 
+    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+    //set the broadcast state of a flit 
+    //0: flit is coming from the router, 1: flit is coming from the bus
+    void set_broadcast(int state) {m_route.broadcast = state; }
+    //returns true if a flit is coming from a Bus
+    bool is_broadcast() {
+        if(m_route.broadcast == 1){
+            return true;
+        }
+        return false;
+    }
+    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
     //for couting the hops of a flit till destination
     void increment_hops() { m_route.hops_traversed++; }
     virtual void print(std::ostream& out) const;
