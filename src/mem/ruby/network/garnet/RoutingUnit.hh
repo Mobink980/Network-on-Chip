@@ -65,6 +65,9 @@ class RoutingUnit
     //add a weight to a link
     void addWeight(int link_weight);
 
+    //Find the layer of a router based on its id
+    int get_layer(int router_id);
+
     // get output port from routing table
     int  lookupRoutingTable(int vnet, NetDest net_dest);
 

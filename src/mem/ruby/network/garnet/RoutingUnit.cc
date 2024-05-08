@@ -36,6 +36,10 @@
 #include "mem/ruby/network/garnet/InputUnit.hh"
 #include "mem/ruby/network/garnet/Router.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
+//==================================
+#include <cmath>
+#include <string>
+//==================================
 
 namespace gem5
 {
@@ -227,7 +231,22 @@ RoutingUnit::outportCompute(RouteInfo route, int inport,
     return outport;
 }
 
-// XY routing implemented using port directions.
+//Find the layer of a router based on its id
+int 
+RoutingUnit::get_layer(int router_id) 
+{
+    int num_rows = m_router->get_net_ptr()->getNumRows();
+    int num_cols = m_router->get_net_ptr()->getNumCols();
+    int num_layers = m_router->get_net_ptr()->getNumLayers();
+    assert(num_rows > 0 && num_cols > 0 && num_layers > 0); 
+    //number of routers or RLIs per layer
+    int num_routers_layer = num_rows * num_cols;
+    if (num_layers > 1) { return floor(router_id/num_routers_layer); }
+    //return 0 if we only have one layer
+    return 0;    
+} 
+
+// XYZ routing implemented using port directions.
 // Only for reference purpose in a Mesh.
 // By default Garnet uses the routing table.
 int
@@ -249,14 +268,23 @@ RoutingUnit::outportComputeXY(RouteInfo route,
     int my_id = m_router->get_id();
     int my_x = my_id % num_cols; //x_position of the current router
     int my_y = my_id / num_cols; //y_position of the current router
+    //===============================================================
+    int my_z = get_layer(my_id); //z_position of the current router
+    //===============================================================
 
     //router_id of the destination router
     int dest_id = route.dest_router;
     int dest_x = dest_id % num_cols; //x_position of the dest router
     int dest_y = dest_id / num_cols; //y_position of the dest router
+    //===============================================================
+    int dest_z = get_layer(dest_id); //z_position of the dest router
+    //===============================================================
 
     int x_hops = abs(dest_x - my_x); //how many hops in the x direction
     int y_hops = abs(dest_y - my_y); //how many hops in the y direction
+    //===============================================================
+    int z_hops = abs(dest_z - my_z); //how many hops in the z direction
+    //===============================================================
 
     bool x_dirn = (dest_x >= my_x); //if true, we need to go to the right
     bool y_dirn = (dest_y >= my_y); //if true, we need to go upward
@@ -289,6 +317,10 @@ RoutingUnit::outportComputeXY(RouteInfo route,
             assert(inport_dirn != "South");
             outport_dirn = "South"; //the outport to go is south
         }
+    } else if (z_hops > 0) { //we need to use the bus
+        //===============================================================
+        outport_dirn = "Down" + std::to_string(my_z);
+        //===============================================================
     } else { //we have neither horizontal nor vertical hops
         // x_hops == 0 and y_hops == 0
         // this is not possible
