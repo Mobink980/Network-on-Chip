@@ -118,11 +118,12 @@ Bus::addInPort(PortDirection inport_dirn,
                   NetworkLink *in_link, CreditLink *credit_link)
 {
     //======================================================
-    std::cout << "name of the link (from addInPort in Bus.cc): " << in_link->name() <<"\n";
-    std::cout << "width of the link (from addInPort in Bus.cc): " << in_link->bitWidth <<"\n";
-    std::cout << "id of the bus (from addInPort in Bus.cc): " << m_id <<"\n";
-    std::cout << "width of the bus (from addInPort in Bus.cc): " << m_bit_width <<"\n";
-    std::cout << "=================================================\n";
+    // std::cout << "=================================================\n";
+    // std::cout << "name of the link (from addInPort in Bus.cc): " << in_link->name() <<"\n";
+    // std::cout << "width of the link (from addInPort in Bus.cc): " << in_link->bitWidth <<"\n";
+    // std::cout << "id of the bus (from addInPort in Bus.cc): " << m_id <<"\n";
+    // std::cout << "width of the bus (from addInPort in Bus.cc): " << m_bit_width <<"\n";
+    // std::cout << "=================================================\n";
     //======================================================
 
     fatal_if(in_link->bitWidth != m_bit_width, "Widths of link %s(%d)does"
@@ -166,11 +167,12 @@ Bus::addOutPort(PortDirection outport_dirn,
                    CreditLink *credit_link, uint32_t consumerVcs)
 {
     //======================================================
-    std::cout << "name of the link (from addOutPort in Bus.cc): " << out_link->name() <<"\n";
-    std::cout << "width of the link (from addOutPort in Bus.cc): " << out_link->bitWidth <<"\n";
-    std::cout << "id of the bus (from addOutPort in Bus.cc): " << m_id <<"\n";
-    std::cout << "width of the bus (from addOutPort in Bus.cc): " << m_bit_width <<"\n";
-    std::cout << "=================================================\n";
+    // std::cout << "=================================================\n";
+    // std::cout << "name of the link (from addOutPort in Bus.cc): " << out_link->name() <<"\n";
+    // std::cout << "width of the link (from addOutPort in Bus.cc): " << out_link->bitWidth <<"\n";
+    // std::cout << "id of the bus (from addOutPort in Bus.cc): " << m_id <<"\n";
+    // std::cout << "width of the bus (from addOutPort in Bus.cc): " << m_bit_width <<"\n";
+    // std::cout << "=================================================\n";
     //======================================================
 
     fatal_if(out_link->bitWidth != m_bit_width, "Widths of units do not match."

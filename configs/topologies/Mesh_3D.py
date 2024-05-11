@@ -240,9 +240,9 @@ class Mesh_3D(SimpleTopology):
             for row in range(num_rows):
                 if row + 1 < num_rows:
                     # id of the up router
-                    south_in = col + (row * num_columns)
+                    south_in = col + ((row + 1) * num_columns)
                     # id of the down router
-                    north_out = col + ((row + 1) * num_columns)
+                    north_out = col + (row * num_columns)
                     int_links.append(
                         IntLink(
                             link_id=link_count,
@@ -267,9 +267,9 @@ class Mesh_3D(SimpleTopology):
             for row in range(num_rows):
                 if row + 1 < num_rows:
                     # id of the up router
-                    south_out = col + (row * num_columns)
+                    south_out = col + ((row + 1) * num_columns)
                     # id of the down router
-                    north_in = col + ((row + 1) * num_columns)
+                    north_in = col + (row * num_columns)
                     int_links.append(
                         IntLink(
                             link_id=link_count,

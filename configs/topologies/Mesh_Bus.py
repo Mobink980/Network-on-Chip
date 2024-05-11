@@ -208,14 +208,14 @@ class Mesh_Bus(SimpleTopology):
                                     weight=2))
         link_count += 1
 
-        int_links.append(IntLink(link_id=link_count,
-                                    src_node=routers[1],
-                                    dst_node=routers[3],
-                                    src_outport="North",
-                                    dst_inport="South",
-                                    latency = link_latency,
-                                    weight=2))
-        link_count += 1
+        # int_links.append(IntLink(link_id=link_count,
+        #                             src_node=routers[1],
+        #                             dst_node=routers[3],
+        #                             src_outport="North",
+        #                             dst_inport="South",
+        #                             latency = link_latency,
+        #                             weight=2))
+        # link_count += 1
 
 
         int_links.append(IntLink(link_id=link_count,
@@ -227,14 +227,14 @@ class Mesh_Bus(SimpleTopology):
                                     weight=2))
         link_count += 1
 
-        int_links.append(IntLink(link_id=link_count,
-                                    src_node=routers[3],
-                                    dst_node=routers[1],
-                                    src_outport="South",
-                                    dst_inport="North",
-                                    latency = link_latency,
-                                    weight=2))
-        link_count += 1
+        # int_links.append(IntLink(link_id=link_count,
+        #                             src_node=routers[3],
+        #                             dst_node=routers[1],
+        #                             src_outport="South",
+        #                             dst_inport="North",
+        #                             latency = link_latency,
+        #                             weight=2))
+        # link_count += 1
 
         #=================================================================
         bus_to_router_links.append(

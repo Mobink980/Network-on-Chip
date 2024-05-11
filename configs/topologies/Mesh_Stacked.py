@@ -277,9 +277,9 @@ class Mesh_Stacked(SimpleTopology):
             for row in range(num_rows):
                 if row + 1 < num_rows:
                     # id of the up router
-                    south_in = col + (row * num_columns)
+                    south_in = col + ((row + 1) * num_columns)
                     # id of the down router
-                    north_out = col + ((row + 1) * num_columns)
+                    north_out = col + (row * num_columns)
                     int_links.append(
                         IntLink(
                             link_id=link_count,
@@ -304,9 +304,9 @@ class Mesh_Stacked(SimpleTopology):
             for row in range(num_rows):
                 if row + 1 < num_rows:
                     # id of the up router
-                    south_out = col + (row * num_columns)
+                    south_out = col + ((row + 1) * num_columns)
                     # id of the down router
-                    north_in = col + ((row + 1) * num_columns)
+                    north_in = col + (row * num_columns)
                     int_links.append(
                         IntLink(
                             link_id=link_count,
@@ -346,8 +346,8 @@ class Mesh_Stacked(SimpleTopology):
                 link_id=bus_to_router_count,
                 src_node=bus,
                 dst_node=router,
-                src_outport="Up" + str(layer_number),
-                dst_inport="Down" + str(layer_number),
+                src_outport="Down" + str(layer_number),
+                dst_inport="Up",
                 latency=link_latency,
                 weight=3,
             )
@@ -359,8 +359,8 @@ class Mesh_Stacked(SimpleTopology):
                 link_id=router_to_bus_count,
                 src_node=router,
                 dst_node=bus,
-                src_outport="Down" + str(layer_number),
-                dst_inport="Up" + str(layer_number),
+                src_outport="Up",
+                dst_inport="Down" + str(layer_number),
                 latency=link_latency,
                 weight=3,
             )

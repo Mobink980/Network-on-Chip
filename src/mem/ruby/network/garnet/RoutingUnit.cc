@@ -39,6 +39,7 @@
 //==================================
 #include <cmath>
 #include <string>
+#include <iostream>
 //==================================
 
 namespace gem5
@@ -196,6 +197,13 @@ RoutingUnit::outportCompute(RouteInfo route, int inport,
     //the outport we want to send the flit to
     int outport = -1; 
 
+    //======================================================
+    std::cout << "=================================================\n";
+    std::cout << "Source router of the flit: R" << route.src_router <<"\n";
+    std::cout << "Destination router of the flit: R" << route.dest_router <<"\n";
+    std::cout << "=================================================\n";
+    //======================================================
+
     //if the flit has reached to the destination router 
     //(it needs to be ejected from the network)
     if (route.dest_router == m_router->get_id()) {
@@ -262,23 +270,45 @@ RoutingUnit::outportComputeXY(RouteInfo route,
     [[maybe_unused]] int num_rows = m_router->get_net_ptr()->getNumRows();
     //number of collumns in the mesh topology
     int num_cols = m_router->get_net_ptr()->getNumCols();
+    //number of layers in the mesh topology (default is 1)
+    int num_layers = m_router->get_net_ptr()->getNumLayers();
     assert(num_rows > 0 && num_cols > 0); 
+
+    //number of routers in one layer
+    int num_routers_layer = num_rows * num_cols;
 
     //router_id of the current router
     int my_id = m_router->get_id();
     int my_x = my_id % num_cols; //x_position of the current router
-    int my_y = my_id / num_cols; //y_position of the current router
     //===============================================================
     int my_z = get_layer(my_id); //z_position of the current router
     //===============================================================
+    int my_y = -1;
+    if(num_layers == 1) { //in case of 2D NoCs
+        my_y = my_id / num_cols; //y_position of the current router
+    } else { //for 3D NoCs
+        //y_position of the current router
+        my_y = (my_id - (num_routers_layer * my_z)) / num_cols; 
+    }
+    //make sure my_y is valid
+    assert(my_y >= 0 && my_y < num_cols);
+
 
     //router_id of the destination router
     int dest_id = route.dest_router;
     int dest_x = dest_id % num_cols; //x_position of the dest router
-    int dest_y = dest_id / num_cols; //y_position of the dest router
     //===============================================================
     int dest_z = get_layer(dest_id); //z_position of the dest router
     //===============================================================
+    int dest_y = -1;
+    if(num_layers == 1) { //in case of 2D NoCs
+        dest_y = dest_id / num_cols; //y_position of the dest router
+    } else { //for 3D NoCs
+        //y_position of the dest router
+        dest_y = (dest_id - (num_routers_layer * dest_z)) / num_cols; 
+    }
+    //make sure dest_y is valid
+    assert(dest_y >= 0 && dest_y < num_cols);
 
     int x_hops = abs(dest_x - my_x); //how many hops in the x direction
     int y_hops = abs(dest_y - my_y); //how many hops in the y direction
@@ -291,7 +321,7 @@ RoutingUnit::outportComputeXY(RouteInfo route,
 
     // already checked that in outportCompute() function
     //ensure we're not already in the destination router
-    assert(!(x_hops == 0 && y_hops == 0)); 
+    assert(!(x_hops == 0 && y_hops == 0 && z_hops == 0)); 
 
     if (x_hops > 0) { //we have horizontal hops
         if (x_dirn) { //if we need to go rightward
@@ -319,7 +349,18 @@ RoutingUnit::outportComputeXY(RouteInfo route,
         }
     } else if (z_hops > 0) { //we need to use the bus
         //===============================================================
-        outport_dirn = "Down" + std::to_string(my_z);
+        outport_dirn = "Up";
+        std::cout << "************************************************\n";
+        std::cout << "Now the router should pass the packet to the bus!\n";
+        if (m_outports_dirn2idx.find(outport_dirn) != m_outports_dirn2idx.end()) {
+            // Key exists, you can access the value using m_outports_dirn2idx[outport_dirn]
+            std::cout << "The outport number for Up is: " << m_outports_dirn2idx[outport_dirn] <<"\n";
+        } else {
+            // Key does not exist
+            std::cout << "Router port Up is not properly created and thus the segmentation fault!\n";
+        }
+        std::cout << "************************************************\n";
+        // outport_dirn = "Down" + std::to_string(my_z);
         //===============================================================
     } else { //we have neither horizontal nor vertical hops
         // x_hops == 0 and y_hops == 0

@@ -428,11 +428,11 @@ Topology::makeLink(Network *net, SwitchID src, SwitchID dest,
         }
     } else if ((src >= 4 * m_nodes) && (dest >= 4 * m_nodes)) {
         //======================================================
-        std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++\n";
-        std::cout << "m_nodes: " << m_nodes <<"\n";
-        std::cout << "SwitchID src is (router_id): " << src <<"\n";
-        std::cout << "SwitchID dest is (bus_id): " << dest <<"\n";
-        std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++\n";
+        // std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++\n";
+        // std::cout << "m_nodes: " << m_nodes <<"\n";
+        // std::cout << "SwitchID src is (router_id): " << src <<"\n";
+        // std::cout << "SwitchID dest is (bus_id): " << dest <<"\n";
+        // std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++\n";
         //======================================================
         //router to bus links
         //==============================================================
@@ -465,11 +465,11 @@ Topology::makeLink(Network *net, SwitchID src, SwitchID dest,
 
     } else if ((src >= 3*m_nodes) && (dest >= 3*m_nodes)) { 
         //======================================================
-        std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
-        std::cout << "m_nodes: " << m_nodes <<"\n";
-        std::cout << "SwitchID src is (bus_id): " << src <<"\n";
-        std::cout << "SwitchID dest is (router_id): " << dest <<"\n";
-        std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
+        // std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
+        // std::cout << "m_nodes: " << m_nodes <<"\n";
+        // std::cout << "SwitchID src is (bus_id): " << src <<"\n";
+        // std::cout << "SwitchID dest is (router_id): " << dest <<"\n";
+        // std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
         //======================================================
         //bus to router links
         //==============================================================
@@ -501,11 +501,11 @@ Topology::makeLink(Network *net, SwitchID src, SwitchID dest,
         //============================================================== 
     } else {
         //======================================================
-        std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n";
-        std::cout << "m_nodes: " << m_nodes <<"\n";
-        std::cout << "SwitchID src is (router_id): " << src <<"\n";
-        std::cout << "SwitchID dest is (router_id): " << dest <<"\n";
-        std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n";
+        // std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n";
+        // std::cout << "m_nodes: " << m_nodes <<"\n";
+        // std::cout << "SwitchID src is (router_id): " << src <<"\n";
+        // std::cout << "SwitchID dest is (router_id): " << dest <<"\n";
+        // std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n";
         //======================================================
         assert((src >= 2 * m_nodes) && (dest >= 2 * m_nodes));
         
