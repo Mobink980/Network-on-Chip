@@ -82,7 +82,7 @@ CrossbarSwitch::wakeup()
             continue;
         }
 
-	//peek the top flit of the switch_buffer that has a ready flit
+	    //peek the top flit of the switch_buffer that has a ready flit
         flit *t_flit = switch_buffer.peekTopFlit();
         //if the flit is in the Switch_Traversal pipeline stage
         if (t_flit->is_stage(ST_, curTick())) {

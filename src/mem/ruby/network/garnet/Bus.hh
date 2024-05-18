@@ -43,7 +43,6 @@
 #include "mem/ruby/network/garnet/CommonTypes.hh"
 #include "mem/ruby/network/garnet/BusCrossbarSwitch.hh"
 #include "mem/ruby/network/garnet/GarnetNetwork.hh"
-#include "mem/ruby/network/garnet/BusRoutingUnit.hh"
 #include "mem/ruby/network/garnet/BusSwitchAllocator.hh"
 #include "mem/ruby/network/garnet/flit.hh"
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -154,7 +153,7 @@ class Bus : public BasicBus, public Consumer
     //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     //This function grants the switch to an inport, so the flit could pass
     //the crossbar.
-    void grant_switch(int inport, flit *t_flit);
+    void grant_switch(flit *t_flit);
     //This function gives the bus, time cycles delay.
     void schedule_wakeup(Cycles time);
 
@@ -200,8 +199,6 @@ class Bus : public BasicBus, public Consumer
     //pointer to the GarnetNetwork
     GarnetNetwork *m_network_ptr;
 
-    //RoutingUnit of this bus
-    BusRoutingUnit routingUnit;
     //SwitchAllocator of this bus
     BusSwitchAllocator switchAllocator;
     //CrossbarSwitch of this bus

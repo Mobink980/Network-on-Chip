@@ -55,7 +55,6 @@ Source('Bus.cc')
 Source('BusCrossbarSwitch.cc')
 Source('BusInputUnit.cc')
 Source('BusOutputUnit.cc')
-Source('BusRoutingUnit.cc')
 Source('BusSwitchAllocator.cc')
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 Source('RoutingUnit.cc')

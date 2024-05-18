@@ -132,8 +132,7 @@ SwitchAllocator::arbitrate_inports()
     // Select a VC from each input in a round robin manner
     // Independent arbiter at each input port
     for (int inport = 0; inport < m_num_inports; inport++) {
-        //pick the invc we're gonna choose from every inport 
-        //(ex:first vc of every inport, third vc of every inport, etc.)
+        //the pointer is on what vc at this inport (e.g., third vc)
         int invc = m_round_robin_invc[inport];
 
         for (int invc_iter = 0; invc_iter < m_num_vcs; invc_iter++) {
@@ -212,7 +211,7 @@ SwitchAllocator::arbitrate_outports()
                 //the router this SwitchAllocator is a part of
                 auto input_unit = m_router->getInputUnit(inport);
 
-                // grant this outport to this inport
+                // get the winner vc for this inport
                 int invc = m_vc_winners[inport];
 
                 //get the outvc for this invc

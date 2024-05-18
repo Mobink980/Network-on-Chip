@@ -115,20 +115,10 @@ BusInputUnit::wakeup()
             set_vc_active(vc, curTick());
 
             //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-            // Route computation for this vc 
-            // The flit is broadcasted to all the outports
-            std::vector<int> outports = m_bus->route_compute();
-
-
-            // Update output port in VC
-            // All flits in this packet will use this output port
-            // The output port field in the flit is updated after it wins SA
-
-            // Iterate through each outport and call grant_outport
-            for (int outport : outports) {
-                //grant the outport to the VC
-                grant_outport(vc, outport); 
-            }
+            // No need to specify a specific outport for the flit to go to.
+            // The flit in bus is broadcasted to all outports.
+            int outport = 0;
+            grant_outport(vc, outport);
             //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 

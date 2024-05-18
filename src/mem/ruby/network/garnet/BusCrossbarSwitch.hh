@@ -66,12 +66,14 @@ class BusCrossbarSwitch : public Consumer
     //printing the CrossbarSwitch
     void print(std::ostream& out) const {};
 
-    //insert the flit t_flit into the switchBuffer of the inport
+    //=========================================================
+    //insert the flit t_flit into the switchBuffer 
     inline void
-    update_sw_winner(int inport, flit *t_flit)
+    update_sw_winner(flit *t_flit)
     {
-        switchBuffers[inport].insert(t_flit);
+        switchBuffer.insert(t_flit);
     }
+    //=========================================================
 
     //returns the number of times the crossbar is used so far
     inline double get_crossbar_activity() { return m_crossbar_activity; }
@@ -90,8 +92,12 @@ class BusCrossbarSwitch : public Consumer
     int m_num_vcs;
     //number of times the crossbar is used so far
     double m_crossbar_activity;
-    //the buffers of the CrossbarSwitch to hold flits
-    std::vector<flitBuffer> switchBuffers;
+    //=========================================================
+    //only one buffer to hold the flit that we are going to broadcast
+    flitBuffer switchBuffer;
+    //we need the number of outports to broadcast
+    int m_num_outports;
+    //=========================================================
 };
 
 } // namespace garnet

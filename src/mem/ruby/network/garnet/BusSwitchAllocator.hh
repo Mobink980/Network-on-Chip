@@ -81,9 +81,10 @@ class BusSwitchAllocator : public Consumer
     //(that placed a request during SA-I) as the winner for this 
     //outport in a round robin manner.
     void arbitrate_outports();
+    //===========================================================
     //Check to see if a flit in an invc is allowed to be sent 
-    //to its desired output 
-    bool send_allowed(int inport, int invc, int outport, int outvc);
+    bool send_allowed(int inport, int invc, int outvc);
+    //===========================================================
     //Assign a free VC to the winner of the outport (for HEAD/HEAD_TAIL flits)
     int vc_allocate(int outport, int inport, int invc);
 
@@ -119,9 +120,10 @@ class BusSwitchAllocator : public Consumer
     std::vector<int> m_round_robin_invc;
     //for choosing an inport in a round-robin manner
     std::vector<int> m_round_robin_inport;
-    //to hold each inport (the winning invc in that inport) wants 
-    //what outport in a cycle
-    std::vector<int> m_port_requests;
+    //=========================================================
+    //to check whether an inport has a request to broadcast
+    std::vector<bool> m_has_request;
+    //=========================================================
     //to hold the winning invc in each inport 
     std::vector<int> m_vc_winners;
 };
