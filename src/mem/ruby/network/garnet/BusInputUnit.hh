@@ -85,13 +85,6 @@ class BusInputUnit : public Consumer
         virtualChannels[vc].set_active(curTime);
     }
 
-    //grant the outport to the VC
-    inline void
-    grant_outport(int vc, int outport)
-    {
-        virtualChannels[vc].set_outport(outport);
-    }
-
     //select a free VC from the outport for this inport VC
     //(for HEAD/HEAD_TAIL flits)
     inline void

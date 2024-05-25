@@ -60,9 +60,7 @@ class BusCrossbarSwitch : public Consumer
     //Loop through all input ports, and send the winning 
     //flit out of its output port onto the output link.
     void wakeup(); 
-    //for resizing switchBuffers vector to the number of 
-    //input ports (inports)
-    void init(); 
+
     //printing the CrossbarSwitch
     void print(std::ostream& out) const {};
 
@@ -95,8 +93,6 @@ class BusCrossbarSwitch : public Consumer
     //=========================================================
     //only one buffer to hold the flit that we are going to broadcast
     flitBuffer switchBuffer;
-    //we need the number of outports to broadcast
-    int m_num_outports;
     //=========================================================
 };
 

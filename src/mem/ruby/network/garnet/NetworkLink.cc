@@ -36,6 +36,10 @@
 #include "debug/RubyNetwork.hh"
 #include "mem/ruby/network/garnet/CreditLink.hh"
 
+//=====================================
+#include <iostream>
+//=====================================
+
 //Both NetworkLink.hh and CreditLink.hh are included here.
 //There is no CreditLink.cc.
 namespace gem5
@@ -95,6 +99,7 @@ NetworkLink::wakeup()
         src_object->name());
     assert(link_srcQueue != nullptr); //ensure there's a srcQueue
     assert(curTick() == clockEdge()); //current tick must be the clock edge
+
     if (link_srcQueue->isReady(curTick())) { 
         //get the top flit from link_srcQueue
         flit *t_flit = link_srcQueue->getTopFlit(); 
@@ -104,6 +109,16 @@ NetworkLink::wakeup()
         if (m_type != NUM_LINK_TYPES_) {
             // Only for assertions and debug messages
             //flit width must be equal to link width
+            //======================================================
+            // std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+            // std::cout << "ID of the flit: " << t_flit->get_id() <<"\n";
+            // std::cout << "Did t_flit came from bus? " << t_flit->is_broadcast() <<"\n";
+            // std::cout << "t_flit source router is: R" << t_flit->get_route().src_router <<"\n";
+            // std::cout << "t_flit destination router is: R" << t_flit->get_route().dest_router <<"\n";
+            // std::cout << "Size of the flit: " << t_flit->m_width <<"\n";
+            // std::cout << "Size of the network link: " << bitWidth <<"\n";
+            // std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+            //====================================================== 
             assert(t_flit->m_width == bitWidth);
             //ensure the Vnet of the flit is valid, and also
             //the size of the Vnets is not zero  

@@ -38,6 +38,10 @@
 #include "mem/ruby/network/garnet/CommonTypes.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
+//=====================================
+#include <iostream>
+//=====================================
+
 namespace gem5
 {
 
@@ -100,9 +104,17 @@ class flit
     //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     //set the broadcast state of a flit 
     //0: flit is coming from the router, 1: flit is coming from the bus
-    void set_broadcast(int state) {m_route.broadcast = state; }
+    void set_broadcast(int state) {
+        m_route.broadcast = state; 
+        // std::cout << "----------------------------------------------\n";
+        // std::cout << "Now the flit broadcast value is: " << m_route.broadcast <<"\n";
+        // std::cout << "----------------------------------------------\n";
+    }
     //returns true if a flit is coming from a Bus
     bool is_broadcast() {
+        // std::cout << "----------------------------------------------\n";
+        // std::cout << "Broadcast value for this flit is: " << m_route.broadcast <<"\n";
+        // std::cout << "----------------------------------------------\n";
         if(m_route.broadcast == 1){
             return true;
         }

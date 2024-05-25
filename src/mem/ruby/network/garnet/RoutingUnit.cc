@@ -197,16 +197,19 @@ RoutingUnit::outportCompute(RouteInfo route, int inport,
     //the outport we want to send the flit to
     int outport = -1; 
 
-    //======================================================
-    std::cout << "=================================================\n";
-    std::cout << "Source router of the flit: R" << route.src_router <<"\n";
-    std::cout << "Destination router of the flit: R" << route.dest_router <<"\n";
-    std::cout << "=================================================\n";
-    //======================================================
-
     //if the flit has reached to the destination router 
     //(it needs to be ejected from the network)
     if (route.dest_router == m_router->get_id()) {
+
+        //======================================================
+        // std::cout << "=================================================\n";
+        // std::cout << "This flit has reached its destination (in RoutingUnit.cc).\n";
+        // std::cout << "Source router of the flit: R" << route.src_router <<"\n";
+        // std::cout << "Destination router of the flit: R" << route.dest_router <<"\n";
+        // std::cout << "Current router: R" << m_router->get_id() <<"\n";
+        // std::cout << "Did the flit came from a bus? " << route.broadcast <<"\n";
+        // std::cout << "=================================================\n";
+        //======================================================
 
         // Multiple NIs may be connected to this router,
         // all with output port direction = "Local"
@@ -350,16 +353,16 @@ RoutingUnit::outportComputeXY(RouteInfo route,
     } else if (z_hops > 0) { //we need to use the bus
         //===============================================================
         outport_dirn = "Up";
-        std::cout << "************************************************\n";
-        std::cout << "Now the router should pass the packet to the bus!\n";
+        // std::cout << "************************************************\n";
+        // std::cout << "Now the router should pass the packet to the bus!\n";
         if (m_outports_dirn2idx.find(outport_dirn) != m_outports_dirn2idx.end()) {
             // Key exists, you can access the value using m_outports_dirn2idx[outport_dirn]
-            std::cout << "The outport number for Up is: " << m_outports_dirn2idx[outport_dirn] <<"\n";
+            // std::cout << "The outport number for Up is: " << m_outports_dirn2idx[outport_dirn] <<"\n";
         } else {
             // Key does not exist
-            std::cout << "Router port Up is not properly created and thus the segmentation fault!\n";
+            // std::cout << "Router port Up is not properly created and thus the segmentation fault!\n";
         }
-        std::cout << "************************************************\n";
+        // std::cout << "************************************************\n";
         // outport_dirn = "Down" + std::to_string(my_z);
         //===============================================================
     } else { //we have neither horizontal nor vertical hops

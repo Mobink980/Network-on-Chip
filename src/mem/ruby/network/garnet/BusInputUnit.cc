@@ -35,6 +35,10 @@
 #include "mem/ruby/network/garnet/Credit.hh"
 #include "mem/ruby/network/garnet/Bus.hh"
 
+//=====================================
+#include <iostream>
+//=====================================
+
 namespace gem5
 {
 
@@ -97,6 +101,15 @@ BusInputUnit::wakeup()
         //for stats (number of hops the flit traveled so far)
         t_flit->increment_hops();
 
+        //======================================================
+        std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
+        std::cout << "t_flit entered the bus inport through router_to_bus_link (BusInputUnit.cc).\n";
+        std::cout << "ID of t_flit is: " << t_flit->get_id() <<"\n";
+        std::cout << "t_flit source router is: R" << t_flit->get_route().src_router <<"\n";
+        std::cout << "t_flit destination router is: R" << t_flit->get_route().dest_router <<"\n";
+        std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
+        //====================================================== 
+
         //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         //change the broadcast flag to one so the routers would know
         //the flit is coming from a bus 
@@ -113,14 +126,6 @@ BusInputUnit::wakeup()
             //change the state of vc from IDLE_ to ACTIVE_ at 
             //the current tick
             set_vc_active(vc, curTick());
-
-            //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-            // No need to specify a specific outport for the flit to go to.
-            // The flit in bus is broadcasted to all outports.
-            int outport = 0;
-            grant_outport(vc, outport);
-            //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-
 
         } else { //the flit is of type BODY/TAIL
             //make sure the VC_state of the VC the flit is in, is ACTIVE_

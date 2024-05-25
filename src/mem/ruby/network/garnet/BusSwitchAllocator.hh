@@ -83,7 +83,7 @@ class BusSwitchAllocator : public Consumer
     void arbitrate_outports();
     //===========================================================
     //Check to see if a flit in an invc is allowed to be sent 
-    bool send_allowed(int inport, int invc, int outvc);
+    bool send_allowed(int inport, int invc, int outport, int outvc);
     //===========================================================
     //Assign a free VC to the winner of the outport (for HEAD/HEAD_TAIL flits)
     int vc_allocate(int outport, int inport, int invc);

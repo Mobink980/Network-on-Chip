@@ -37,6 +37,10 @@
 #include "mem/ruby/network/garnet/BusOutputUnit.hh"
 #include "mem/ruby/network/garnet/Bus.hh"
 
+//==================================
+#include <iostream>
+//==================================
+
 namespace gem5
 {
 
@@ -111,7 +115,6 @@ BusSwitchAllocator::wakeup()
 {
     arbitrate_inports(); // First stage of allocation
     arbitrate_outports(); // Second stage of allocation
-
     //Clear the request vector within the allocator at end of SA-II.
     //Was populated by SA-I.
     clear_request_vector();
@@ -133,10 +136,10 @@ BusSwitchAllocator::wakeup()
 void
 BusSwitchAllocator::arbitrate_inports()
 {
-    // Select a VC from each input in a round robin manner
+    // Select a VC from each inport in a round robin manner
     // Independent arbiter at each input port
     for (int inport = 0; inport < m_num_inports; inport++) {
-        //the pinter is on what vc at this inport
+        //the round-robin pinter is on what vc at this inport
         int invc = m_round_robin_invc[inport];
 
         for (int invc_iter = 0; invc_iter < m_num_vcs; invc_iter++) {
@@ -147,11 +150,6 @@ BusSwitchAllocator::arbitrate_inports()
             //if the top flit in invc in input_unit is currently
             //in SwitchAllocation stage
             if (input_unit->need_stage(invc, SA_, curTick())) {
-                // This flit is in SA stage
-
-                //======================================================
-                // No need to specify the outport for the VC.
-                //======================================================
 
                 //get the output vc the flit in invc wants to go to
                 // (ex: fifth outvc in the third outport)
@@ -161,8 +159,12 @@ BusSwitchAllocator::arbitrate_inports()
                 // Check if the flit in this InputVC is allowed to be sent.
                 // No need to know the specific outport (All outports in 
                 // Bus have the same condition because of the broadcast)
-                bool make_request =
-                    send_allowed(inport, invc, outvc);
+                //@@%%@@
+                // int outport = 0;
+                // int outport = 1;
+                // int outport = 2;
+                int outport = 3;
+                bool make_request = send_allowed(inport, invc, outport, outvc);
                 //======================================================
 
                 if (make_request) { //if we're allowed to send
@@ -207,7 +209,11 @@ BusSwitchAllocator::arbitrate_outports()
     // Again do round robin arbitration on these requests.
     //===================================================================
     // Only one arbiter for outport(0). Other outports are the same.
-    int outport = 0; 
+    //@@%%@@
+    // int outport = 0; 
+    // int outport = 1;
+    // int outport = 2;
+    int outport = 3;
     //===================================================================
     //choose an inport in a round-robin manner
     int inport = m_round_robin_inport[outport];
@@ -269,10 +275,11 @@ BusSwitchAllocator::arbitrate_outports()
             // decrement credit in outvc (i.e., invc of the next router)
             // Since, we are sending to all the outports, we need to decrement
             // credit for this particular vc in all the outports here. 
-            for(int my_outport = 0; my_outport < m_num_outports; my_outport++) {
-                auto my_output_unit = m_bus->getOutputUnit(my_outport);
-                my_output_unit->decrement_credit(outvc);
-            }    
+            // for(int my_outport = 0; my_outport < m_num_outports; my_outport++) {
+            //     auto my_output_unit = m_bus->getOutputUnit(my_outport);
+            //     my_output_unit->decrement_credit(outvc);
+            // }    
+            m_bus->getOutputUnit(outport)->decrement_credit(outvc); //only decrement for outport(0)
             //=============================================================
 
             // flit ready for Switch Traversal
@@ -347,7 +354,7 @@ BusSwitchAllocator::arbitrate_outports()
  *     that arrived before this flit and is requesting the same output port.
  */
 bool
-BusSwitchAllocator::send_allowed(int inport, int invc, int outvc)
+BusSwitchAllocator::send_allowed(int inport, int invc, int outport, int outvc)
 {
     // Check if outvc needed
     // Check if credit needed (for multi-flit packet)
@@ -362,16 +369,9 @@ BusSwitchAllocator::send_allowed(int inport, int invc, int outvc)
     //check whether the outvc has any credit left
     bool has_credit = false;
 
-    //========================================================
-    int outport = 0; // Only consider the first outport
-    //========================================================
-
-    // In bus, all the outports have the same condition since
-    // we are broadcasting. So to check if we have an empty VC,
-    // or the outvc of a flit has credit, it suffices to check
-    // the outport(0).
+    //get the right outport from the router which
+    //this SwitchAllocator is a part of
     auto output_unit = m_bus->getOutputUnit(outport);
-
     if (!has_outvc) { //if we don't have an outvc for this invc
 
         // needs outvc

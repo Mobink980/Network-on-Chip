@@ -160,7 +160,7 @@ OutputUnit::wakeup()
         Credit *t_credit = (Credit*) m_credit_link->consumeLink();
         //increment the credit for the outvc of t_credit
         //It means that outvc (i.e., input VC of the downstream router)  
-        //has one less free slot. 
+        //has one more free slot. 
         increment_credit(t_credit->get_vc());
 
         //if is_free_signal in t_credit is true, then set the VC state

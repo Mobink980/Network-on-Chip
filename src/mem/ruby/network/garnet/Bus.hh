@@ -85,6 +85,12 @@ class Bus : public BasicBus, public Consumer
     //for printing this bus
     void print(std::ostream& out) const {};
 
+    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+    //This function grants the switch to an inport, so the flit could pass
+    //the crossbar.
+    void grant_switch(flit *t_flit);
+    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
     //calls the init function of BasicBus, 
     //SwitchAllocator, and CrossbarSwitch
     void init();
@@ -147,13 +153,6 @@ class Bus : public BasicBus, public Consumer
     //get the direction of an inport
     PortDirection getInportDirection(int inport);
 
-    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-    //broadcast the received flits to all outports
-    std::vector<int> route_compute();
-    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-    //This function grants the switch to an inport, so the flit could pass
-    //the crossbar.
-    void grant_switch(flit *t_flit);
     //This function gives the bus, time cycles delay.
     void schedule_wakeup(Cycles time);
 

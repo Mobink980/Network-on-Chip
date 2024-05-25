@@ -37,6 +37,10 @@
 #include "mem/ruby/network/garnet/Bus.hh"
 #include "mem/ruby/network/garnet/flitBuffer.hh"
 
+//=====================================
+#include <iostream>
+//=====================================
+
 namespace gem5
 {
 
@@ -150,7 +154,6 @@ BusOutputUnit::select_free_vc(int vnet)
  * If the credit carries is_free_signal as true,
  * the output VC is marked IDLE (meaning that VC is free).
  */
-
 void
 BusOutputUnit::wakeup()
 {
@@ -160,7 +163,7 @@ BusOutputUnit::wakeup()
         Credit *t_credit = (Credit*) m_credit_link->consumeLink();
         //increment the credit for the outvc of t_credit
         //It means that outvc (i.e., input VC of the downstream router)  
-        //has one less free slot. 
+        //has one more free slot. 
         increment_credit(t_credit->get_vc());
 
         //if is_free_signal in t_credit is true, then set the VC state
@@ -208,6 +211,16 @@ BusOutputUnit::insert_flit(flit *t_flit)
 {
     //insert t_flit into outBuffer flitBuffer
     outBuffer.insert(t_flit);
+    //======================================================
+    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+    std::cout << "t_flit entered the outBuffer of the bus outport (BusOutputUnit.cc).\n";
+    std::cout << "ID of the t_flit in outBuffer: " << t_flit->get_id() <<"\n";
+    std::cout << "t_flit source router is: R" << t_flit->get_route().src_router <<"\n";
+    std::cout << "t_flit destination router is: R" << t_flit->get_route().dest_router <<"\n";
+    // flit *top_flit = outBuffer.peekTopFlit();
+    // std::cout << "ID of the flit at the top of the outBuffer is: " << top_flit->get_id() <<"\n";
+    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+    //====================================================== 
     //schedule consumption event for m_out_link for the next cycle 
     m_out_link->scheduleEventAbsolute(m_bus->clockEdge(Cycles(1)));
 }

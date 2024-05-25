@@ -34,6 +34,10 @@
 #include "mem/ruby/network/garnet/BusOutputUnit.hh"
 #include "mem/ruby/network/garnet/Bus.hh"
 
+//=====================================
+#include <iostream>
+//=====================================
+
 namespace gem5
 {
 
@@ -43,20 +47,21 @@ namespace ruby
 namespace garnet
 {
 
+//=================================================================
 //BusCrossbarSwitch constructor for instantiation
 BusCrossbarSwitch::BusCrossbarSwitch(Bus *bus)
   : Consumer(bus), m_bus(bus), m_num_vcs(m_bus->get_num_vcs()),
-    m_crossbar_activity(0), m_num_outports(m_bus->get_num_inports())
+    m_crossbar_activity(0)
 {
     switchBuffer = flitBuffer();
 }
+//=================================================================
 
 /*
  * The wakeup function of the CrossbarSwitch loops through all input ports,
  * and sends the winning flit (from SA) out of its output port on to the
  * output link. The output link is scheduled for wakeup in the next cycle.
  */
-
 void
 BusCrossbarSwitch::wakeup()
 {
@@ -79,12 +84,27 @@ BusCrossbarSwitch::wakeup()
             t_flit->advance_stage(LT_, m_bus->clockEdge(Cycles(1)));
             t_flit->set_time(m_bus->clockEdge(Cycles(1)));
 
+            //======================================================
+            std::cout << "*********************************************\n";
+            std::cout << "t_flit entered the switchBuffer of the crossbar after arbitration (BusCrossbarSwitch.cc).\n";
+            std::cout << "ID of the t_flit in switchBuffer: " << t_flit->get_id() <<"\n";
+            std::cout << "t_flit source router is: R" << t_flit->get_route().src_router <<"\n";
+            std::cout << "t_flit destination router is: R" << t_flit->get_route().dest_router <<"\n";
+            std::cout << "*********************************************\n";
+            //====================================================== 
+
             // This will take care of waking up the Network Link
             // in the next cycle
             // Insert the flit into all of the outports.
-            for(int outport = 0; outport < m_num_outports; outport++) {
-                m_bus->getOutputUnit(outport)->insert_flit(t_flit);
-            }
+            // for(int outport = 0; outport < m_bus->get_num_outports(); outport++) {
+            //     std::cout << "t_flit inserted into outport: " << outport <<"\n";
+            //     m_bus->getOutputUnit(outport)->insert_flit(t_flit);
+            // }
+            //@@%%@@
+            // m_bus->getOutputUnit(0)->insert_flit(t_flit); //only send to outport(0)
+            // m_bus->getOutputUnit(1)->insert_flit(t_flit);
+            // m_bus->getOutputUnit(2)->insert_flit(t_flit);
+            m_bus->getOutputUnit(3)->insert_flit(t_flit);
             
             //get the top flit of the switchBuffer (1 place is freed)
             switchBuffer.getTopFlit();
@@ -94,6 +114,8 @@ BusCrossbarSwitch::wakeup()
     }
 }
 
+
+//===================================================================
 bool
 BusCrossbarSwitch::functionalRead(Packet *pkt, WriteMask &mask)
 {
@@ -113,6 +135,7 @@ BusCrossbarSwitch::functionalWrite(Packet *pkt)
    uint32_t num_functional_writes = switchBuffer.functionalWrite(pkt);
    return num_functional_writes;
 }
+//===================================================================
 
 //for resetting BusCrossbarSwitch statistics
 void
