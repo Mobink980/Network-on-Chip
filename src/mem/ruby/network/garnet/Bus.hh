@@ -88,7 +88,11 @@ class Bus : public BasicBus, public Consumer
     //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     //This function grants the switch to an inport, so the flit could pass
     //the crossbar.
-    void grant_switch(flit *t_flit);
+    // void grant_switch(flit *t_flit);
+
+    //This function grants the switch to an inport, so the flit could pass
+    //the crossbar.
+    void grant_switch(int inport, flit *t_flit);
     //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
     //calls the init function of BasicBus, 

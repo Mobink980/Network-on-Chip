@@ -71,6 +71,7 @@ Bus::init()
     BasicBus::init();
 
     switchAllocator.init();
+    crossbarSwitch.init();
 }
 
 //Loop through all InputUnits and call their wakeup()
@@ -201,10 +202,18 @@ Bus::getInportDirection(int inport)
 //===================================================================
 //This function grants the switch to an inport, so the flit could pass
 //the crossbar.
+// void
+// Bus::grant_switch(flit *t_flit)
+// {
+//     crossbarSwitch.update_sw_winner(t_flit);
+// }
+
+//This function grants the switch to an inport, so the flit could pass
+//the crossbar.
 void
-Bus::grant_switch(flit *t_flit)
+Bus::grant_switch(int inport, flit *t_flit)
 {
-    crossbarSwitch.update_sw_winner(t_flit);
+    crossbarSwitch.update_sw_winner(inport, t_flit);
 }
 //===================================================================
 

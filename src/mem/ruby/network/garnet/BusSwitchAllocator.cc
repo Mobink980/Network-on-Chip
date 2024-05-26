@@ -70,9 +70,9 @@ BusSwitchAllocator::BusSwitchAllocator(Bus *bus)
 void
 BusSwitchAllocator::init()
 {
-    //get the number of router inports
+    //get the number of bus inports
     m_num_inports = m_bus->get_num_inports();
-    //get the number of router outports
+    //get the number of bus outports
     m_num_outports = m_bus->get_num_outports();
     //set the size of m_round_robin_inport to the size of inports
     m_round_robin_inport.resize(m_num_outports);
@@ -107,7 +107,7 @@ BusSwitchAllocator::init()
  * seperable switch allocation. At the end of the 2nd stage, a free
  * output VC is assigned to the winning flits of each output port.
  * There is no separate VCAllocator stage like the one in garnet1.0.
- * At the end of this function, the router is rescheduled to wakeup
+ * At the end of this function, the bus is rescheduled to wakeup
  * next cycle for peforming SA for any flits ready next cycle.
  */
 void
@@ -118,7 +118,7 @@ BusSwitchAllocator::wakeup()
     //Clear the request vector within the allocator at end of SA-II.
     //Was populated by SA-I.
     clear_request_vector();
-    //Wakeup the router next cycle to perform SA again
+    //Wakeup the bus next cycle to perform SA again
     //if there are flits ready.
     check_for_wakeup();
 }
@@ -144,7 +144,7 @@ BusSwitchAllocator::arbitrate_inports()
 
         for (int invc_iter = 0; invc_iter < m_num_vcs; invc_iter++) {
             //get the InputUnit with the inport number from 
-            //the router this SwitchAllocator is a part of
+            //the bus this SwitchAllocator is a part of
             auto input_unit = m_bus->getInputUnit(inport);
 
             //if the top flit in invc in input_unit is currently
@@ -156,15 +156,15 @@ BusSwitchAllocator::arbitrate_inports()
                 int outvc = input_unit->get_outvc(invc);
 
                 //======================================================
+                //No routingUnit in bus, therefore for each inport, 
+                //we check whether there is a vc that can go to the 
+                //corresponding outport. 
+                //inport(i) ==> outport(i)
+                int outport = inport;
                 // Check if the flit in this InputVC is allowed to be sent.
-                // No need to know the specific outport (All outports in 
-                // Bus have the same condition because of the broadcast)
                 //@@%%@@
-                // int outport = 0;
-                // int outport = 1;
-                // int outport = 2;
-                int outport = 3;
-                bool make_request = send_allowed(inport, invc, outport, outvc);
+                bool make_request =
+                    send_allowed(inport, invc, outport, outvc);
                 //======================================================
 
                 if (make_request) { //if we're allowed to send
@@ -199,7 +199,7 @@ BusSwitchAllocator::arbitrate_inports()
  * The winning flit is read out from the input VC and sent to the
  * CrossbarSwitch.
  * An increment_credit signal is sent from the InputUnit
- * to the upstream router. For HEAD_TAIL/TAIL flits, is_free_signal in the
+ * to the upstream bus. For HEAD_TAIL/TAIL flits, is_free_signal in the
  * credit is set to true.
  */
 void
@@ -207,28 +207,22 @@ BusSwitchAllocator::arbitrate_outports()
 {
     // Now there are a set of input vc requests for output vcs.
     // Again do round robin arbitration on these requests.
-    //===================================================================
-    // Only one arbiter for outport(0). Other outports are the same.
-    //@@%%@@
-    // int outport = 0; 
-    // int outport = 1;
-    // int outport = 2;
-    int outport = 3;
-    //===================================================================
-    //choose an inport in a round-robin manner
-    int inport = m_round_robin_inport[outport];
+    // Independent arbiter at each output port
+    for (int outport = 0; outport < m_num_outports; outport++) {
+        //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        //For each outport, we need to check the corresponding inport
+        //since in the arbitrate_inports, we chose a vc in each inport
+        //for its corresponding outport
+        int inport = outport;
+        //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
-    for (int inport_iter = 0; inport_iter < m_num_inports;
-                inport_iter++) {
-        //=====================================================
-        //if this inport has a request this cycle for broadcast
+        //if inport has a request in this cycle
         if (m_has_request[inport] == true) {
-        //=====================================================
             //get the OutputUnit with the outport number from 
-            //the router this SwitchAllocator is a part of
+            //the bus this SwitchAllocator is a part of
             auto output_unit = m_bus->getOutputUnit(outport);
             //get the InputUnit with the inport number from 
-            //the router this SwitchAllocator is a part of
+            //the bus this SwitchAllocator is a part of
             auto input_unit = m_bus->getInputUnit(inport);
 
             // get the winner vc for this inport
@@ -271,22 +265,14 @@ BusSwitchAllocator::arbitrate_outports()
             // (This was updated in VC by vc_allocate, but not in flit)
             t_flit->set_vc(outvc);
 
-            //=============================================================
-            // decrement credit in outvc (i.e., invc of the next router)
-            // Since, we are sending to all the outports, we need to decrement
-            // credit for this particular vc in all the outports here. 
-            // for(int my_outport = 0; my_outport < m_num_outports; my_outport++) {
-            //     auto my_output_unit = m_bus->getOutputUnit(my_outport);
-            //     my_output_unit->decrement_credit(outvc);
-            // }    
-            m_bus->getOutputUnit(outport)->decrement_credit(outvc); //only decrement for outport(0)
-            //=============================================================
+            // decrement credit in outvc (i.e., invc of the next bus)
+            output_unit->decrement_credit(outvc);
 
             // flit ready for Switch Traversal
             //change the flit stage from SA_ to ST_
             t_flit->advance_stage(ST_, curTick()); 
             //grant the switch (crossbar) to t_flit
-            m_bus->grant_switch(t_flit);
+            m_bus->grant_switch(inport, t_flit);
             //increment the activity of output_arbiter
             m_output_arbiter_activity++;
 
@@ -312,14 +298,6 @@ BusSwitchAllocator::arbitrate_outports()
             // remove this request
             m_has_request[inport] = false;
 
-            // Update Round Robin pointer
-            //go to the next inport for this outport (we now check invcs
-            //in this inport to see if any flit needs this outport)
-            m_round_robin_inport[outport] = inport + 1;
-            //start from the beginning again (round-robin)
-            if (m_round_robin_inport[outport] >= m_num_inports)
-                m_round_robin_inport[outport] = 0;
-
             // Update Round Robin pointer to the next VC
             // We do it here to keep it fair.
             // Only the VC which got switch traversal
@@ -329,14 +307,8 @@ BusSwitchAllocator::arbitrate_outports()
             if (m_round_robin_invc[inport] >= m_num_vcs)
                 m_round_robin_invc[inport] = 0;
 
-
-            break; // got a input winner for this outport
         }
 
-        inport++; //go to the next inport
-        //start from the beginning again (round-robin)
-        if (inport >= m_num_inports)
-            inport = 0;
     }
 }
 
@@ -369,7 +341,7 @@ BusSwitchAllocator::send_allowed(int inport, int invc, int outport, int outvc)
     //check whether the outvc has any credit left
     bool has_credit = false;
 
-    //get the right outport from the router which
+    //get the right outport from the bus which
     //this SwitchAllocator is a part of
     auto output_unit = m_bus->getOutputUnit(outport);
     if (!has_outvc) { //if we don't have an outvc for this invc
@@ -399,7 +371,7 @@ BusSwitchAllocator::send_allowed(int inport, int invc, int outport, int outvc)
 
     // protocol ordering check
     if ((m_bus->get_net_ptr())->isVNetOrdered(vnet)) { //if vnet is ordered
-        //get the right inport from the router which
+        //get the right inport from the bus which
         //this SwitchAllocator is a part of
         auto input_unit = m_bus->getInputUnit(inport);
 
@@ -439,17 +411,17 @@ BusSwitchAllocator::vc_allocate(int outport, int inport, int invc)
     assert(outvc != -1);
     //grant the free outvc to the winner invc (winner of the output port)
     m_bus->getInputUnit(inport)->grant_outvc(invc, outvc);
-    return outvc; //return the free outvc (free invc of the next router)
+    return outvc; //return the free outvc (free invc of the next bus)
 }
 
-// Wakeup the router next cycle to perform SA again
+// Wakeup the bus next cycle to perform SA again
 // if there are flits ready.
 void
 BusSwitchAllocator::check_for_wakeup()
 {
-    //get the next clockEdge (cycle) of this router
+    //get the next clockEdge (cycle) of this bus
     Tick nextCycle = m_bus->clockEdge(Cycles(1));
-    //if the router is already scheduled for the next 
+    //if the bus is already scheduled for the next 
     //cycle, then no action needs to be done
     if (m_bus->alreadyScheduled(nextCycle)) {
         return;
@@ -459,7 +431,7 @@ BusSwitchAllocator::check_for_wakeup()
         for (int j = 0; j < m_num_vcs; j++) { //for every vc in that inport
             //if the vc in that inport has a flit in SA_ stage
             if (m_bus->getInputUnit(i)->need_stage(j, SA_, nextCycle)) {
-                //schedule the router to wakeup in the next cycle
+                //schedule the bus to wakeup in the next cycle
                 m_bus->schedule_wakeup(Cycles(1)); 
                 return;
             }

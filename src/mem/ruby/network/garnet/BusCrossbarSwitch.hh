@@ -60,18 +60,18 @@ class BusCrossbarSwitch : public Consumer
     //Loop through all input ports, and send the winning 
     //flit out of its output port onto the output link.
     void wakeup(); 
-
+    //for resizing switchBuffers vector to the number of 
+    //input ports (inports)
+    void init(); 
     //printing the CrossbarSwitch
     void print(std::ostream& out) const {};
 
-    //=========================================================
-    //insert the flit t_flit into the switchBuffer 
+    //insert the flit t_flit into the switchBuffer of the inport
     inline void
-    update_sw_winner(flit *t_flit)
+    update_sw_winner(int inport, flit *t_flit)
     {
-        switchBuffer.insert(t_flit);
+        switchBuffers[inport].insert(t_flit);
     }
-    //=========================================================
 
     //returns the number of times the crossbar is used so far
     inline double get_crossbar_activity() { return m_crossbar_activity; }
@@ -84,16 +84,14 @@ class BusCrossbarSwitch : public Consumer
     void resetStats();
 
   private:
-    //the bus this BusCrossbarSwitch is part of
+    //the bus this CrossbarSwitch is part of
     Bus *m_bus;
     //number of VCs
     int m_num_vcs;
     //number of times the crossbar is used so far
     double m_crossbar_activity;
-    //=========================================================
-    //only one buffer to hold the flit that we are going to broadcast
-    flitBuffer switchBuffer;
-    //=========================================================
+    //the buffers of the CrossbarSwitch to hold flits
+    std::vector<flitBuffer> switchBuffers;
 };
 
 } // namespace garnet
