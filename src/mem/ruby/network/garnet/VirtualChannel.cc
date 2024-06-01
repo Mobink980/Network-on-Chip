@@ -43,7 +43,7 @@ namespace garnet
 //VC constructor
 VirtualChannel::VirtualChannel()
   : inputBuffer(), m_vc_state(IDLE_, Tick(0)), m_output_port(-1),
-    m_enqueue_time(INFINITE_), m_output_vc(-1)
+    m_enqueue_time(INFINITE_), m_output_vc(-1), m_broadcast_output_vcs()
 {
 }
 
@@ -56,6 +56,8 @@ VirtualChannel::set_idle(Tick curTime)
     m_enqueue_time = Tick(INFINITE_);
     m_output_port = -1;
     m_output_vc = -1;
+    //Remove all elements from m_broadcast_output_vcs vector
+    m_broadcast_output_vcs.clear();
 }
 
 //set the vc state to active (the VC is in use)

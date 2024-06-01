@@ -102,12 +102,12 @@ BusInputUnit::wakeup()
         t_flit->increment_hops();
 
         //======================================================
-        std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
-        std::cout << "t_flit entered the bus inport through router_to_bus_link (BusInputUnit.cc).\n";
-        std::cout << "ID of t_flit is: " << t_flit->get_id() <<"\n";
-        std::cout << "t_flit source router is: R" << t_flit->get_route().src_router <<"\n";
-        std::cout << "t_flit destination router is: R" << t_flit->get_route().dest_router <<"\n";
-        std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
+        // std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
+        // std::cout << "t_flit entered the bus inport through router_to_bus_link (BusInputUnit.cc).\n";
+        // std::cout << "ID of t_flit is: " << t_flit->get_id() <<"\n";
+        // std::cout << "t_flit source router is: R" << t_flit->get_route().src_router <<"\n";
+        // std::cout << "t_flit destination router is: R" << t_flit->get_route().dest_router <<"\n";
+        // std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
         //====================================================== 
 
         //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&

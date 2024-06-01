@@ -33,6 +33,7 @@
 #define __MEM_RUBY_NETWORK_GARNET_0_VIRTUALCHANNEL_HH__
 
 #include <utility>
+#include <vector>
 
 #include "mem/ruby/network/garnet/CommonTypes.hh"
 #include "mem/ruby/network/garnet/flitBuffer.hh"
@@ -65,6 +66,24 @@ class VirtualChannel
     void set_outvc(int outvc)               { m_output_vc = outvc; }
     //get the output vc
     inline int get_outvc()                  { return m_output_vc; }
+    //==============================================================
+    //set the output vc for a specific outport
+    void set_broadcast_outvc(int outvc) { 
+        m_broadcast_output_vcs.push_back(outvc); 
+    }
+    //get the outvc for a specific outport
+    inline int get_broadcast_outvc(int outport) { 
+        assert(!m_broadcast_output_vcs.empty());
+        return m_broadcast_output_vcs[outport];
+    }
+    //to check the need for vc allocations in broadcast mode
+    inline bool is_outvc_allocated() {
+        if(m_broadcast_output_vcs.empty()) {
+            return false;
+        }
+        return true;
+    }
+    //==============================================================
     //set the outport for the vc
     void set_outport(int outport)           { m_output_port = outport; };
     //get the outport of the vc
@@ -129,6 +148,10 @@ class VirtualChannel
     Tick m_enqueue_time;
     //output vc
     int m_output_vc;
+    //========================================
+    //used in broadcasting (to save the output vc of multiple outports)
+    std::vector<int> m_broadcast_output_vcs;
+    //========================================
 };
 
 } // namespace garnet

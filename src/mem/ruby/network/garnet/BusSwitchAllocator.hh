@@ -37,6 +37,7 @@
 
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/network/garnet/CommonTypes.hh"
+#include "mem/ruby/network/garnet/VirtualChannel.hh"
 
 namespace gem5
 {
@@ -123,6 +124,12 @@ class BusSwitchAllocator : public Consumer
     //=========================================================
     //to check whether an inport has a request to broadcast
     std::vector<bool> m_has_request;
+    //to check whether there is a broadcast available in this cycle
+    bool broadcast_this_cycle;
+    //the inport that has won the broadcast
+    int m_inport_broadcast;
+    //the winner vc in the inport that has won the broadcast
+    int m_vc_broadcast;
     //=========================================================
     //to hold the winning invc in each inport 
     std::vector<int> m_vc_winners;

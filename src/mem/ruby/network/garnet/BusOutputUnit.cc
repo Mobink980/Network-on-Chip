@@ -212,14 +212,14 @@ BusOutputUnit::insert_flit(flit *t_flit)
     //insert t_flit into outBuffer flitBuffer
     outBuffer.insert(t_flit);
     //======================================================
-    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-    std::cout << "t_flit entered the outBuffer of the bus outport (BusOutputUnit.cc).\n";
-    std::cout << "ID of the t_flit in outBuffer: " << t_flit->get_id() <<"\n";
-    std::cout << "t_flit source router is: R" << t_flit->get_route().src_router <<"\n";
-    std::cout << "t_flit destination router is: R" << t_flit->get_route().dest_router <<"\n";
-    // flit *top_flit = outBuffer.peekTopFlit();
-    // std::cout << "ID of the flit at the top of the outBuffer is: " << top_flit->get_id() <<"\n";
-    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+    // std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+    // std::cout << "t_flit entered the outBuffer of the bus outport (BusOutputUnit.cc).\n";
+    // std::cout << "ID of the t_flit in outBuffer: " << t_flit->get_id() <<"\n";
+    // std::cout << "t_flit source router is: R" << t_flit->get_route().src_router <<"\n";
+    // std::cout << "t_flit destination router is: R" << t_flit->get_route().dest_router <<"\n";
+    // // flit *top_flit = outBuffer.peekTopFlit();
+    // // std::cout << "ID of the flit at the top of the outBuffer is: " << top_flit->get_id() <<"\n";
+    // std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
     //====================================================== 
     //schedule consumption event for m_out_link for the next cycle 
     m_out_link->scheduleEventAbsolute(m_bus->clockEdge(Cycles(1)));

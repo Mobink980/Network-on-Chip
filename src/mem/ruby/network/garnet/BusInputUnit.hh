@@ -107,6 +107,29 @@ class BusInputUnit : public Consumer
         return virtualChannels[invc].get_outvc();
     }
 
+    //===========================================================
+    //get the outport VC for this inport VC (for BODY/TAIL flits)
+    //in case of broadcast
+    inline int
+    get_broadcast_outvc(int invc, int outport) 
+    {
+        return virtualChannels[invc].get_broadcast_outvc(outport);
+    }
+    //Set the outvc for an invc for a specific outport (broadcast mode)
+    inline void
+    grant_broadcast_outvc(int vc, int outvc)
+    {
+        virtualChannels[vc].set_broadcast_outvc(outvc);
+    }
+    //To check whether the outvcs are allocated for an invc (broadcast mode)
+    //allocation needed for HEAD or HEAD_TAIL flits
+    inline bool
+    is_outvc_allocated(int invc)
+    {
+        return virtualChannels[invc].is_outvc_allocated(); 
+    }
+    //===========================================================
+
     //get the time of enqueue for this inport VC
     inline Tick
     get_enqueue_time(int invc)

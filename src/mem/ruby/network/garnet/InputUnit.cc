@@ -98,14 +98,14 @@ InputUnit::wakeup()
         m_router->getBitWidth(), *t_flit);
  
         //======================================================
-        std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
-        std::cout << "ID of the flit: " << t_flit->get_id() <<"\n";
-        std::cout << "Did t_flit came from bus? " << t_flit->is_broadcast() <<"\n";
-        // std::cout << "t_flit source router is: R" << t_flit->get_route().src_router <<"\n";
-        // std::cout << "t_flit destination router is: R" << t_flit->get_route().dest_router <<"\n";
-        std::cout << "Size of the flit: " << t_flit->m_width <<"\n";
-        std::cout << "Size of the network link: " << m_router->getBitWidth() <<"\n";
-        std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
+        // std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
+        // std::cout << "ID of the flit: " << t_flit->get_id() <<"\n";
+        // std::cout << "Did t_flit came from bus? " << t_flit->is_broadcast() <<"\n";
+        // // std::cout << "t_flit source router is: R" << t_flit->get_route().src_router <<"\n";
+        // // std::cout << "t_flit destination router is: R" << t_flit->get_route().dest_router <<"\n";
+        // std::cout << "Size of the flit: " << t_flit->m_width <<"\n";
+        // std::cout << "Size of the network link: " << m_router->getBitWidth() <<"\n";
+        // std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
         //====================================================== 
 
         //make sure the flit size is the same as the router link size
