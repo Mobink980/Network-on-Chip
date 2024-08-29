@@ -99,9 +99,7 @@ class Topology
     Topology(uint32_t num_nodes, uint32_t num_routers, uint32_t num_busses,
              uint32_t num_vnets,
              const std::vector<BasicExtLink *> &ext_links,
-             const std::vector<BasicIntLink *> &int_links,
-             const std::vector<BasicBusToRouterLink *> &bus_to_router_links,
-             const std::vector<BasicRouterToBusLink *> &router_to_bus_links); 
+             const std::vector<BasicIntLink *> &int_links);
     //====================================================================
 
     //returns the number of switches in the topology
@@ -160,11 +158,6 @@ class Topology
     std::vector<BasicExtLink*> m_ext_link_vector;
     //vector containing internal links of the topology
     std::vector<BasicIntLink*> m_int_link_vector;
-    //================================================================
-    //vectors containing bus links of the topology
-    std::vector<BasicBusToRouterLink*> m_bus_to_router_link_vector; 
-    std::vector<BasicRouterToBusLink*> m_router_to_bus_link_vector; 
-    //================================================================
 
     //LinkMap for finding the shortest path
     LinkMap m_link_map;

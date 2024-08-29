@@ -237,15 +237,11 @@ def create_system(
     (
         network,
         IntLinkClass,
-        #============================================
-        BusToRouterLinkClass,
-        RouterToBusLinkClass,
-        #============================================
         ExtLinkClass,
         RouterClass,
-        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         BusClass,
-        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         InterfaceClass,
     ) = Network.create_network(options, ruby)
     ruby.network = network
@@ -265,16 +261,10 @@ def create_system(
         print(f"Error: could not create sytem for ruby protocol {protocol}")
         raise
 
-    
-    # topology.makeTopology(
-    #     options, network, IntLinkClass, ExtLinkClass, RouterClass
-    # )
     # =====================================================
     # Create the network topology
     topology.makeTopology(
-        options, network, IntLinkClass, 
-        BusToRouterLinkClass, RouterToBusLinkClass, ExtLinkClass, 
-        RouterClass, BusClass
+        options, network, IntLinkClass, ExtLinkClass, RouterClass, BusClass
     )
     # =====================================================
 

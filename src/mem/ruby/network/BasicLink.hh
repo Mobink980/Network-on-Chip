@@ -37,10 +37,6 @@
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "params/BasicExtLink.hh"
 #include "params/BasicIntLink.hh"
-//========================================
-#include "params/BasicBusToRouterLink.hh"
-#include "params/BasicRouterToBusLink.hh"
-//========================================
 #include "params/BasicLink.hh"
 #include "sim/sim_object.hh"
 
@@ -95,26 +91,6 @@ class BasicIntLink : public BasicLink
 };
 
 
-//==================================================
-class BasicBusToRouterLink : public BasicLink
-{
-  public:
-    PARAMS(BasicBusToRouterLink);
-    BasicBusToRouterLink(const Params &p);
-
-    friend class Topology;
-};
-
-
-class BasicRouterToBusLink : public BasicLink
-{
-  public:
-    PARAMS(BasicRouterToBusLink);
-    BasicRouterToBusLink(const Params &p);
-
-    friend class Topology;
-};
-//==================================================
 
 
 } // namespace ruby

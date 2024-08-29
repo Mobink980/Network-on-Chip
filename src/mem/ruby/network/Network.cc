@@ -129,9 +129,7 @@ Network::Network(const Params &p)
     m_topology_ptr = new Topology(m_nodes, p.routers.size(),
                                   p.busses.size(),
                                   m_virtual_networks,
-                                  p.ext_links, p.int_links, 
-                                  p.bus_to_router_links,
-                                  p.router_to_bus_links);
+                                  p.ext_links, p.int_links);
     //================================================================
 
 

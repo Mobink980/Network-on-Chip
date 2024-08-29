@@ -37,8 +37,8 @@ from m5.params import *
 # to guarantee deadlock freedom.
 
 
-class Mesh_Stacked(SimpleTopology):
-    description = "Mesh_Stacked"
+class NoC_Bus_Hybrid(SimpleTopology):
+    description = "NoC_Bus_Hybrid"
 
     def __init__(self, controllers):
         self.nodes = controllers
@@ -69,7 +69,7 @@ class Mesh_Stacked(SimpleTopology):
         # Adding some extra middle routers (16 for 64 main routers)
         # These extra routers connect routers in different layers
         num_routers = options.num_cpus
-        num_busses = num_rows * num_columns
+        num_busses = num_rows * num_columns * 4
         # ******************************************************
 
         # default values for link latency and router latency.
@@ -187,7 +187,6 @@ class Mesh_Stacked(SimpleTopology):
             router_to_bus_links,
             bus_to_router_count,
             router_to_bus_count,
-            link_latency,
             routers,
             busses,
         )
@@ -333,7 +332,7 @@ class Mesh_Stacked(SimpleTopology):
         router_to_bus_links,
         BusToRouterLink,
         RouterToBusLink,
-        link_latency,
+        bus_port_number,
         bus_to_router_count,
         router_to_bus_count,
         layer_number,
@@ -346,8 +345,11 @@ class Mesh_Stacked(SimpleTopology):
                 link_id=bus_to_router_count,
                 src_node=bus,
                 dst_node=router,
-                src_outport="Down" + str(layer_number),
-                dst_inport="Up",
+                src_outport="Down"
+                + str(layer_number)
+                + "_"
+                + str(bus_port_number),
+                dst_inport="Up" + str(bus_port_number),
                 latency=0,
                 weight=3,
             )
@@ -359,8 +361,11 @@ class Mesh_Stacked(SimpleTopology):
                 link_id=router_to_bus_count,
                 src_node=router,
                 dst_node=bus,
-                src_outport="Up",
-                dst_inport="Down" + str(layer_number),
+                src_outport="Up" + str(bus_port_number),
+                dst_inport="Down"
+                + str(layer_number)
+                + "_"
+                + str(bus_port_number),
                 latency=0,
                 weight=3,
             )
@@ -378,29 +383,29 @@ class Mesh_Stacked(SimpleTopology):
         router_to_bus_links,
         bus_to_router_count,
         router_to_bus_count,
-        link_latency,
         routers,
         busses,
     ):
         # number of routers in one layer
         num_routers_layer = num_rows * num_columns
 
-        for i in range(num_routers_layer):
-            for j in range(num_layers):
-                self.connect_routers(
-                    bus_to_router_links,
-                    router_to_bus_links,
-                    BusToRouterLink,
-                    RouterToBusLink,
-                    link_latency,
-                    bus_to_router_count,
-                    router_to_bus_count,
-                    j,
-                    routers[i + (j * num_routers_layer)],
-                    busses[i],
-                )
-                bus_to_router_count += 1
-                router_to_bus_count += 1
+        for bus_port_number in range(4):
+            for i in range(num_routers_layer):
+                for j in range(num_layers):
+                    self.connect_routers(
+                        bus_to_router_links,
+                        router_to_bus_links,
+                        BusToRouterLink,
+                        RouterToBusLink,
+                        bus_port_number,
+                        bus_to_router_count,
+                        router_to_bus_count,
+                        j,
+                        routers[i + (j * num_routers_layer)],
+                        busses[i + (bus_port_number * num_routers_layer)],
+                    )
+                    bus_to_router_count += 1
+                    router_to_bus_count += 1
 
     # Register nodes with filesystem
     def registerTopology(self, options):

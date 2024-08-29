@@ -65,17 +65,5 @@ BasicIntLink::BasicIntLink(const Params &p)
     : BasicLink(p) {}
 
 
-
-//=====================================================================
-//BasicBusToRouterLink constructor calling BasicLink constructor
-BasicBusToRouterLink::BasicBusToRouterLink(const Params &p)
-    : BasicLink(p) {}
-
-//BasicRouterToBusLink constructor calling BasicLink constructor
-BasicRouterToBusLink::BasicRouterToBusLink(const Params &p)
-    : BasicLink(p) {}
-
-//======================================================================
-
 } // namespace ruby
 } // namespace gem5

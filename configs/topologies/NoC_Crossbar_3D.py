@@ -45,22 +45,7 @@ class NoC_Crossbar_3D(SimpleTopology):
 
     # Makes a generic mesh
     # assuming an equal number of cache and directory cntrls
-
-    # def makeTopology(self, options, network, IntLink, ExtLink, Router):
-    # ========================================================================
-    def makeTopology(
-        self,
-        options,
-        network,
-        IntLink,
-        BusToRouterLink,
-        RouterToBusLink,
-        ExtLink,
-        Router,
-        Bus,
-    ):
-        # ========================================================================
-
+    def makeTopology(self, options, network, IntLink, ExtLink, Router, Bus):
         nodes = self.nodes
         num_rows = options.mesh_rows  # number of rows in 3D mesh
         num_columns = options.mesh_columns  # number of columns in 3D mesh

@@ -37,7 +37,7 @@ class BaseTopology:
         all of the controllers created in the above file.
         """
 
-    def makeTopology(self, options, network, IntLink, ExtLink, Router):
+    def makeTopology(self, options, network, IntLink, ExtLink, Router, Bus):
         """Called from configs/ruby/Ruby.py
         The return value is ( list(Router), list(IntLink), list(ExtLink))
         The API of this function cannot change when subclassing!!

@@ -72,7 +72,7 @@ BusOutputUnit::BusOutputUnit(int id, PortDirection direction, Bus *bus,
 void
 BusOutputUnit::decrement_credit(int out_vc)
 {
-    //printing router_id, the OutputUnit, outvc credits, outvc,  
+    //printing router_id, the OutputUnit, outvc credits, outvc,
     //current cycle, and credit_link
     DPRINTF(RubyNetwork, "Bus %d OutputUnit %s decrementing credit:%d for "
             "outvc %d at time: %lld for %s\n", m_bus->get_id(),
@@ -88,7 +88,7 @@ BusOutputUnit::decrement_credit(int out_vc)
 void
 BusOutputUnit::increment_credit(int out_vc)
 {
-    //printing router_id, the OutputUnit, outvc credits, outvc,  
+    //printing router_id, the OutputUnit, outvc credits, outvc,
     //current cycle, and credit_link
     DPRINTF(RubyNetwork, "Bus %d OutputUnit %s incrementing credit:%d for "
             "outvc %d at time: %lld from:%s\n", m_bus->get_id(),
@@ -118,7 +118,7 @@ BusOutputUnit::has_free_vc(int vnet)
 {
     //the first VC in the given Vnet
     int vc_base = vnet*m_vc_per_vnet;
-    //go through all VCs in the given Vnet, if you found a VC that 
+    //go through all VCs in the given Vnet, if you found a VC that
     //is in IDLE_ state, then we have a free VC
     for (int vc = vc_base; vc < vc_base + m_vc_per_vnet; vc++) {
         if (is_vc_idle(vc, curTick()))
@@ -162,8 +162,8 @@ BusOutputUnit::wakeup()
         //put the content of the credit link into t_credit
         Credit *t_credit = (Credit*) m_credit_link->consumeLink();
         //increment the credit for the outvc of t_credit
-        //It means that outvc (i.e., input VC of the downstream router)  
-        //has one more free slot. 
+        //It means that outvc (i.e., input VC of the downstream router)
+        //has one more free slot.
         increment_credit(t_credit->get_vc());
 
         //if is_free_signal in t_credit is true, then set the VC state
@@ -204,7 +204,7 @@ BusOutputUnit::set_credit_link(CreditLink *credit_link)
     m_credit_link = credit_link;
 }
 
-//for inserting a flit into an output VC 
+//for inserting a flit into an output VC
 //(i.e., input VC of the downstream router)
 void
 BusOutputUnit::insert_flit(flit *t_flit)
@@ -220,9 +220,10 @@ BusOutputUnit::insert_flit(flit *t_flit)
     // // flit *top_flit = outBuffer.peekTopFlit();
     // // std::cout << "ID of the flit at the top of the outBuffer is: " << top_flit->get_id() <<"\n";
     // std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-    //====================================================== 
-    //schedule consumption event for m_out_link for the next cycle 
-    m_out_link->scheduleEventAbsolute(m_bus->clockEdge(Cycles(1)));
+    //======================================================
+    //schedule consumption event for m_out_link for the next cycle
+    // m_out_link->scheduleEventAbsolute(m_bus->clockEdge(Cycles(1)));
+    m_out_link->scheduleEventAbsolute(m_bus->clockEdge(Cycles(0)));
 }
 
 bool
@@ -241,4 +242,3 @@ BusOutputUnit::functionalWrite(Packet *pkt)
 } // namespace garnet
 } // namespace ruby
 } // namespace gem5
-

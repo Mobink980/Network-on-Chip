@@ -65,7 +65,7 @@ class flit
     int get_outport() {return m_outport; } //flit outport
     int get_size() { return m_size; } //flit size
     //time it takes to enqueue the flit into the FIFO
-    Tick get_enqueue_time() { return m_enqueue_time; } 
+    Tick get_enqueue_time() { return m_enqueue_time; }
     //time it takes to dequeue the flit from FIFO
     Tick get_dequeue_time() { return m_dequeue_time; }
     int getPacketID() { return m_packet_id; }
@@ -89,7 +89,7 @@ class flit
 
     //set the outport of the flit
     void set_outport(int port) { m_outport = port; }
-    //set the time for the flit 
+    //set the time for the flit
     void set_time(Tick time) { m_time = time; }
     //set the VC for the flit
     void set_vc(int vc) { m_vc = vc; }
@@ -98,23 +98,17 @@ class flit
     void set_src_delay(Tick delay) { src_delay = delay; }
     //time it takes to dequeue the flit from FIFO
     void set_dequeue_time(Tick time) { m_dequeue_time = time; }
-    //time it takes to enqueue the flit into the FIFO 
+    //time it takes to enqueue the flit into the FIFO
     void set_enqueue_time(Tick time) { m_enqueue_time = time; }
 
     //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-    //set the broadcast state of a flit 
+    //set the broadcast state of a flit
     //0: flit is coming from the router, 1: flit is coming from the bus
     void set_broadcast(int state) {
-        m_route.broadcast = state; 
-        // std::cout << "----------------------------------------------\n";
-        // std::cout << "Now the flit broadcast value is: " << m_route.broadcast <<"\n";
-        // std::cout << "----------------------------------------------\n";
+        m_route.broadcast = state;
     }
     //returns true if a flit is coming from a Bus
     bool is_broadcast() {
-        // std::cout << "----------------------------------------------\n";
-        // std::cout << "Broadcast value for this flit is: " << m_route.broadcast <<"\n";
-        // std::cout << "----------------------------------------------\n";
         if(m_route.broadcast == 1){
             return true;
         }
@@ -127,7 +121,7 @@ class flit
     virtual void print(std::ostream& out) const;
 
     //returns true if we have a valid flit stage
-    //and the time is right. 
+    //and the time is right.
     bool
     is_stage(flit_stage stage, Tick time)
     {

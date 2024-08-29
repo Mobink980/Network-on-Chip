@@ -64,7 +64,7 @@ Router::Router(const Params &p)
     m_output_unit.clear(); //clear the outports
 }
 
-//calls the init function of BasicRouter, SwitchAllocator, 
+//calls the init function of BasicRouter, SwitchAllocator,
 //and CrossbarSwitch
 void
 Router::init()
@@ -80,7 +80,7 @@ Router::init()
 //Call SwitchAllocator's wakeup()
 //Call CrossbarSwitch's wakeup()
 //The router's wakeup function is called whenever any of its modules
-//(InputUnit, OutputUnit, SwitchAllocator, CrossbarSwitch) have a 
+//(InputUnit, OutputUnit, SwitchAllocator, CrossbarSwitch) have a
 //ready flit/credit to act upon this cycle.
 void
 Router::wakeup()
@@ -112,7 +112,7 @@ Router::wakeup()
 }
 
 //The following function of the Router class adds one input port or
-//inport to the Router object. 
+//inport to the Router object.
 void
 Router::addInPort(PortDirection inport_dirn,
                   NetworkLink *in_link, CreditLink *credit_link)
@@ -130,29 +130,29 @@ Router::addInPort(PortDirection inport_dirn,
             " not match that of Router%d(%d). Consider inserting SerDes "
             "Units.", in_link->name(), in_link->bitWidth, m_id, m_bit_width);
 
-    //port number of this inport 
+    //port number of this inport
     //every time we push_back into vector, the size increases, and that is
     //the port number of our new inport
-    int port_num = m_input_unit.size(); 
+    int port_num = m_input_unit.size();
 
     //Defining an input port for this router object.
-    //This refers to an object of the Router class in InputUnit 
-    //class instantiation. inport_dirn is the direction of the  
+    //This refers to an object of the Router class in InputUnit
+    //class instantiation. inport_dirn is the direction of the
     //input port that we are creating.
     InputUnit *input_unit = new InputUnit(port_num, inport_dirn, this);
     //set network link for this inport (to this router)
-    input_unit->set_in_link(in_link); 
+    input_unit->set_in_link(in_link);
     //set credit link for this inport (from this router to the adjacent one)
-    input_unit->set_credit_link(credit_link); 
+    input_unit->set_credit_link(credit_link);
     //the consumer of the network link is this router
-    in_link->setLinkConsumer(this); 
+    in_link->setLinkConsumer(this);
     //set the number of virtual channels per virtual network for the network link
-    in_link->setVcsPerVnet(get_vc_per_vnet()); 
+    in_link->setVcsPerVnet(get_vc_per_vnet());
     //set the source queue for the credit link
     credit_link->setSourceQueue(input_unit->getCreditQueue(), this);
     //set the number of virtual channels per virtual network for the credit link
     credit_link->setVcsPerVnet(get_vc_per_vnet());
-    //add the input port we created to the router object  
+    //add the input port we created to the router object
     m_input_unit.push_back(std::shared_ptr<InputUnit>(input_unit));
     //add the new inport and its direction to the routingUnit
     routingUnit.addInDirection(inport_dirn, port_num);
@@ -177,21 +177,21 @@ Router::addOutPort(PortDirection outport_dirn,
     fatal_if(out_link->bitWidth != m_bit_width, "Widths of units do not match."
             " Consider inserting SerDes Units");
 
-    //port number of this outport 
+    //port number of this outport
     //every time we push_back into vector, the size increases, and that is
     //the port number of our new outport
-    int port_num = m_output_unit.size(); 
+    int port_num = m_output_unit.size();
 
     //Defining an output port for this router object.
-    //outport_dirn is the direction of the output port that we 
+    //outport_dirn is the direction of the output port that we
     //are creating. consumerVcs is the virtual channels that
     //would consume from each outport.
     OutputUnit *output_unit = new OutputUnit(port_num, outport_dirn, this,
                                              consumerVcs);
     //set network link for this outport (from this router to the adjacent one)
-    output_unit->set_out_link(out_link); 
+    output_unit->set_out_link(out_link);
     //set credit link for this outport (to this router)
-    output_unit->set_credit_link(credit_link); 
+    output_unit->set_credit_link(credit_link);
     //the consumer of the credit link is this router
     credit_link->setLinkConsumer(this);
     //set the number of virtual channels per virtual network for the credit link
@@ -207,7 +207,7 @@ Router::addOutPort(PortDirection outport_dirn,
     //add the route of the routing_table_entry to the routingUnit
     routingUnit.addRoute(routing_table_entry);
     //add the weight of the link to the routingUnit
-    //This is for the network link, and since a link connects one 
+    //This is for the network link, and since a link connects one
     //outport to an inport, by giving weight while creating an outport,
     //we cover the total links in the network.
     routingUnit.addWeight(link_weight);
@@ -251,6 +251,20 @@ Router::schedule_wakeup(Cycles time)
 {
     // wake up after time cycles
     scheduleEvent(time);
+}
+
+//get the layer of a router based on its id
+int
+Router::get_router_layer(int router_id) {
+    int num_rows = m_network_ptr->getNumRows();
+    int num_cols = m_network_ptr->getNumCols();
+    int num_layers = m_network_ptr->getNumLayers();
+    assert(num_rows > 0 && num_cols > 0 && num_layers > 0);
+    //number of routers or RLIs per layer
+    int num_routers_layer = num_rows * num_cols;
+    if (num_layers > 1) { return floor(router_id/num_routers_layer); }
+    //return 0 if we only have one layer
+    return 0;
 }
 
 //Getting the direction of a port as a string
@@ -316,7 +330,7 @@ Router::collateStats()
     m_crossbar_activity = crossbarSwitch.get_crossbar_activity();
 }
 
-//Resetting statistics for inports, crossbarSwitch, and switchAllocator. 
+//Resetting statistics for inports, crossbarSwitch, and switchAllocator.
 void
 Router::resetStats()
 {
@@ -400,4 +414,3 @@ Router::functionalWrite(Packet *pkt)
 } // namespace garnet
 } // namespace ruby
 } // namespace gem5
-

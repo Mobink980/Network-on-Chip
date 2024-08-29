@@ -42,14 +42,14 @@ BasicRouter::BasicRouter(const Params &p)
     m_latency = p.latency; //set the router latency
 }
 
-//to initialize BasicRouter class variables 
+//to initialize BasicRouter class variables
 //used in derived classes
 void
 BasicRouter::init()
 {
 }
 
-//print the BasicRouter 
+//print the BasicRouter
 void
 BasicRouter::print(std::ostream& out) const
 {
@@ -65,14 +65,14 @@ BasicBus::BasicBus(const Params &p)
     m_latency = p.latency; //set the router latency
 }
 
-//to initialize BasicBus class variables 
+//to initialize BasicBus class variables
 //used in derived classes
 void
 BasicBus::init()
 {
 }
 
-//print the BasicBus 
+//print the BasicBus
 void
 BasicBus::print(std::ostream& out) const
 {
@@ -80,29 +80,6 @@ BasicBus::print(std::ostream& out) const
 }
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
-//*************************************************************
-//BasicCrossbar constructor
-BasicCrossbar::BasicCrossbar(const Params &p)
-    : ClockedObject(p)
-{
-    m_id = p.crossbar_id; // set the crossbar_id
-    m_latency = p.latency; //set the router latency
-}
-
-//to initialize BasicCrossbar class variables 
-//used in derived classes
-void
-BasicCrossbar::init()
-{
-}
-
-//print the BasicCrossbar 
-void
-BasicCrossbar::print(std::ostream& out) const
-{
-    out << name();
-}
-//*************************************************************
 
 } // namespace ruby
 } // namespace gem5

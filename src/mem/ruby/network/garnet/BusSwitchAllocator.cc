@@ -55,13 +55,13 @@ BusSwitchAllocator::BusSwitchAllocator(Bus *bus)
     : Consumer(bus)
 {
     //set the bus for this SwitchAllocator
-    m_bus = bus; 
+    m_bus = bus;
     //set the number of vcs
-    m_num_vcs = m_bus->get_num_vcs(); 
+    m_num_vcs = m_bus->get_num_vcs();
     //set the number of vcs per vnet
     m_vc_per_vnet = m_bus->get_vc_per_vnet();
 
-    //initialize input_arbiter & output_arbiter activity 
+    //initialize input_arbiter & output_arbiter activity
     m_input_arbiter_activity = 0;
     m_output_arbiter_activity = 0;
 }
@@ -89,7 +89,7 @@ BusSwitchAllocator::init()
     m_inport_broadcast = -1;
     //initialize the vc of the broadcast
     m_vc_broadcast = -1;
-  
+
     //===============================================================
     //set the size of m_vc_winners to the size of inports
     //(one vc wins in each inport)
@@ -144,6 +144,10 @@ void
 BusSwitchAllocator::arbitrate_inports()
 {
     bool shouldBreak = false;
+    // std::cout << "Number of VCs: " <<m_num_vcs<< ".\n";
+    // std::cout << "Number of Vnets: " <<m_bus->get_num_vnets()<< ".\n";
+    std::cout << "Number of VCs per vnet: " <<m_vc_per_vnet<< ".\n";
+
     // Select a VC from each inport in a round robin manner
     // Independent arbiter at each input port
     for (int inport = 0; inport < m_num_inports && !shouldBreak; inport++) {
@@ -151,18 +155,25 @@ BusSwitchAllocator::arbitrate_inports()
         int invc = m_round_robin_invc[inport];
 
         for (int invc_iter = 0; invc_iter < m_num_vcs  && !shouldBreak; invc_iter++) {
-            //get the InputUnit with the inport number from 
+            //get the InputUnit with the inport number from
             //the bus this SwitchAllocator is a part of
             auto input_unit = m_bus->getInputUnit(inport);
 
+            // std::cout << "+++++++++++++++++++++++++++++++++++++++++++++\n";
+            // std::cout << "Checking invc " <<invc<< " from inport "<<inport<<" for broadcast.\n";
+            // std::cout << "+++++++++++++++++++++++++++++++++++++++++++++\n";
             //if the top flit in invc in input_unit is currently
             //in SwitchAllocation stage
             if (input_unit->need_stage(invc, SA_, curTick())) {
 
+                //==================================================
+                //checking the type of flit for printing
+                flit *my_flit = input_unit->peekTopFlit(invc);
+                std::cout << "Type of the flit in the invc is: " <<my_flit->get_type()<< "\n";
+                //==================================================
 
-                
                 bool broadcast = true;
-                //if the outvc vector is not empty for this invc, check them 
+                //if the outvc vector is not empty for this invc, check them
                 if (input_unit->is_outvc_allocated(invc)) {
                     for (int outport = 0; outport < m_num_outports; outport++) {
                         //get the outvc for this inport
@@ -171,9 +182,12 @@ BusSwitchAllocator::arbitrate_inports()
                         bool port_request = send_allowed(inport, invc, outport, outvc);
                         //if we can't send to one of the outports, then can't broadcast
                         if (!port_request) {
+                            std::cout << "*********************************************\n";
+                            std::cout << "Top flit in invc " <<invc<< " from inport "<<inport<<" cannot go to outvc " <<outvc<< " of outport " <<outport<<".\n";
+                            std::cout << "*********************************************\n";
                             broadcast = false;
                         }
-                    }                 
+                    }
                 } else {
                     //if the outvc vector for this invc is empty,
                     //then all the outvcs should be -1
@@ -184,35 +198,45 @@ BusSwitchAllocator::arbitrate_inports()
                         bool port_request = send_allowed(inport, invc, outport, outvc);
                         //if we can't send to one of the outports, then can't broadcast
                         if (!port_request) {
+                            std::cout << "*********************************************\n";
+                            std::cout << "Top flit in invc " <<invc<< " from inport "<<inport<<" cannot find a free outvc in outport " <<outport<<".\n";
+                            std::cout << "*********************************************\n";
                             broadcast = false;
                         }
-                    } 
+                    }
                 }
 
-                         
+
                 if(broadcast) {
                     std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
-                    std::cout << "Top flit in invc:" <<invc<< " from inport:"<<inport<<" could go to all the outports.\n";
+                    std::cout << "Top flit in invc " <<invc<< " from inport "<<inport<<" could go to all the outports.\n";
                     std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
                     //increment the input_arbiter activity
                     m_input_arbiter_activity++;
                     //we have a broadcast request this cycle
                     broadcast_this_cycle = true;
                     //update inport broadcast
-                    m_inport_broadcast = inport; 
+                    m_inport_broadcast = inport;
                     //update vc broadcast
-                    m_vc_broadcast = invc; 
+                    m_vc_broadcast = invc;
                     //got one winner vc for broadcast this cycle
-                    shouldBreak = true; 
+                    shouldBreak = true;
+
                 }
                 //======================================================
             }
-           
+
             invc++; //choose the next invc in inport next time
             //we return to the first input vc again (round-robin)
             if (invc >= m_num_vcs)
                 invc = 0;
         }
+    }
+
+    if (broadcast_this_cycle == false) {
+        std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+        std::cout << "No broadcast for this cycle.\n";
+        std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
     }
 }
 
@@ -238,10 +262,8 @@ BusSwitchAllocator::arbitrate_outports()
         int inport = m_inport_broadcast;
         //the winner vc in that inport
         int invc = m_vc_broadcast;
-        std::cout << "*********************************************\n";
-        std::cout << "Top flit in invc:" <<invc<< " from inport:"<<inport<<" is going to all the outports.\n";
 
-        //get the InputUnit with the inport number from 
+        //get the InputUnit with the inport number from
         //the bus this SwitchAllocator is a part of
         auto input_unit = m_bus->getInputUnit(inport);
 
@@ -252,26 +274,32 @@ BusSwitchAllocator::arbitrate_outports()
         // We do it here to keep it fair.
         // Only the VC which got switch traversal
         // is updated.
-        m_round_robin_invc[inport] = invc + 1; //go to the next invc
-        //start from the beginning again (round-robin)
-        if (m_round_robin_invc[inport] >= m_num_vcs)
-            m_round_robin_invc[inport] = 0;
+
+        m_round_robin_invc[inport] = 0;
 
         //vector containing the output vcs for an invc
         std::vector<int> outvcs;
         // Make sure the vector is empty
-        outvcs.clear(); 
-        //if the outvcs are already allocated, retrieve them 
+        outvcs.clear();
+        //if the outvcs are already allocated, retrieve them
         if (input_unit->is_outvc_allocated(invc)) {
+            std::cout << "#############################################\n";
+            std::cout << "Outvcs already allocated to this invc are:\n";
             for (int outport = 0; outport < m_num_outports; outport++) {
                 outvcs.push_back(input_unit->get_broadcast_outvc(invc, outport));
+                std::cout << outvcs[outport] <<", ";
             }
-        
+            std::cout << "#############################################\n";
+
         } else {
             //if outvcs are not allocatd for broadcast, allocate them
+            std::cout << "#############################################\n";
+            std::cout << "Outvcs being allocated to this invc are:\n";
             for (int outport = 0; outport < m_num_outports; outport++) {
                 outvcs.push_back(vc_allocate(outport, inport, invc));
+                std::cout << outvcs[outport] <<", ";
             }
+            std::cout << "#############################################\n";
         }
 
         //Sending a credit flit back for the winner vc in the winner inport
@@ -284,7 +312,7 @@ BusSwitchAllocator::arbitrate_outports()
             //this invc became free and now is available for outvc allocation
             input_unit->set_vc_idle(invc, curTick());
 
-            // Send a credit back 
+            // Send a credit back
             // along with the information that this VC is now idle
             input_unit->increment_credit(invc, true, curTick());
         } else { //flit type is HEAD or BODY
@@ -292,16 +320,16 @@ BusSwitchAllocator::arbitrate_outports()
             // but do not indicate that the VC is idle
             input_unit->increment_credit(invc, false, curTick());
         }
-    
+
         for (int outport = 0; outport < m_num_outports; outport++) {
 
-            //get the OutputUnit with the outport number from 
+            //get the OutputUnit with the outport number from
             //the bus this SwitchAllocator is a part of
             auto output_unit = m_bus->getOutputUnit(outport);
 
             //get the outvc for this specific outport
-            int outvc = outvcs[outport];   
-            
+            int outvc = outvcs[outport];
+
             //printing what just happened
             DPRINTF(RubyNetwork, "SwitchAllocator at Bus %d "
                                     "granted outvc %d at outport %d "
@@ -333,14 +361,14 @@ BusSwitchAllocator::arbitrate_outports()
 
             // flit ready for Switch Traversal
             //change the flit stage from SA_ to ST_
-            t_flit->advance_stage(ST_, curTick()); 
+            t_flit->advance_stage(ST_, curTick());
             //grant the switch (crossbar) to t_flit
             m_bus->grant_switch(inport, t_flit);
             //increment the activity of output_arbiter
-            m_output_arbiter_activity++;    
+            m_output_arbiter_activity++;
 
         }
-        std::cout << "*********************************************\n";
+
     }
     //we answered to the broadcast request in this cycle
     broadcast_this_cycle = false;
@@ -365,11 +393,11 @@ BusSwitchAllocator::send_allowed(int inport, int invc, int outport, int outvc)
     // Check if outvc needed
     // Check if credit needed (for multi-flit packet)
     // Check if ordering violated (in ordered vnet)
-    //In ordered vnet the flit that was enqueued first 
+    //In ordered vnet the flit that was enqueued first
     //should be sent first (FIFO)
 
     //get the vnet of invc
-    int vnet = get_vnet(invc); 
+    int vnet = get_vnet(invc);
     //check if invc needs an outvc (for HEAD/HEAD_TAIL flits)
     bool has_outvc = (outvc != -1);
     //check whether the outvc has any credit left
@@ -380,19 +408,15 @@ BusSwitchAllocator::send_allowed(int inport, int invc, int outport, int outvc)
     auto output_unit = m_bus->getOutputUnit(outport);
     if (!has_outvc) { //if we don't have an outvc for this invc
 
-        std::cout << "==============================================\n";
-        std::cout << "The invc " <<invc<< " from inport "<<inport<<" has no outvc: "<<outvc<<".\n";
-        std::cout << "==============================================\n";
-
         // needs outvc
         // this is only true for HEAD and HEAD_TAIL flits.
 
-        //check if output_unit in vnet has any free vc 
+        //check if output_unit in vnet has any free vc
         if (output_unit->has_free_vc(vnet)) {
 
-            std::cout << "###############################################\n";
-            std::cout << "There is one free vc in the outport "<<outport<<"\n";
-            std::cout << "###############################################\n";
+            // std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+            // std::cout << "Found free outvc for invc " <<invc<< " in inport "<<inport<<" from outport "<<outport<<".\n";
+            // std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
 
             //if yes, set has_outvc to true
             has_outvc = true;
@@ -403,9 +427,6 @@ BusSwitchAllocator::send_allowed(int inport, int invc, int outport, int outvc)
         }
     } else { //if we already have an outvc for this invc (for BODY/TAIL flits)
         //check whether the outvc in output_unit has any credit left
-        std::cout << "==============================================\n";
-        std::cout << "The invc " <<invc<< " from inport "<<inport<<" has already an outvc "<<outvc<<".\n";
-        std::cout << "==============================================\n";
         has_credit = output_unit->has_credit(outvc);
     }
 
@@ -454,11 +475,11 @@ BusSwitchAllocator::vc_allocate(int outport, int inport, int invc)
 
     // has to get a valid VC since it checked before performing SA
     assert(outvc != -1);
-    //grant the free outvc to the winner invc (winner of the output port)
-    m_bus->getInputUnit(inport)->grant_broadcast_outvc(invc, outvc);    
-    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++\n";
+    //grant the free outvc to the winner invc (push the outvc in the outvcs vector of invc)
+    m_bus->getInputUnit(inport)->grant_broadcast_outvc(invc, outvc);
+    std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&\n";
     std::cout << "The outvc " <<outvc<< " from outport "<<outport<<" is allocated to invc " <<invc<< " from inport "<<inport<<".\n";
-    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++\n";
+    std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&\n";
     return outvc; //return the free outvc (free invc of the next bus)
 }
 
@@ -469,7 +490,7 @@ BusSwitchAllocator::check_for_wakeup()
 {
     //get the next clockEdge (cycle) of this bus
     Tick nextCycle = m_bus->clockEdge(Cycles(1));
-    //if the bus is already scheduled for the next 
+    //if the bus is already scheduled for the next
     //cycle, then no action needs to be done
     if (m_bus->alreadyScheduled(nextCycle)) {
         return;
@@ -480,7 +501,7 @@ BusSwitchAllocator::check_for_wakeup()
             //if the vc in that inport has a flit in SA_ stage
             if (m_bus->getInputUnit(i)->need_stage(j, SA_, nextCycle)) {
                 //schedule the bus to wakeup in the next cycle
-                m_bus->schedule_wakeup(Cycles(1)); 
+                m_bus->schedule_wakeup(Cycles(1));
                 return;
             }
         }

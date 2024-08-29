@@ -153,29 +153,21 @@ def create_network(options, ruby):
     if options.network == "garnet":
         NetworkClass = GarnetNetwork
         IntLinkClass = GarnetIntLink
-        #========================================================
-        BusToRouterLinkClass = GarnetBusToRouterLink
-        RouterToBusLinkClass = GarnetRouterToBusLink
-        #========================================================
         ExtLinkClass = GarnetExtLink
         RouterClass = GarnetRouter
-        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         BusClass = GarnetBus
-        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         InterfaceClass = GarnetNetworkInterface
 
     else:
         NetworkClass = SimpleNetwork
         IntLinkClass = SimpleIntLink
-        #========================================================
-        BusToRouterLinkClass = None
-        RouterToBusLinkClass = None
-        #========================================================
         ExtLinkClass = SimpleExtLink
         RouterClass = Switch
-        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         BusClass = None
-        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         InterfaceClass = None
 
     # Instantiate the network object
@@ -184,15 +176,11 @@ def create_network(options, ruby):
         ruby_system=ruby,
         topology=options.topology,
         routers=[],
-        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-        busses = [],
-        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        busses=[],
+        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         ext_links=[],
         int_links=[],
-        #===================================================
-        bus_to_router_links=[],
-        router_to_bus_links=[],
-        #===================================================
         netifs=[],
     )
 
@@ -200,15 +188,11 @@ def create_network(options, ruby):
     return (
         network,
         IntLinkClass,
-        #=============================================
-        BusToRouterLinkClass,
-        RouterToBusLinkClass,
-        #=============================================
         ExtLinkClass,
         RouterClass,
-        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         BusClass,
-        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         InterfaceClass,
     )
 
@@ -245,53 +229,6 @@ def init_network(options, network, InterfaceClass):
                 vtype="OBJECT_LINK",
                 width=intLink.dst_node.width,
             )
-
-        # ====================================================================
-        for busLink in network.bus_to_router_links:
-            busLink.src_net_bridge = NetworkBridge(
-                link=busLink.network_link,
-                vtype="OBJECT_LINK",
-                width=busLink.src_node.width,
-            )
-            busLink.src_cred_bridge = NetworkBridge(
-                link=busLink.credit_link,
-                vtype="LINK_OBJECT",
-                width=busLink.src_node.width,
-            )
-            busLink.dst_net_bridge = NetworkBridge(
-                link=busLink.network_link,
-                vtype="LINK_OBJECT",
-                width=busLink.dst_node.width,
-            )
-            busLink.dst_cred_bridge = NetworkBridge(
-                link=busLink.credit_link,
-                vtype="OBJECT_LINK",
-                width=busLink.dst_node.width,
-            )
-
-
-        for busLink in network.router_to_bus_links:
-            busLink.src_net_bridge = NetworkBridge(
-                link=busLink.network_link,
-                vtype="OBJECT_LINK",
-                width=busLink.src_node.width,
-            )
-            busLink.src_cred_bridge = NetworkBridge(
-                link=busLink.credit_link,
-                vtype="LINK_OBJECT",
-                width=busLink.src_node.width,
-            )
-            busLink.dst_net_bridge = NetworkBridge(
-                link=busLink.network_link,
-                vtype="LINK_OBJECT",
-                width=busLink.dst_node.width,
-            )
-            busLink.dst_cred_bridge = NetworkBridge(
-                link=busLink.credit_link,
-                vtype="OBJECT_LINK",
-                width=busLink.dst_node.width,
-            )
-        # ====================================================================
 
         for extLink in network.ext_links:
             ext_net_bridges = []

@@ -73,14 +73,14 @@ RoutingUnit::addRoute(std::vector<NetDest>& routing_table_entry)
     }
 }
 
-//add the link weight to m_weight_table 
+//add the link weight to m_weight_table
 void
 RoutingUnit::addWeight(int link_weight)
 {
     m_weight_table.push_back(link_weight);
 }
 
-//Returns true if vnet is present in the vector of vnets, 
+//Returns true if vnet is present in the vector of vnets,
 //or if the vector supports all vnets.
 bool
 RoutingUnit::supportsVnet(int vnet, std::vector<int> sVnets)
@@ -121,9 +121,9 @@ RoutingUnit::lookupRoutingTable(int vnet, NetDest msg_destination)
     int num_candidates = 0;
 
     // Identify the minimum weight among the candidate output links
-    //go through all the elements of m_routing_table associated with vnet 
+    //go through all the elements of m_routing_table associated with vnet
     for (int link = 0; link < m_routing_table[vnet].size(); link++) {
-        //if the destination of the message and the links in 
+        //if the destination of the message and the links in
         //m_routing_table[vnet] has an intersection, then that link
         //is a candidate
         if (msg_destination.intersectionIsNotEmpty(
@@ -131,7 +131,7 @@ RoutingUnit::lookupRoutingTable(int vnet, NetDest msg_destination)
 
         //identify the minimum weight among the candidates link
         //(which one to choose from all the output links that have
-        //intersection with msg_destination) 
+        //intersection with msg_destination)
         if (m_weight_table[link] <= min_weight)
             min_weight = m_weight_table[link];
         }
@@ -142,10 +142,10 @@ RoutingUnit::lookupRoutingTable(int vnet, NetDest msg_destination)
         if (msg_destination.intersectionIsNotEmpty(
             m_routing_table[vnet][link])) {
 
-            //if the candidate link's weight is minimum, then that's 
+            //if the candidate link's weight is minimum, then that's
             //a real candidate (we're choosing a link with minimum weight)
             if (m_weight_table[link] == min_weight) {
-                num_candidates++; 
+                num_candidates++;
                 output_link_candidates.push_back(link);
             }
         }
@@ -195,9 +195,9 @@ RoutingUnit::outportCompute(RouteInfo route, int inport,
                             PortDirection inport_dirn)
 {
     //the outport we want to send the flit to
-    int outport = -1; 
+    int outport = -1;
 
-    //if the flit has reached to the destination router 
+    //if the flit has reached to the destination router
     //(it needs to be ejected from the network)
     if (route.dest_router == m_router->get_id()) {
 
@@ -214,8 +214,8 @@ RoutingUnit::outportCompute(RouteInfo route, int inport,
         // Multiple NIs may be connected to this router,
         // all with output port direction = "Local"
         // Get exact outport id from table
-        //sending from the right router output_link to be received 
-        //by the right NI 
+        //sending from the right router output_link to be received
+        //by the right NI
         outport = lookupRoutingTable(route.vnet, route.net_dest);
         return outport;
     }
@@ -243,19 +243,29 @@ RoutingUnit::outportCompute(RouteInfo route, int inport,
 }
 
 //Find the layer of a router based on its id
-int 
-RoutingUnit::get_layer(int router_id) 
+int
+RoutingUnit::get_layer(int router_id)
 {
     int num_rows = m_router->get_net_ptr()->getNumRows();
     int num_cols = m_router->get_net_ptr()->getNumCols();
     int num_layers = m_router->get_net_ptr()->getNumLayers();
-    assert(num_rows > 0 && num_cols > 0 && num_layers > 0); 
+    assert(num_rows > 0 && num_cols > 0 && num_layers > 0);
     //number of routers or RLIs per layer
     int num_routers_layer = num_rows * num_cols;
     if (num_layers > 1) { return floor(router_id/num_routers_layer); }
     //return 0 if we only have one layer
-    return 0;    
-} 
+    return 0;
+}
+
+// Generating sequence number 0 to bus_port repeatedly
+int getNextNumber(int bus_port) {
+    static int count = 0; // Initialize count only once
+
+    int result = count % bus_port;
+    count = (count + 1) % bus_port; // Increment count and wrap around
+
+    return result;
+}
 
 // XYZ routing implemented using port directions.
 // Only for reference purpose in a Mesh.
@@ -275,7 +285,7 @@ RoutingUnit::outportComputeXY(RouteInfo route,
     int num_cols = m_router->get_net_ptr()->getNumCols();
     //number of layers in the mesh topology (default is 1)
     int num_layers = m_router->get_net_ptr()->getNumLayers();
-    assert(num_rows > 0 && num_cols > 0); 
+    assert(num_rows > 0 && num_cols > 0);
 
     //number of routers in one layer
     int num_routers_layer = num_rows * num_cols;
@@ -291,7 +301,7 @@ RoutingUnit::outportComputeXY(RouteInfo route,
         my_y = my_id / num_cols; //y_position of the current router
     } else { //for 3D NoCs
         //y_position of the current router
-        my_y = (my_id - (num_routers_layer * my_z)) / num_cols; 
+        my_y = (my_id - (num_routers_layer * my_z)) / num_cols;
     }
     //make sure my_y is valid
     assert(my_y >= 0 && my_y < num_cols);
@@ -308,7 +318,7 @@ RoutingUnit::outportComputeXY(RouteInfo route,
         dest_y = dest_id / num_cols; //y_position of the dest router
     } else { //for 3D NoCs
         //y_position of the dest router
-        dest_y = (dest_id - (num_routers_layer * dest_z)) / num_cols; 
+        dest_y = (dest_id - (num_routers_layer * dest_z)) / num_cols;
     }
     //make sure dest_y is valid
     assert(dest_y >= 0 && dest_y < num_cols);
@@ -324,7 +334,7 @@ RoutingUnit::outportComputeXY(RouteInfo route,
 
     // already checked that in outportCompute() function
     //ensure we're not already in the destination router
-    assert(!(x_hops == 0 && y_hops == 0 && z_hops == 0)); 
+    assert(!(x_hops == 0 && y_hops == 0 && z_hops == 0));
 
     if (x_hops > 0) { //we have horizontal hops
         if (x_dirn) { //if we need to go rightward
@@ -352,7 +362,12 @@ RoutingUnit::outportComputeXY(RouteInfo route,
         }
     } else if (z_hops > 0) { //we need to use the bus
         //===============================================================
-        outport_dirn = "Up";
+        outport_dirn = "Up" + std::to_string(getNextNumber(4));
+
+        // std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n";
+        // std::cout << "The selected bus port is: " <<outport_dirn<< "\n";
+        // std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n";
+
         // std::cout << "************************************************\n";
         // std::cout << "Now the router should pass the packet to the bus!\n";
         if (m_outports_dirn2idx.find(outport_dirn) != m_outports_dirn2idx.end()) {
@@ -389,4 +404,3 @@ RoutingUnit::outportComputeCustom(RouteInfo route,
 } // namespace garnet
 } // namespace ruby
 } // namespace gem5
-

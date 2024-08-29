@@ -55,7 +55,7 @@ BusCrossbarSwitch::BusCrossbarSwitch(Bus *bus)
 }
 
 //for resizing switchBuffers vector to the number of input ports (inports)
-//We have a switchBuffer for every inport (west_in, east_in, south_in, 
+//We have a switchBuffer for every inport (west_in, east_in, south_in,
 //north_in).
 void
 BusCrossbarSwitch::init()
@@ -92,14 +92,16 @@ BusCrossbarSwitch::wakeup()
             //find out which outport the flit is going to
             int outport = t_flit->get_outport();
 
-            // flit performs Link_Traversal in the next cycle 
+            // flit performs Link_Traversal in the next cycle
             //(advancing the pipeline stage: ST_ ==> LT_)
-            t_flit->advance_stage(LT_, m_bus->clockEdge(Cycles(1)));
-            t_flit->set_time(m_bus->clockEdge(Cycles(1)));
+            // t_flit->advance_stage(LT_, m_bus->clockEdge(Cycles(1)));
+            // t_flit->set_time(m_bus->clockEdge(Cycles(1)));
+            t_flit->advance_stage(LT_, m_bus->clockEdge(Cycles(0)));
+            t_flit->set_time(m_bus->clockEdge(Cycles(0)));
 
             // This will take care of waking up the Network Link
             // in the next cycle
-            //insert the flit into its outport 
+            //insert the flit into its outport
             m_bus->getOutputUnit(outport)->insert_flit(t_flit);
             //get the top flit of the switch_buffer (1 place is freed)
             switch_buffer.getTopFlit();

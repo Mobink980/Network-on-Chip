@@ -24,43 +24,33 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.objects.ClockedObject import ClockedObject
 from m5.params import *
 
-from m5.objects.ClockedObject import ClockedObject
 
 # BasicRouter is a ClockedObject
 class BasicRouter(ClockedObject):
-    type = 'BasicRouter'
+    type = "BasicRouter"
     cxx_header = "mem/ruby/network/BasicRouter.hh"
-    cxx_class = 'gem5::ruby::BasicRouter'
+    cxx_class = "gem5::ruby::BasicRouter"
 
     router_id = Param.Int("ID in relation to other routers")
 
     # only used by garnet (default is 1-cycle latency)
-    latency   = Param.Cycles(1, "number of cycles inside router")
+    latency = Param.Cycles(1, "number of cycles inside router")
 
-#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+# &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 # BasicBus is a ClockedObject
 class BasicBus(ClockedObject):
-    type = 'BasicBus'
+    type = "BasicBus"
     cxx_header = "mem/ruby/network/BasicRouter.hh"
-    cxx_class = 'gem5::ruby::BasicBus'
+    cxx_class = "gem5::ruby::BasicBus"
 
     bus_id = Param.Int("ID in relation to other busses")
 
     # only used by garnet (default is 1-cycle latency)
-    latency   = Param.Cycles(1, "number of cycles inside bus")
-#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+    latency = Param.Cycles(1, "number of cycles inside bus")
 
-#**************************************************************
-# BasicCrossbar is a ClockedObject
-class BasicCrossbar(ClockedObject):
-    type = 'BasicCrossbar'
-    cxx_header = "mem/ruby/network/BasicRouter.hh"
-    cxx_class = 'gem5::ruby::BasicCrossbar'
 
-    crossbar_id = Param.Int("ID in relation to other crossbars")
-
-    # only used by garnet (default is 1-cycle latency)
-    latency   = Param.Cycles(1, "number of cycles inside crossbar")
-#**************************************************************
+# &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&

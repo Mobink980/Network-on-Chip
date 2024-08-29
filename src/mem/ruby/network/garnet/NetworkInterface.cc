@@ -42,6 +42,11 @@
 #include "mem/ruby/network/garnet/flitBuffer.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
+
+//=====================================
+#include <iostream>
+//=====================================
+
 namespace gem5
 {
 
@@ -72,7 +77,7 @@ NetworkInterface::addInPort(NetworkLink *in_link,
 {
     //instantiate a new input port
     InputPort *newInPort = new InputPort(in_link, credit_link);
-    //push the newly created input port in inPorts vector 
+    //push the newly created input port in inPorts vector
     inPorts.push_back(newInPort);
     //printing the input port that was added and its vnets
     DPRINTF(RubyNetwork, "Adding input port:%s with vnets %s\n",
@@ -83,7 +88,7 @@ NetworkInterface::addInPort(NetworkLink *in_link,
     //set the source queue for the credit_link
     //this source queue is the flitBuffer for sending credit flits to the network
     credit_link->setSourceQueue(newInPort->outCreditQueue(), this);
-    //if number of VCs per vnet is not zero, 
+    //if number of VCs per vnet is not zero,
     //setVcsPerVnet for the network and credit link of the inport
     if (m_vc_per_vnet != 0) {
         in_link->setVcsPerVnet(m_vc_per_vnet);
@@ -100,7 +105,7 @@ NetworkInterface::addOutPort(NetworkLink *out_link,
 {
     //instantiate a new output port
     OutputPort *newOutPort = new OutputPort(out_link, credit_link, router_id);
-    //push the newly created output port in outPorts vector 
+    //push the newly created output port in outPorts vector
     outPorts.push_back(newOutPort);
 
     //ensure we have at least one consumer vc
@@ -143,16 +148,16 @@ NetworkInterface::addOutPort(NetworkLink *out_link,
     DPRINTF(RubyNetwork, "OutputPort:%s Vnet: %s\n",
     out_link->name(), newOutPort->printVnets());
 
-    //set the source queue for newOutPort (the flitBuffer for sending 
+    //set the source queue for newOutPort (the flitBuffer for sending
     //out flits to the network)
     out_link->setSourceQueue(newOutPort->outFlitQueue(), this);
-    //set the number of VCs per Vnet (e.g., 4) for 
-    //out_link (outport network link) 
+    //set the number of VCs per Vnet (e.g., 4) for
+    //out_link (outport network link)
     out_link->setVcsPerVnet(m_vc_per_vnet);
     //NetworkInterface is the consumer of credit_link for outport
     credit_link->setLinkConsumer(this);
-    //set the number of VCs per Vnet (e.g., 4) for 
-    //credit_link (outport credit link) 
+    //set the number of VCs per Vnet (e.g., 4) for
+    //credit_link (outport credit link)
     credit_link->setVcsPerVnet(m_vc_per_vnet);
 }
 
@@ -162,11 +167,11 @@ NetworkInterface::addNode(std::vector<MessageBuffer *>& in,
                           std::vector<MessageBuffer *>& out)
 {
     //set the MessageBuffers that take messages from the protocol
-    inNode_ptr = in; 
+    inNode_ptr = in;
     //set the MessageBuffers that provide messages for the protocol
-    outNode_ptr = out; 
+    outNode_ptr = out;
 
-    //for all MessageBuffers that take messages from 
+    //for all MessageBuffers that take messages from
     //the protocol (cache controller)
     for (auto& it : in) {
         if (it != nullptr) {
@@ -198,6 +203,16 @@ NetworkInterface::incrementStats(flit *t_flit)
     // Latency
     //increment the received flits for the vnet in GarnetNetwork
     m_net_ptr->increment_received_flits(vnet);
+
+    // std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+    // std::cout<<"One flit received.\n";
+
+    //**************************************************
+    // if (t_flit->is_broadcast()) {
+    //     std::cout<<"The received flit was from bus!\n";
+    // }
+    //**************************************************
+    // std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
     //network delay = flit_dequeue_time - flit_enqueue_time - Ticks(1_cycle)
     Tick network_delay =
         t_flit->get_dequeue_time() -
@@ -246,20 +261,20 @@ NetworkInterface::wakeup()
     for (auto &oPort: outPorts) {
         oss << oPort->routerID() << "[" << oPort->printVnets() << "] ";
     }
-    //for printing what NI waked up when 
+    //for printing what NI waked up when
     DPRINTF(RubyNetwork, "Network Interface %d connected to router:%s "
             "woke up. Period: %ld\n", m_id, oss.str(), clockPeriod());
 
     //make sure the current_tick is a clock edge (the tick a cycle begins)
     assert(curTick() == clockEdge());
-    MsgPtr msg_ptr; 
+    MsgPtr msg_ptr;
     Tick curTime = clockEdge(); //get the current time
 
     // Checking for messages coming from the protocol
     // can pick up a message/cycle for each virtual net
     for (int vnet = 0; vnet < inNode_ptr.size(); ++vnet) {
         //get the MessageBuffer based on vnet
-        MessageBuffer *b = inNode_ptr[vnet]; 
+        MessageBuffer *b = inNode_ptr[vnet];
         if (b == nullptr) { //no message from that protocol buffer
             continue;
         }
@@ -270,7 +285,7 @@ NetworkInterface::wakeup()
             //if the message for that vnet could be flitisized
             if (flitisizeMessage(msg_ptr, vnet)) {
                 //dequeue that message from b at current_time
-                b->dequeue(curTime); 
+                b->dequeue(curTime);
             }
         }
     }
@@ -289,27 +304,27 @@ NetworkInterface::wakeup()
         NetworkLink *inNetLink = iPort->inNetLink();
         //if the network link buffer has a ready flit at the current tick
         if (inNetLink->isReady(curTick())) {
-            //consume that flit on the network link and put it in t_flit 
+            //consume that flit on the network link and put it in t_flit
             flit *t_flit = inNetLink->consumeLink();
-            //print the flit that was received by the NI 
+            //print the flit that was received by the NI
             DPRINTF(RubyNetwork, "Recieved flit:%s\n", *t_flit);
-            //make sure the flit width and the bitWidth of the inport 
+            //make sure the flit width and the bitWidth of the inport
             //are the same
             assert(t_flit->m_width == iPort->bitWidth());
 
             //get the vnet of t_flit
             int vnet = t_flit->get_vnet();
-            //set the flit dequeue time from FIFO to current_tick 
+            //set the flit dequeue time from FIFO to current_tick
             //(dequeue the flit)
             t_flit->set_dequeue_time(curTick());
 
             // If a tail flit is received, enqueue into the protocol buffers
             // if space is available. Otherwise, exchange non-tail flits for
             // credits.
-            //If we get a tail flit, it means all the flits of the message is 
-            //received, and thus, we can dequeue from vc and enqueue into the 
+            //If we get a tail flit, it means all the flits of the message is
+            //received, and thus, we can dequeue from vc and enqueue into the
             //protocol buffer; therefore, is_free_signal in the credit signal
-            //that we send back is true, becuase we have a free vc. Else, 
+            //that we send back is true, becuase we have a free vc. Else,
             //is_free_signal in the credit we're sending back would be false.
             if (t_flit->get_type() == TAIL_ ||
                 t_flit->get_type() == HEAD_TAIL_) {
@@ -328,13 +343,13 @@ NetworkInterface::wakeup()
                     // Update stats and delete flit pointer
                     incrementStats(t_flit);
                     delete t_flit;
-                } else { 
+                } else {
                     // No space available- Place tail flit in stall queue and
                     // set up a callback for when protocol buffer is dequeued.
                     // Stat update and flit pointer deletion will occur upon
                     // unstall.
                     ////push the flit into stall queue
-                    iPort->m_stall_queue.push_back(t_flit); 
+                    iPort->m_stall_queue.push_back(t_flit);
                     //increment the number of stalls for the vnet
                     m_stall_count[vnet]++;
 
@@ -364,7 +379,7 @@ NetworkInterface::wakeup()
         CreditLink *inCreditLink = oPort->inCreditLink();
         //if that credit link has a ready flit at current tick
         if (inCreditLink->isReady(curTick())) {
-            //consume that flit on the credit link and put it in t_credit 
+            //consume that flit on the credit link and put it in t_credit
             Credit *t_credit = (Credit*) inCreditLink->consumeLink();
             //increment credit (free space) for the vc of t_credit in
             //outVcState vector (It means that the downstream router got
@@ -419,7 +434,7 @@ NetworkInterface::checkStallQueue()
         //get the tick where the current cycle begins
         Tick curTime = clockEdge();
 
-        //if the stall queue for the inport is not empty 
+        //if the stall queue for the inport is not empty
         if (!iPort->m_stall_queue.empty()) {
             //go through all the elements in the inport stall queue
             for (auto stallIter = iPort->m_stall_queue.begin();
@@ -434,7 +449,7 @@ NetworkInterface::checkStallQueue()
                 //if there is 1 slot available in the vnet of the stalled flit
                 //(the vnet the flit wants to go to)
                 if (outNode_ptr[vnet]->areNSlotsAvailable(1,
-                    curTime)) { 
+                    curTime)) {
                     //eject to the protocol buffer (enqueue the flit into
                     //the outNode_ptr[vnet] after one cycle delay)
                     outNode_ptr[vnet]->enqueue(stallFlit->get_msg_ptr(),
@@ -455,7 +470,7 @@ NetworkInterface::checkStallQueue()
                     delete stallFlit; //delete stallFlit variable
                     //erase the ejected flit from m_stall_queue
                     iPort->m_stall_queue.erase(stallIter);
-                    //decrement the number of stalled messages for this vnet 
+                    //decrement the number of stalled messages for this vnet
                     m_stall_count[vnet]--;
 
                     // If there are no more stalled messages for this vnet, the
@@ -506,7 +521,7 @@ NetworkInterface::flitisizeMessage(MsgPtr msg_ptr, int vnet)
         int vc = calculateVC(vnet); //find a free vc in dest vnet
 
         //no free vc was found, so we can't flitisize the message
-        if (vc == -1) { 
+        if (vc == -1) {
             return false ;
         }
         //copy the msg_ptr into new_msg_ptr variable
@@ -514,9 +529,9 @@ NetworkInterface::flitisizeMessage(MsgPtr msg_ptr, int vnet)
         //get the destination node id
         NodeID destID = dest_nodes[ctr];
 
-        //get a pointer to new_msg_ptr 
+        //get a pointer to new_msg_ptr
         Message *new_net_msg_ptr = new_msg_ptr.get();
-        //if we have more than one destination for this message 
+        //if we have more than one destination for this message
         //(multicast message)
         if (dest_nodes.size() > 1) {
             //define a NetDest
@@ -571,9 +586,9 @@ NetworkInterface::flitisizeMessage(MsgPtr msg_ptr, int vnet)
                 net_msg_ptr->getMessageSize()),
                 oPort->bitWidth(), curTick());
 
-            //the src delay for the flit is the current_tick - msg_ptr_time 
+            //the src delay for the flit is the current_tick - msg_ptr_time
             fl->set_src_delay(curTick() - msg_ptr->getTime());
-            //insert the created flit into the right vc in NI 
+            //insert the created flit into the right vc in NI
             niOutVcs[vc].insert(fl);
         }
 
@@ -631,7 +646,7 @@ NetworkInterface::scheduleOutputPort(OutputPort *oPort)
             // model buffer backpressure
             //if vc is ready and has credit
             if (niOutVcs[vc].isReady(curTick()) &&
-                outVcState[vc].has_credit()) { 
+                outVcState[vc].has_credit()) {
                 //then this vc is a candidate
                 bool is_candidate_vc = true;
                 //the first vc in the vnet
@@ -710,7 +725,7 @@ NetworkInterface::InputPort *
 NetworkInterface::getInportForVnet(int vnet)
 {
     for (auto &iPort : inPorts) { //for each NI inport
-        //if that inport supports vnet 
+        //if that inport supports vnet
         if (iPort->isVnetSupported(vnet)) {
             return iPort; //that is our inport
         }
@@ -730,7 +745,7 @@ NetworkInterface::OutputPort *
 NetworkInterface::getOutportForVnet(int vnet)
 {
     for (auto &oPort : outPorts) { //for each NI outport
-        //if that outport supports vnet 
+        //if that outport supports vnet
         if (oPort->isVnetSupported(vnet)) {
             return oPort; //that is our outport
         }
@@ -791,7 +806,7 @@ void
 NetworkInterface::checkReschedule()
 {
     //for every MessageBuffer in inNode_ptr
-    for (const auto& it : inNode_ptr) { 
+    for (const auto& it : inNode_ptr) {
         if (it == nullptr) { //move on, if the MessageBuffer is null
             continue;
         }
@@ -805,7 +820,7 @@ NetworkInterface::checkReschedule()
 
     for (auto& ni_out_vc : niOutVcs) { //for every NI outvc
         //if that outvc is ready (has a message)
-        if (ni_out_vc.isReady(clockEdge(Cycles(1)))) { 
+        if (ni_out_vc.isReady(clockEdge(Cycles(1)))) {
             scheduleEvent(Cycles(1)); //wake up the NI in the next cycle
             return;
         }
@@ -859,7 +874,7 @@ NetworkInterface::functionalRead(Packet *pkt, WriteMask &mask)
     return read;
 }
 
-//updating niOutVcs and outport outFlitQueue flits with the 
+//updating niOutVcs and outport outFlitQueue flits with the
 //data from the packet. It returns the number of functional writes.
 //niOutVcs ==> input flitBuffers that serve the consumer (NI)
 //oPort->outFlitQueue ==> output flitBuffers for sending flits to the network
@@ -871,7 +886,7 @@ NetworkInterface::functionalWrite(Packet *pkt)
         num_functional_writes += ni_out_vc.functionalWrite(pkt);
     }
 
-    for (auto &oPort: outPorts) { //for every outport in NI 
+    for (auto &oPort: outPorts) { //for every outport in NI
         num_functional_writes += oPort->outFlitQueue()->functionalWrite(pkt);
     }
     return num_functional_writes;
@@ -880,4 +895,3 @@ NetworkInterface::functionalWrite(Packet *pkt)
 } // namespace garnet
 } // namespace ruby
 } // namespace gem5
-

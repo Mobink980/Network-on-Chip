@@ -55,10 +55,10 @@ InputUnit::InputUnit(int id, PortDirection direction, Router *router)
   : Consumer(router), m_router(router), m_id(id), m_direction(direction),
     m_vc_per_vnet(m_router->get_vc_per_vnet())
 {
-    //number of VCs in this InputUnit 
+    //number of VCs in this InputUnit
     const int m_num_vcs = m_router->get_num_vcs();
     //buffer_reads=buffer_writes=(num_VCs/num_of_VCs_per_Vnet)
-    //we have this many buffers in this InputUnit 
+    //we have this many buffers in this InputUnit
     m_num_buffer_reads.resize(m_num_vcs/m_vc_per_vnet);
     m_num_buffer_writes.resize(m_num_vcs/m_vc_per_vnet);
     //set the buffer reads & writes activity to zero for all buffers
@@ -87,7 +87,7 @@ InputUnit::InputUnit(int id, PortDirection direction, Router *router)
 void
 InputUnit::wakeup()
 {
-    flit *t_flit; //define a flit 
+    flit *t_flit; //define a flit
     //if the input link to the inport is ready at the current tick
     if (m_in_link->isReady(curTick())) {
         //update the flit with the link content
@@ -96,17 +96,6 @@ InputUnit::wakeup()
         DPRINTF(RubyNetwork, "Router[%d] Consuming:%s Width: %d Flit:%s\n",
         m_router->get_id(), m_in_link->name(),
         m_router->getBitWidth(), *t_flit);
- 
-        //======================================================
-        // std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
-        // std::cout << "ID of the flit: " << t_flit->get_id() <<"\n";
-        // std::cout << "Did t_flit came from bus? " << t_flit->is_broadcast() <<"\n";
-        // // std::cout << "t_flit source router is: R" << t_flit->get_route().src_router <<"\n";
-        // // std::cout << "t_flit destination router is: R" << t_flit->get_route().dest_router <<"\n";
-        // std::cout << "Size of the flit: " << t_flit->m_width <<"\n";
-        // std::cout << "Size of the network link: " << m_router->getBitWidth() <<"\n";
-        // std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
-        //====================================================== 
 
         //make sure the flit size is the same as the router link size
         assert(t_flit->m_width == m_router->getBitWidth());
@@ -115,63 +104,94 @@ InputUnit::wakeup()
         //for stats (number of hops the flit traveled so far)
         t_flit->increment_hops();
 
-        //if our flit is of type HEAD_ or HEAD_TAIL_, then we need route
-        //computation and must update the route in the VC 
-        if ((t_flit->get_type() == HEAD_) ||
-            (t_flit->get_type() == HEAD_TAIL_)) {
+        //do the following only if the flit is not broadcast or
+        //it is broadcast, but the destination is this router
+        // if (!t_flit->is_broadcast() || (t_flit->is_broadcast() && t_flit->get_route().dest_router == m_router->get_id())) {
 
-            //make sure the VC_state of the VC the flit is in, is IDLE_ 
-            assert(virtualChannels[vc].get_state() == IDLE_);
-            //change the state of vc from IDLE_ to ACTIVE_ at 
-            //the current tick
-            set_vc_active(vc, curTick());
+            //if our flit is of type HEAD_ or HEAD_TAIL_, then we need route
+            //computation and must update the route in the VC
+            if ((t_flit->get_type() == HEAD_) ||
+                (t_flit->get_type() == HEAD_TAIL_)) {
 
-            // Route computation for this vc 
-            //(determine the outport for the flit)
-            int outport = m_router->route_compute(t_flit->get_route(),
-                m_id, m_direction);
+                //make sure the VC_state of the VC the flit is in, is IDLE_
+                assert(virtualChannels[vc].get_state() == IDLE_);
+                //change the state of vc from IDLE_ to ACTIVE_ at
+                //the current tick
+                set_vc_active(vc, curTick());
 
-            // Update output port in VC
-            // All flits in this packet will use this output port
-            // The output port field in the flit is updated after it wins SA
-            grant_outport(vc, outport); //grant the outport to the VC
+                // Route computation for this vc
+                //(determine the outport for the flit)
+                int outport = m_router->route_compute(t_flit->get_route(),
+                    m_id, m_direction);
 
-        } else { //the flit is of type BODY/TAIL
-            //make sure the VC_state of the VC the flit is in, is ACTIVE_
-            //no need for route computation (the route is already set for vc)
-            assert(virtualChannels[vc].get_state() == ACTIVE_);
-        }
+                // Update output port in VC
+                // All flits in this packet will use this output port
+                // The output port field in the flit is updated after it wins SA
+                grant_outport(vc, outport); //grant the outport to the VC
+
+            } else { //the flit is of type BODY/TAIL
+                //make sure the VC_state of the VC the flit is in, is ACTIVE_
+                //no need for route computation (the route is already set for vc)
+                assert(virtualChannels[vc].get_state() == ACTIVE_);
+            }
+
+            //========================================================
+            //if a flit has reached its destination router
+            // if (t_flit->get_route().dest_router == m_router->get_id()) {
+            //     int src_router_layer = m_router->get_router_layer(t_flit->get_route().src_router);
+            //     int dest_router_layer = m_router->get_router_layer(t_flit->get_route().dest_router);
+            //     //if the flit has come from another layer
+            //     // std::cout<<"*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=\n";
+            //     // std::cout<<"A flit has reached its destination router.\n";
+            //     if (src_router_layer != dest_router_layer) {
+            //         // std::cout<<"src router:"<<t_flit->get_route().src_router<<".\n";
+            //         // std::cout<<"dest router:"<<t_flit->get_route().dest_router<<".\n";
+            //         // std::cout<<"src router layer:"<<src_router_layer<<".\n";
+            //         // std::cout<<"dest router layer:"<<dest_router_layer<<".\n";
+            //         std::cout<<"It was from another layer. ";
+            //         if (t_flit->is_broadcast()) {
+            //             std::cout<<"This flit came from bus.\n";
+            //         } else {
+            //             std::cout<<"\n";
+            //         }
+            //     }
+                // std::cout<<"*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=\n";
+            // }
+
+            //========================================================
 
 
-        // Buffer the flit (insert the flit into vc)
-        virtualChannels[vc].insertFlit(t_flit);
+            // Buffer the flit (insert the flit into vc)
+            virtualChannels[vc].insertFlit(t_flit);
 
-        //determine the Vnet (vnet = vc_id/number_of_VCs_per_Vnet)
-        int vnet = vc/m_vc_per_vnet;
-        // number of writes same as reads
-        // any flit that is written will be read only once
-        m_num_buffer_writes[vnet]++;
-        m_num_buffer_reads[vnet]++;
+            //determine the Vnet (vnet = vc_id/number_of_VCs_per_Vnet)
+            int vnet = vc/m_vc_per_vnet;
+            // number of writes same as reads
+            // any flit that is written will be read only once
+            m_num_buffer_writes[vnet]++;
+            m_num_buffer_reads[vnet]++;
 
-        //get the number of pipeline stages (router latency)
-        Cycles pipe_stages = m_router->get_pipe_stages();
-        if (pipe_stages == 1) {
-            // 1-cycle router
-            // Flit goes for SA directly
-            t_flit->advance_stage(SA_, curTick());
-        } else {
-            assert(pipe_stages > 1); 
-            // Router delay is modeled by making flit wait in buffer for
-            // (pipe_stages cycles - 1) cycles before going for SA
+            //get the number of pipeline stages (router latency)
+            Cycles pipe_stages = m_router->get_pipe_stages();
+            if (pipe_stages == 1) {
+                // 1-cycle router
+                // Flit goes for SA directly
+                t_flit->advance_stage(SA_, curTick());
+            } else {
+                assert(pipe_stages > 1);
+                // Router delay is modeled by making flit wait in buffer for
+                // (pipe_stages cycles - 1) cycles before going for SA
 
-            //wait_time before advancing to Switch_Allocation stage
-            Cycles wait_time = pipe_stages - Cycles(1);
-            //advance the flit stage to SA_ after m_latency-1 cycles,
-            //so the router latency becomes m_latncy cycles
-            t_flit->advance_stage(SA_, m_router->clockEdge(wait_time));
+                //wait_time before advancing to Switch_Allocation stage
+                Cycles wait_time = pipe_stages - Cycles(1);
+                //advance the flit stage to SA_ after m_latency-1 cycles,
+                //so the router latency becomes m_latncy cycles
+                t_flit->advance_stage(SA_, m_router->clockEdge(wait_time));
 
-            // Wakeup the router in that cycle to perform SA
-            m_router->schedule_wakeup(Cycles(wait_time));
+                // Wakeup the router in that cycle to perform SA
+                m_router->schedule_wakeup(Cycles(wait_time));
+            }
+
         }
 
         //if the input link to the inport is ready at the current tick
@@ -179,7 +199,6 @@ InputUnit::wakeup()
             //Wakeup the router in one cycle to consume the flit
             m_router->schedule_wakeup(Cycles(1));
         }
-    }
 }
 
 // Send a credit back to upstream router for this VC.
@@ -196,7 +215,7 @@ InputUnit::increment_credit(int in_vc, bool free_signal, Tick curTime)
     Credit *t_credit = new Credit(in_vc, free_signal, curTime);
     //insert the created credit flit into the creditQueue
     creditQueue.insert(t_credit);
-    //the credit link of the InputUnit will send t_credit in one cycle   
+    //the credit link of the InputUnit will send t_credit in one cycle
     m_credit_link->scheduleEventAbsolute(m_router->clockEdge(Cycles(1)));
 }
 
@@ -239,4 +258,3 @@ InputUnit::resetStats()
 } // namespace garnet
 } // namespace ruby
 } // namespace gem5
-

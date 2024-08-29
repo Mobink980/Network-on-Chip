@@ -52,12 +52,14 @@ void
 VirtualChannel::set_idle(Tick curTime)
 {
     m_vc_state.first = IDLE_;
-    m_vc_state.second = curTime; 
+    m_vc_state.second = curTime;
     m_enqueue_time = Tick(INFINITE_);
     m_output_port = -1;
     m_output_vc = -1;
+    //===========================================================
     //Remove all elements from m_broadcast_output_vcs vector
     m_broadcast_output_vcs.clear();
+    //===========================================================
 }
 
 //set the vc state to active (the VC is in use)
@@ -69,13 +71,13 @@ VirtualChannel::set_active(Tick curTime)
     m_enqueue_time = curTime;
 }
 
-//check the stage of the inputBuffer top flit at time and 
+//check the stage of the inputBuffer top flit at time and
 //see if it is a specific state
 bool
 VirtualChannel::need_stage(flit_stage stage, Tick time)
 {
     if (inputBuffer.isReady(time)) {
-        //make sure the vc state is active and the time is greater than 
+        //make sure the vc state is active and the time is greater than
         //or equal to the time the active state was set
         assert(m_vc_state.first == ACTIVE_ && m_vc_state.second <= time);
         //peek the top flit from inputBuffer
@@ -103,4 +105,3 @@ VirtualChannel::functionalWrite(Packet *pkt)
 } // namespace garnet
 } // namespace ruby
 } // namespace gem5
-

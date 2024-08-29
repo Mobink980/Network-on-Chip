@@ -77,13 +77,13 @@ class Router : public BasicRouter, public Consumer
     //Call SwitchAllocator's wakeup()
     //Call CrossbarSwitch's wakeup()
     //The router's wakeup function is called whenever any of its modules
-    //(InputUnit, OutputUnit, SwitchAllocator, CrossbarSwitch) have a 
+    //(InputUnit, OutputUnit, SwitchAllocator, CrossbarSwitch) have a
     //ready flit/credit to act upon this cycle.
     void wakeup();
     //for printing this Router
     void print(std::ostream& out) const {};
 
-    //calls the init function of BasicRouter, 
+    //calls the init function of BasicRouter,
     //SwitchAllocator, and CrossbarSwitch
     void init();
     //add an inport to the router
@@ -109,6 +109,9 @@ class Router : public BasicRouter, public Consumer
     int get_num_outports()  { return m_output_unit.size(); }
     //get the id of the router
     int get_id()            { return m_id; }
+
+    //get the layer of a router based on its id
+    int get_router_layer(int router_id);
 
     //initialize the pointer to the GarnetNetwork
     void init_net_ptr(GarnetNetwork* net_ptr)
@@ -154,7 +157,7 @@ class Router : public BasicRouter, public Consumer
     void schedule_wakeup(Cycles time);
 
     //Getting the direction of a port as a string
-    //(North, South, East, West)  
+    //(North, South, East, West)
     std::string getPortDirectionName(PortDirection direction);
     //For printing fault vector based on temperature.
     void printFaultVector(std::ostream& out);
@@ -181,7 +184,7 @@ class Router : public BasicRouter, public Consumer
     }
 
     bool functionalRead(Packet *pkt, WriteMask &mask);
-    
+
     //Getting the total number of functional writes for a packet.
     uint32_t functionalWrite(Packet *);
 
@@ -225,4 +228,3 @@ class Router : public BasicRouter, public Consumer
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_ROUTER_HH__
-

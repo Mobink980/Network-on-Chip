@@ -53,20 +53,12 @@ class RubyNetwork(ClockedObject):
     ruby_system = Param.RubySystem("")
 
     routers = VectorParam.BasicRouter("Network routers")
-    #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+    # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     busses = VectorParam.BasicBus("Network busses")
-    #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+    # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     netifs = VectorParam.ClockedObject("Network Interfaces")
     ext_links = VectorParam.BasicExtLink("Links to external nodes")
     int_links = VectorParam.BasicIntLink("Links between internal nodes")
-    #==================================================================
-    bus_to_router_links = VectorParam.BasicBusToRouterLink(
-        "Links from routers to busses"
-    )
-    router_to_bus_links = VectorParam.BasicRouterToBusLink(
-        "Links from busses to routers"
-    )
-    #==================================================================
 
     in_port = VectorResponsePort("CPU input port")
     slave = DeprecatedParam(in_port, "`slave` is now called `in_port`")

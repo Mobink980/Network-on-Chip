@@ -26,8 +26,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.BasicLink import (
-    BasicBusToRouterLink,
-    BasicRouterToBusLink,
     BasicExtLink,
     BasicIntLink,
 )
@@ -184,92 +182,3 @@ class GarnetExtLink(BasicExtLink):
     width = Param.UInt32(
         Parent.ni_flit_size, "bit width supported by the router"
     )
-
-
-# ==========================================================================
-# =================================================================
-# This is supposed to be a bus that connects several routers.
-# Bus traversal only takes one cycle, just like a GarnetIntLink.
-# But only one router can send per cycle on the bus.
-# =================================================================
-# GarnetBusToRouterLink is inherited from BasicBusToRouterLink
-class GarnetBusToRouterLink(BasicBusToRouterLink):
-    type = "GarnetBusToRouterLink"
-    cxx_header = "mem/ruby/network/garnet/GarnetLink.hh"
-    cxx_class = "gem5::ruby::garnet::GarnetBusToRouterLink"
-
-    # The internal link includes one forward link (for flit)
-    # and one backward flow-control link (for credit)
-    network_link = Param.NetworkLink(NetworkLink(), "forward link")
-    credit_link = Param.CreditLink(CreditLink(), "backward flow-control link")
-
-    # The src_cdc and dst_cdc flags are used to enable the
-    # clock domain crossing(CDC) at the source and destination
-    # end of the link respectively. This is required when the
-    # link and the objected connected to the link are operating
-    # at different clock domains. These flags should be set
-    # in the network topology files.
-    src_cdc = Param.Bool(False, "Enable Clock Domain Crossing")
-    dst_cdc = Param.Bool(False, "Enable Clock Domain Crossing")
-
-    # The src_serdes and dst_serdes flags are used to enable
-    # the Serializer-Deserializer units at the source and
-    # destination end of the link respectively. Enabling
-    # these flags is necessary when the connecting object
-    # supports a different flit width.
-    src_serdes = Param.Bool(False, "Enable Serializer-Deserializer")
-    dst_serdes = Param.Bool(False, "Enable Serializer-Deserializer")
-
-    # The network bridge encapsulates both the CDC and Ser-Des
-    # units in HeteroGarnet. This is automatically enabled when
-    # either CDC or Ser-Des is enabled.
-    src_net_bridge = Param.NetworkBridge(NULL, "Network Bridge at source")
-    dst_net_bridge = Param.NetworkBridge(NULL, "Network Bridge at dest")
-    src_cred_bridge = Param.NetworkBridge(NULL, "Credit Bridge at source")
-    dst_cred_bridge = Param.NetworkBridge(NULL, "Credit Bridge at dest")
-
-    width = Param.UInt32(
-        Parent.ni_flit_size, "bit width supported by the router"
-    )
-
-# GarnetRouterToBusLink is inherited from BasicRouterToBusLink
-class GarnetRouterToBusLink(BasicRouterToBusLink):
-    type = "GarnetRouterToBusLink"
-    cxx_header = "mem/ruby/network/garnet/GarnetLink.hh"
-    cxx_class = "gem5::ruby::garnet::GarnetRouterToBusLink"
-
-    # The internal link includes one forward link (for flit)
-    # and one backward flow-control link (for credit)
-    network_link = Param.NetworkLink(NetworkLink(), "forward link")
-    credit_link = Param.CreditLink(CreditLink(), "backward flow-control link")
-
-    # The src_cdc and dst_cdc flags are used to enable the
-    # clock domain crossing(CDC) at the source and destination
-    # end of the link respectively. This is required when the
-    # link and the objected connected to the link are operating
-    # at different clock domains. These flags should be set
-    # in the network topology files.
-    src_cdc = Param.Bool(False, "Enable Clock Domain Crossing")
-    dst_cdc = Param.Bool(False, "Enable Clock Domain Crossing")
-
-    # The src_serdes and dst_serdes flags are used to enable
-    # the Serializer-Deserializer units at the source and
-    # destination end of the link respectively. Enabling
-    # these flags is necessary when the connecting object
-    # supports a different flit width.
-    src_serdes = Param.Bool(False, "Enable Serializer-Deserializer")
-    dst_serdes = Param.Bool(False, "Enable Serializer-Deserializer")
-
-    # The network bridge encapsulates both the CDC and Ser-Des
-    # units in HeteroGarnet. This is automatically enabled when
-    # either CDC or Ser-Des is enabled.
-    src_net_bridge = Param.NetworkBridge(NULL, "Network Bridge at source")
-    dst_net_bridge = Param.NetworkBridge(NULL, "Network Bridge at dest")
-    src_cred_bridge = Param.NetworkBridge(NULL, "Credit Bridge at source")
-    dst_cred_bridge = Param.NetworkBridge(NULL, "Credit Bridge at dest")
-
-    width = Param.UInt32(
-        Parent.ni_flit_size, "bit width supported by the router"
-    )
-
-# ==========================================================================
