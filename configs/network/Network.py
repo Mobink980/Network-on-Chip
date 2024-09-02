@@ -68,15 +68,15 @@ def define_options(parser):
     parser.add_argument(
         "--network",
         default="simple",
-        choices=["simple", "garnet"],
-        help="""'simple'|'garnet' (garnet2.0 will be deprecated.)""",
+        choices=["simple", "garnet", "onyx"],
+        help="""'simple'|'garnet' (garnet2.0 will be deprecated.) | 'onyx'""",
     )
     parser.add_argument(
         "--router-latency",
         action="store",
         type=int,
         default=1,
-        help="""number of pipeline stages in the garnet router.
+        help="""number of pipeline stages in the garnet|onyx router.
             Has to be >= 1.
             Can be over-ridden on a per router basis
             in the topology file.""",
@@ -86,7 +86,7 @@ def define_options(parser):
         action="store",
         type=int,
         default=1,
-        help="""latency of each link the simple/garnet networks.
+        help="""latency of each link the simple/garnet/onyx networks.
         Has to be >= 1. Can be over-ridden on a per link basis
         in the topology file.""",
     )
@@ -95,7 +95,7 @@ def define_options(parser):
         action="store",
         type=int,
         default=128,
-        help="width in bits for all links inside garnet.",
+        help="width in bits for all links inside garnet/onyx.",
     )
     parser.add_argument(
         "--vcs-per-vnet",
@@ -103,7 +103,7 @@ def define_options(parser):
         type=int,
         default=4,
         help="""number of virtual channels per virtual network
-            inside garnet network.""",
+            inside garnet/onyx network.""",
     )
     parser.add_argument(
         "--routing-algorithm",
@@ -112,8 +112,8 @@ def define_options(parser):
         default=0,
         help="""routing algorithm in network.
             0: weight-based table
-            1: XY (for Mesh. see garnet/RoutingUnit.cc)
-            2: Custom (see garnet/RoutingUnit.cc""",
+            1: XY (for Mesh. see garnet|onyx/RoutingUnit.cc)
+            2: Custom (see garnet|onyx/RoutingUnit.cc""",
     )
     parser.add_argument(
         "--network-fault-model",
@@ -160,6 +160,16 @@ def create_network(options, ruby):
         # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         InterfaceClass = GarnetNetworkInterface
 
+    elif options.network == "onyx":
+        NetworkClass = OnyxNetwork
+        IntLinkClass = OnyxIntLink
+        ExtLinkClass = OnyxExtLink
+        RouterClass = OnyxRouter
+        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        BusClass = OnyxBus
+        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        InterfaceClass = OnyxNetworkInterface
+
     else:
         NetworkClass = SimpleNetwork
         IntLinkClass = SimpleIntLink
@@ -198,7 +208,7 @@ def create_network(options, ruby):
 
 
 def init_network(options, network, InterfaceClass):
-    if options.network == "garnet":
+    if options.network == "garnet" or options.network == "onyx":
         network.num_rows = options.mesh_rows
         network.num_columns = options.mesh_columns
         network.num_layers = options.mesh_layers
@@ -313,6 +323,6 @@ def init_network(options, network, InterfaceClass):
         network.netifs = netifs
 
     if options.network_fault_model:
-        assert options.network == "garnet"
+        assert options.network == "garnet" or options.network == "onyx"
         network.enable_fault_model = True
         network.fault_model = FaultModel()
