@@ -44,7 +44,7 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
 // Credit Signal for buffers inside VC
