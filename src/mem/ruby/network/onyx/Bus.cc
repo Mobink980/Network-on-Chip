@@ -30,14 +30,14 @@
  */
 
 
-#include "mem/ruby/network/garnet/Bus.hh"
+#include "mem/ruby/network/onyx/Bus.hh"
 
 #include "debug/RubyNetwork.hh"
-#include "mem/ruby/network/garnet/CreditLink.hh"
-#include "mem/ruby/network/garnet/GarnetNetwork.hh"
-#include "mem/ruby/network/garnet/BusInputUnit.hh"
-#include "mem/ruby/network/garnet/NetworkLink.hh"
-#include "mem/ruby/network/garnet/BusOutputUnit.hh"
+#include "mem/ruby/network/onyx/AckLink.hh"
+#include "mem/ruby/network/onyx/OnyxNetwork.hh"
+#include "mem/ruby/network/onyx/BusInport.hh"
+#include "mem/ruby/network/onyx/NetLink.hh"
+#include "mem/ruby/network/onyx/BusOutport.hh"
 
 //=====================================
 #include <iostream>
@@ -49,7 +49,7 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
 //Bus constructor
@@ -114,7 +114,7 @@ Bus::wakeup()
 //inport to the Bus object.
 void
 Bus::addInPort(PortDirection inport_dirn,
-                  NetworkLink *in_link, CreditLink *credit_link)
+                  NetLink *in_link, AckLink *credit_link)
 {
     fatal_if(in_link->bitWidth != m_bit_width, "Widths of link %s(%d)does"
             " not match that of Bus%d(%d). Consider inserting SerDes "
@@ -129,7 +129,7 @@ Bus::addInPort(PortDirection inport_dirn,
     //This refers to an object of the Bus class in InputUnit
     //class instantiation. inport_dirn is the direction of the
     //input port that we are creating.
-    BusInputUnit *input_unit = new BusInputUnit(port_num, inport_dirn, this);
+    BusInport *input_unit = new BusInport(port_num, inport_dirn, this);
     //set network link for this inport (to this bus)
     input_unit->set_in_link(in_link);
     //set credit link for this inport (from this bus to the adjacent one)
@@ -143,16 +143,16 @@ Bus::addInPort(PortDirection inport_dirn,
     //set the number of virtual channels per virtual network for the credit link
     credit_link->setVcsPerVnet(get_vc_per_vnet());
     //add the input port we created to the bus object
-    m_input_unit.push_back(std::shared_ptr<BusInputUnit>(input_unit));
+    m_input_unit.push_back(std::shared_ptr<BusInport>(input_unit));
 }
 
 //The following function of the Bus class adds one output port or
 //outport to the Bus object.
 void
 Bus::addOutPort(PortDirection outport_dirn,
-                   NetworkLink *out_link,
+                   NetLink *out_link,
                    std::vector<NetDest>& routing_table_entry, int link_weight,
-                   CreditLink *credit_link, uint32_t consumerVcs)
+                   AckLink *credit_link, uint32_t consumerVcs)
 {
     fatal_if(out_link->bitWidth != m_bit_width, "Widths of units do not match."
             " Consider inserting SerDes Units");
@@ -166,7 +166,7 @@ Bus::addOutPort(PortDirection outport_dirn,
     //outport_dirn is the direction of the output port that we
     //are creating. consumerVcs is the virtual channels that
     //would consume from each outport.
-    BusOutputUnit *output_unit = new BusOutputUnit(port_num, outport_dirn, this,
+    BusOutport *output_unit = new BusOutport(port_num, outport_dirn, this,
                                              consumerVcs);
     //set network link for this outport (from this bus to the adjacent one)
     output_unit->set_out_link(out_link);
@@ -182,7 +182,7 @@ Bus::addOutPort(PortDirection outport_dirn,
     //set the number of virtual channels per virtual network for the network link
     out_link->setVcsPerVnet(consumerVcs);
     //add the output port we created to the bus object
-    m_output_unit.push_back(std::shared_ptr<BusOutputUnit>(output_unit));
+    m_output_unit.push_back(std::shared_ptr<BusOutport>(output_unit));
 }
 
 //Getting the direction of an outport in the bus
@@ -202,16 +202,8 @@ Bus::getInportDirection(int inport)
 //===================================================================
 //This function grants the switch to an inport, so the flit could pass
 //the crossbar.
-// void
-// Bus::grant_switch(flit *t_flit)
-// {
-//     crossbarSwitch.update_sw_winner(t_flit);
-// }
-
-//This function grants the switch to an inport, so the flit could pass
-//the crossbar.
 void
-Bus::grant_switch(int inport, flit *t_flit)
+Bus::grant_switch(int inport, chunk *t_flit)
 {
     crossbarSwitch.update_sw_winner(inport, t_flit);
 }
@@ -369,6 +361,6 @@ Bus::functionalWrite(Packet *pkt)
     return num_functional_writes;
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
