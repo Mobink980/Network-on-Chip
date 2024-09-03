@@ -27,7 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/ruby/network/garnet/Credit.hh"
+#include "mem/ruby/network/onyx/Ack.hh"
 
 #include "base/trace.hh"
 #include "debug/RubyNetwork.hh"
@@ -38,50 +38,50 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-// Credit Signal for buffers inside VC
-// Carries m_vc (inherits from flit.hh)
+// Credit (Ack) Signal for buffers inside VC
+// Carries m_vc (inherits from chunk.hh)
 // and m_is_free_signal (whether VC is free or not)
 
-Credit::Credit(int vc, bool is_free_signal, Tick curTime)
-    : flit(0, 0, vc, 0, RouteInfo(), 0, nullptr, 0, 0, curTime)
+Ack::Ack(int vc, bool is_free_signal, Tick curTime)
+    : chunk(0, 0, vc, 0, RouteInfo(), 0, nullptr, 0, 0, curTime)
 {
     m_is_free_signal = is_free_signal; //update class variable
-    m_type = CREDIT_; //flit type is credit
+    m_type = CREDIT_; //flit (chunk) type is credit
 }
 
-//for serializing a credit flit into parts
-flit *
-Credit::serialize(int ser_id, int parts, uint32_t bWidth)
+//for serializing a credit (Ack) flit into parts
+chunk *
+Ack::serialize(int ser_id, int parts, uint32_t bWidth)
 {
     DPRINTF(RubyNetwork, "Serializing a credit\n");
     bool new_free = false;
     if ((ser_id+1 == parts) && m_is_free_signal) {
         new_free = true;
     }
-    Credit *new_credit_flit = new Credit(m_vc, new_free, m_time);
+    Ack *new_credit_flit = new Ack(m_vc, new_free, m_time);
     return new_credit_flit;
 }
 
-flit *
-Credit::deserialize(int des_id, int num_flits, uint32_t bWidth)
+chunk *
+Ack::deserialize(int des_id, int num_flits, uint32_t bWidth)
 {
     DPRINTF(RubyNetwork, "DeSerializing a credit vc:%d free:%d\n",
     m_vc, m_is_free_signal);
     if (m_is_free_signal) {
         // We are not going to get anymore credits for this vc
         // So send a credit in any case
-        return new Credit(m_vc, true, m_time);
+        return new Ack(m_vc, true, m_time);
     }
 
-    return new Credit(m_vc, false, m_time);
+    return new Ack(m_vc, false, m_time);
 }
 
 //printing information of a flit (in this case a credit flit)
 void
-Credit::print(std::ostream& out) const
+Ack::print(std::ostream& out) const
 {
     out << "[Credit:: ";
     out << "Type=" << m_type << " ";
@@ -91,6 +91,6 @@ Credit::print(std::ostream& out) const
     out << "]";
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
