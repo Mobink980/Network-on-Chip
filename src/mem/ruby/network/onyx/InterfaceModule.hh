@@ -30,21 +30,21 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_NETWORKINTERFACE_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_NETWORKINTERFACE_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_INTERFACEMODULE_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_INTERFACEMODULE_HH__
 
 #include <iostream>
 #include <vector>
 
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/network/garnet/CommonTypes.hh"
-#include "mem/ruby/network/garnet/Credit.hh"
-#include "mem/ruby/network/garnet/CreditLink.hh"
-#include "mem/ruby/network/garnet/GarnetNetwork.hh"
-#include "mem/ruby/network/garnet/NetworkLink.hh"
-#include "mem/ruby/network/garnet/OutVcState.hh"
+#include "mem/ruby/network/onyx/CommonTypes.hh"
+#include "mem/ruby/network/onyx/Ack.hh"
+#include "mem/ruby/network/onyx/AckLink.hh"
+#include "mem/ruby/network/onyx/OnyxNetwork.hh"
+#include "mem/ruby/network/onyx/NetLink.hh"
+#include "mem/ruby/network/onyx/VcState.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
-#include "params/GarnetNetworkInterface.hh"
+#include "params/OnyxNetworkInterface.hh"
 
 namespace gem5
 {
@@ -54,25 +54,25 @@ namespace ruby
 
 class MessageBuffer;
 
-namespace garnet
+namespace onyx
 {
 
-class flitBuffer;
+class chunkBuffer;
 
-//NetworkInterface (NI) is both a ClockedObject and a Consumer
-class NetworkInterface : public ClockedObject, public Consumer
+//InterfaceModule (NI) is both a ClockedObject and a Consumer
+class InterfaceModule : public ClockedObject, public Consumer
 {
   public:
-    typedef GarnetNetworkInterfaceParams Params;
-    //NetworkInterface constructor
-    NetworkInterface(const Params &p);
-    //NetworkInterface destructor
-    ~NetworkInterface() = default;
+    typedef OnyxNetworkInterfaceParams Params;
+    //InterfaceModule constructor
+    InterfaceModule(const Params &p);
+    //InterfaceModule destructor
+    ~InterfaceModule() = default;
 
     //add an inport (input port) to the NI
-    void addInPort(NetworkLink *in_link, CreditLink *credit_link);
+    void addInPort(NetLink *in_link, AckLink *credit_link);
     //add an outport (output port) to the NI
-    void addOutPort(NetworkLink *out_link, CreditLink *credit_link,
+    void addOutPort(NetLink *out_link, AckLink *credit_link,
         SwitchID router_id, uint32_t consumerVcs);
 
     //for enqueuing a stalled message into the MessageBuffer
@@ -89,7 +89,7 @@ class NetworkInterface : public ClockedObject, public Consumer
     //get the vnet for a vc
     int get_vnet(int vc);
     //set or initialize a pointer to the GarnetNetwork
-    void init_net_ptr(GarnetNetwork *net_ptr) { m_net_ptr = net_ptr; }
+    void init_net_ptr(OnyxNetwork *net_ptr) { m_net_ptr = net_ptr; }
 
     bool functionalRead(Packet *pkt, WriteMask &mask);
 
@@ -98,7 +98,7 @@ class NetworkInterface : public ClockedObject, public Consumer
     uint32_t functionalWrite(Packet *);
 
     //schedule a flit to be sent from an NI output port
-    void scheduleFlit(flit *t_flit);
+    void scheduleFlit(chunk *t_flit);
 
     //get the id of the router connected to the NI with an outport
     //each port has a specific vnet number
@@ -119,13 +119,13 @@ class NetworkInterface : public ClockedObject, public Consumer
           //OutputPort constructor
           //We need a NetworkLink, a CreditLink, and a router id to
           //instantiate an NI outport
-          OutputPort(NetworkLink *outLink, CreditLink *creditLink,
+          OutputPort(NetLink *outLink, AckLink *creditLink,
               int routerID)
           {
               //outport vnet
               _vnets = outLink->mVnets;
               //the flitBuffer for sending out flits to the network
-              _outFlitQueue = new flitBuffer();
+              _outFlitQueue = new chunkBuffer();
 
               //set the network link going out of the outport
               _outNetLink = outLink;
@@ -142,21 +142,21 @@ class NetworkInterface : public ClockedObject, public Consumer
           }
 
           //get the flitBuffer for sending out flits to the network
-          flitBuffer *
+          chunkBuffer *
           outFlitQueue()
           {
               return _outFlitQueue;
           }
 
           //get the network link going out of the outport
-          NetworkLink *
+          NetLink *
           outNetLink()
           {
               return _outNetLink;
           }
 
           //get the credit link coming into the outport
-          CreditLink *
+          AckLink *
           inCreditLink()
           {
               return _inCreditLink;
@@ -220,12 +220,12 @@ class NetworkInterface : public ClockedObject, public Consumer
           //vnets vector
           std::vector<int> _vnets;
           //for sending out flits to the network
-          flitBuffer *_outFlitQueue;
+          chunkBuffer *_outFlitQueue;
 
           //network link going out of the outport
-          NetworkLink *_outNetLink;
+          NetLink *_outNetLink;
           //credit link coming into the outport
-          CreditLink *_inCreditLink;
+          AckLink *_inCreditLink;
 
           int _vcRoundRobin; // For round robin scheduling
 
@@ -240,12 +240,12 @@ class NetworkInterface : public ClockedObject, public Consumer
           //InputPort constructor
           //We need a NetworkLink, and a CreditLink to instantiate
           //an NI inport
-          InputPort(NetworkLink *inLink, CreditLink *creditLink)
+          InputPort(NetLink *inLink, AckLink *creditLink)
           {
               //inport vnets
               _vnets = inLink->mVnets;
               //set the flitBuffer for sending credit flits to the network
-              _outCreditQueue = new flitBuffer();
+              _outCreditQueue = new chunkBuffer();
 
               //set the network link coming into the inport
               _inNetLink = inLink;
@@ -256,21 +256,21 @@ class NetworkInterface : public ClockedObject, public Consumer
           }
 
           //get the flitBuffer for sending credit flits to the network
-          flitBuffer *
+          chunkBuffer *
           outCreditQueue()
           {
               return _outCreditQueue;
           }
 
           //get the network link coming into the inport
-          NetworkLink *
+          NetLink *
           inNetLink()
           {
               return _inNetLink;
           }
 
           //get the credit link going out of the inport
-          CreditLink *
+          AckLink *
           outCreditLink()
           {
               return _outCreditLink;
@@ -293,7 +293,7 @@ class NetworkInterface : public ClockedObject, public Consumer
           }
 
           //for sending credit flits to the network
-          void sendCredit(Credit *cFlit)
+          void sendCredit(Ack *cFlit)
           {
               //insert the given flit into _outCreditQueue flitBuffer
               _outCreditQueue->insert(cFlit);
@@ -318,19 +318,19 @@ class NetworkInterface : public ClockedObject, public Consumer
           }
 
           // Queue for stalled flits
-          std::deque<flit *> m_stall_queue;
+          std::deque<chunk *> m_stall_queue;
           //check to see if the message enqueued in this cycle
           bool messageEnqueuedThisCycle;
       private:
           //inport vnets
           std::vector<int> _vnets;
           //the flitBuffer for sending credit flits to the network
-          flitBuffer *_outCreditQueue;
+          chunkBuffer *_outCreditQueue;
 
           //the network link coming into the inport
-          NetworkLink *_inNetLink;
+          NetLink *_inNetLink;
           //the credit link going out of the inport
-          CreditLink *_outCreditLink;
+          AckLink *_outCreditLink;
           //bitWidth of the inport links
           uint32_t _bitWidth;
     };
@@ -338,7 +338,7 @@ class NetworkInterface : public ClockedObject, public Consumer
 
   private:
     //pointer to the GarnetNetwork
-    GarnetNetwork *m_net_ptr;
+    OnyxNetwork *m_net_ptr;
     //id of the NI or node (num_NIs = num_cores)
     const NodeID m_id;
     //number of VCs
@@ -361,7 +361,7 @@ class NetworkInterface : public ClockedObject, public Consumer
 
     // Input Flit Buffers
     // The flit buffers which will serve the Consumer
-    std::vector<flitBuffer>  niOutVcs;
+    std::vector<chunkBuffer>  niOutVcs;
     std::vector<Tick> m_ni_out_vcs_enqueue_time;
 
     // The Message buffers that takes messages from the protocol
@@ -391,7 +391,7 @@ class NetworkInterface : public ClockedObject, public Consumer
     void checkReschedule();
 
     //incremet the stats within the flit
-    void incrementStats(flit *t_flit);
+    void incrementStats(chunk *t_flit);
 
     //get the inport for the given vnet
     InputPort *getInportForVnet(int vnet);
@@ -403,4 +403,4 @@ class NetworkInterface : public ClockedObject, public Consumer
 } // namespace ruby
 } // namespace gem5
 
-#endif // __MEM_RUBY_NETWORK_GARNET_0_NETWORKINTERFACE_HH__
+#endif // __MEM_RUBY_NETWORK_ONYX_0_INTERFACEMODULE_HH__
