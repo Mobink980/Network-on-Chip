@@ -28,15 +28,15 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_CREDIT_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_CREDIT_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_ACK_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_ACK_HH__
 
 #include <cassert>
 #include <iostream>
 
 #include "base/types.hh"
-#include "mem/ruby/network/garnet/CommonTypes.hh"
-#include "mem/ruby/network/garnet/flit.hh"
+#include "mem/ruby/network/onyx/CommonTypes.hh"
+#include "mem/ruby/network/onyx/chunk.hh"
 
 namespace gem5
 {
@@ -47,25 +47,25 @@ namespace ruby
 namespace onyx
 {
 
-// Credit Signal for buffers inside VC
-// Carries m_vc (inherits from flit.hh)
+// Credit (Ack) Signal for buffers inside VC
+// Carries m_vc (inherits from chunk.hh)
 // and m_is_free_signal (whether VC is free or not)
 
-class Credit : public flit
+class Ack : public chunk
 {
   public:
-    Credit() {}; //constructor
+    Ack() {}; //constructor
     //another constructor
-    Credit(int vc, bool is_free_signal, Tick curTime);
+    Ack(int vc, bool is_free_signal, Tick curTime);
 
     // Functions used by SerDes
-    //for serializing a flit into parts
-    flit* serialize(int ser_id, int parts, uint32_t bWidth);
-    //for deserializing several parts of a flit into one
-    flit* deserialize(int des_id, int num_flits, uint32_t bWidth);
+    //for serializing a flit (chunk) into parts
+    chunk* serialize(int ser_id, int parts, uint32_t bWidth);
+    //for deserializing several parts of a flit (chunk) into one
+    chunk* deserialize(int des_id, int num_flits, uint32_t bWidth);
     void print(std::ostream& out) const;
 
-    ~Credit() {}; //destructor
+    ~Ack() {}; //destructor
     //telling the previous router whether VC is free
     bool is_free_signal() { return m_is_free_signal; }
 
@@ -77,4 +77,4 @@ class Credit : public flit
 } // namespace ruby
 } // namespace gem5
 
-#endif // __MEM_RUBY_NETWORK_GARNET_0_CREDIT_HH__
+#endif // __MEM_RUBY_NETWORK_ONYX_0_ACK_HH__
