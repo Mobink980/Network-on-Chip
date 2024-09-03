@@ -29,8 +29,8 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_BUS_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_BUS_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_BUS_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_BUS_HH__
 
 #include <iostream>
 #include <memory>
@@ -40,13 +40,13 @@
 #include "mem/ruby/common/NetDest.hh"
 //BasicBus is defined in BasicRouter.hh
 #include "mem/ruby/network/BasicRouter.hh"
-#include "mem/ruby/network/garnet/CommonTypes.hh"
-#include "mem/ruby/network/garnet/BusCrossbarSwitch.hh"
-#include "mem/ruby/network/garnet/GarnetNetwork.hh"
-#include "mem/ruby/network/garnet/BusSwitchAllocator.hh"
-#include "mem/ruby/network/garnet/flit.hh"
+#include "mem/ruby/network/onyx/CommonTypes.hh"
+#include "mem/ruby/network/onyx/BusCrossbar.hh"
+#include "mem/ruby/network/onyx/OnyxNetwork.hh"
+#include "mem/ruby/network/onyx/BusSwitchManager.hh"
+#include "mem/ruby/network/onyx/chunk.hh"
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-#include "params/GarnetBus.hh"
+#include "params/OnyxBus.hh"
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 namespace gem5
@@ -57,19 +57,19 @@ namespace ruby
 
 class FaultModel;
 
-namespace garnet
+namespace onyx
 {
 
-class NetworkLink;
-class CreditLink;
-class BusInputUnit;
-class BusOutputUnit;
+class NetLink;
+class AckLink;
+class BusInport;
+class BusOutport;
 
 //class Bus inherites from both BasicBus and Consumer
 class Bus : public BasicBus, public Consumer
 {
   public:
-    typedef GarnetBusParams Params;
+    typedef OnyxBusParams Params;
     Bus(const Params &p); //Bus constructor
 
     ~Bus() = default; //Bus destructor
@@ -92,19 +92,19 @@ class Bus : public BasicBus, public Consumer
 
     //This function grants the switch to an inport, so the flit could pass
     //the crossbar.
-    void grant_switch(int inport, flit *t_flit);
+    void grant_switch(int inport, chunk *t_flit);
     //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
     //calls the init function of BasicBus,
     //SwitchAllocator, and CrossbarSwitch
     void init();
     //add an inport to the bus
-    void addInPort(PortDirection inport_dirn, NetworkLink *link,
-                   CreditLink *credit_link);
+    void addInPort(PortDirection inport_dirn, NetLink *link,
+                   AckLink *credit_link);
     //add an outport to the bus
-    void addOutPort(PortDirection outport_dirn, NetworkLink *link,
+    void addOutPort(PortDirection outport_dirn, NetLink *link,
                     std::vector<NetDest>& routing_table_entry,
-                    int link_weight, CreditLink *credit_link,
+                    int link_weight, AckLink *credit_link,
                     uint32_t consumerVcs);
 
     //get the latency of the bus in cycles
@@ -122,17 +122,17 @@ class Bus : public BasicBus, public Consumer
     //get the id of the bus
     int get_id()            { return m_id; }
 
-    //initialize the pointer to the GarnetNetwork
-    void init_net_ptr(GarnetNetwork* net_ptr)
+    //initialize the pointer to the OnyxNetwork
+    void init_net_ptr(OnyxNetwork* net_ptr)
     {
         m_network_ptr = net_ptr;
     }
 
-    //get the pointer to the GarnetNetwork
-    GarnetNetwork* get_net_ptr()  { return m_network_ptr; }
+    //get the pointer to the OnyxNetwork
+    OnyxNetwork* get_net_ptr()  { return m_network_ptr; }
 
     //get the InputUnit (inport) by the port number
-    BusInputUnit*
+    BusInport*
     getInputUnit(unsigned port)
     {
         //make sure the given port number is valid
@@ -141,7 +141,7 @@ class Bus : public BasicBus, public Consumer
     }
 
     //get the OutputUnit (outport) by the port number
-    BusOutputUnit*
+    BusOutport*
     getOutputUnit(unsigned port)
     {
         //make sure the given port number is valid
@@ -199,18 +199,18 @@ class Bus : public BasicBus, public Consumer
     uint32_t m_virtual_networks, m_vc_per_vnet, m_num_vcs;
     //link bandwidth of the bus
     uint32_t m_bit_width;
-    //pointer to the GarnetNetwork
-    GarnetNetwork *m_network_ptr;
+    //pointer to the OnyxNetwork
+    OnyxNetwork *m_network_ptr;
 
     //SwitchAllocator of this bus
-    BusSwitchAllocator switchAllocator;
+    BusSwitchManager switchAllocator;
     //CrossbarSwitch of this bus
-    BusCrossbarSwitch crossbarSwitch;
+    BusCrossbar crossbarSwitch;
 
     //vector containing the bus inports
-    std::vector<std::shared_ptr<BusInputUnit>> m_input_unit;
+    std::vector<std::shared_ptr<BusInport>> m_input_unit;
     //vector containing the bus outports
-    std::vector<std::shared_ptr<BusOutputUnit>> m_output_unit;
+    std::vector<std::shared_ptr<BusOutport>> m_output_unit;
 
     // Statistical variables required for power computations
     statistics::Scalar m_buffer_reads; //inport buffer_read activity
@@ -225,8 +225,8 @@ class Bus : public BasicBus, public Consumer
     statistics::Scalar m_crossbar_activity;
 };
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
 
-#endif // __MEM_RUBY_NETWORK_GARNET_0_BUS_HH__
+#endif // __MEM_RUBY_NETWORK_ONYX_0_BUS_HH__
