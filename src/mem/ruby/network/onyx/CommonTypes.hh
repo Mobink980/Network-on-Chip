@@ -28,8 +28,8 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_COMMONTYPES_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_COMMONTYPES_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_COMMONTYPES_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_COMMONTYPES_HH__
 
 #include "mem/ruby/common/NetDest.hh"
 
@@ -39,7 +39,7 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
 // All common enums and typedefs go here
@@ -89,8 +89,8 @@ struct RouteInfo
 //a constant for infinity
 #define INFINITE_ 10000
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
 
-#endif //__MEM_RUBY_NETWORK_GARNET_0_COMMONTYPES_HH__
+#endif //__MEM_RUBY_NETWORK_ONYX_0_COMMONTYPES_HH__
