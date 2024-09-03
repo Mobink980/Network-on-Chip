@@ -29,11 +29,11 @@
  */
 
 
-#include "mem/ruby/network/garnet/BusInputUnit.hh"
+#include "mem/ruby/network/onyx/BusInport.hh"
 
 #include "debug/RubyNetwork.hh"
-#include "mem/ruby/network/garnet/Credit.hh"
-#include "mem/ruby/network/garnet/Bus.hh"
+#include "mem/ruby/network/onyx/Ack.hh"
+#include "mem/ruby/network/onyx/Bus.hh"
 
 //=====================================
 #include <iostream>
@@ -45,11 +45,11 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-//BusInputUnit constructor for instantiation
-BusInputUnit::BusInputUnit(int id, PortDirection direction, Bus *bus)
+//BusInport constructor for instantiation
+BusInport::BusInport(int id, PortDirection direction, Bus *bus)
   : Consumer(bus), m_bus(bus), m_id(id), m_direction(direction),
     m_vc_per_vnet(m_bus->get_vc_per_vnet())
 {
@@ -83,9 +83,9 @@ BusInputUnit::BusInputUnit(int id, PortDirection direction, Bus *bus)
  */
 
 void
-BusInputUnit::wakeup()
+BusInport::wakeup()
 {
-    flit *t_flit; //define a flit
+    chunk *t_flit; //define a flit
     //if the input link to the inport is ready at the current tick
     if (m_in_link->isReady(curTick())) {
         //update the flit with the link content
@@ -169,13 +169,13 @@ BusInputUnit::wakeup()
 //Each InputUnit (inport) has one credit_link, and the credits sent back,
 //are for specific VCs, showing the upstream router the free space in each VC.
 void
-BusInputUnit::increment_credit(int in_vc, bool free_signal, Tick curTime)
+BusInport::increment_credit(int in_vc, bool free_signal, Tick curTime)
 {
     //printing the router_id, inport VC, free_signal, and the credit_link
     DPRINTF(RubyNetwork, "Bus[%d]: Sending a credit vc:%d free:%d to %s\n",
     m_bus->get_id(), in_vc, free_signal, m_credit_link->name());
     //create a credit flit with the following info
-    Credit *t_credit = new Credit(in_vc, free_signal, curTime);
+    Ack *t_credit = new Ack(in_vc, free_signal, curTime);
     //insert the created credit flit into the creditQueue
     creditQueue.insert(t_credit);
     //the credit link of the InputUnit will send t_credit in one cycle
@@ -183,7 +183,7 @@ BusInputUnit::increment_credit(int in_vc, bool free_signal, Tick curTime)
 }
 
 bool
-BusInputUnit::functionalRead(Packet *pkt, WriteMask &mask)
+BusInport::functionalRead(Packet *pkt, WriteMask &mask)
 {
     bool read = false;
     for (auto& virtual_channel : virtualChannels) {
@@ -197,7 +197,7 @@ BusInputUnit::functionalRead(Packet *pkt, WriteMask &mask)
 //updating InputUnit VC messages with the data from the packet
 //It returns the number of functional writes.
 uint32_t
-BusInputUnit::functionalWrite(Packet *pkt)
+BusInport::functionalWrite(Packet *pkt)
 {
     uint32_t num_functional_writes = 0;
     for (auto& virtual_channel : virtualChannels) {
@@ -209,7 +209,7 @@ BusInputUnit::functionalWrite(Packet *pkt)
 
 //for resetting InputUnit statistics
 void
-BusInputUnit::resetStats()
+BusInport::resetStats()
 {
     //reset buffers read & write activity
     for (int j = 0; j < m_num_buffer_reads.size(); j++) {
@@ -218,6 +218,6 @@ BusInputUnit::resetStats()
     }
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
