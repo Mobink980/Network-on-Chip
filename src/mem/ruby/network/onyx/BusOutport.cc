@@ -29,13 +29,13 @@
  */
 
 
-#include "mem/ruby/network/garnet/BusOutputUnit.hh"
+#include "mem/ruby/network/onyx/BusOutport.hh"
 
 #include "debug/RubyNetwork.hh"
-#include "mem/ruby/network/garnet/Credit.hh"
-#include "mem/ruby/network/garnet/CreditLink.hh"
-#include "mem/ruby/network/garnet/Bus.hh"
-#include "mem/ruby/network/garnet/flitBuffer.hh"
+#include "mem/ruby/network/onyx/Ack.hh"
+#include "mem/ruby/network/onyx/AckLink.hh"
+#include "mem/ruby/network/onyx/Bus.hh"
+#include "mem/ruby/network/onyx/chunkBuffer.hh"
 
 //=====================================
 #include <iostream>
@@ -47,11 +47,11 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
 //BusOutputUnit constructor for instantiation
-BusOutputUnit::BusOutputUnit(int id, PortDirection direction, Bus *bus,
+BusOutport::BusOutport(int id, PortDirection direction, Bus *bus,
   uint32_t consumerVcs)
   : Consumer(bus), m_bus(bus), m_id(id), m_direction(direction),
     m_vc_per_vnet(consumerVcs)
@@ -70,7 +70,7 @@ BusOutputUnit::BusOutputUnit(int id, PortDirection direction, Bus *bus,
 
 //for decrementing the credit in the appropriate output VC
 void
-BusOutputUnit::decrement_credit(int out_vc)
+BusOutport::decrement_credit(int out_vc)
 {
     //printing router_id, the OutputUnit, outvc credits, outvc,
     //current cycle, and credit_link
@@ -86,7 +86,7 @@ BusOutputUnit::decrement_credit(int out_vc)
 
 //for incrementing the credit in the appropriate output VC
 void
-BusOutputUnit::increment_credit(int out_vc)
+BusOutport::increment_credit(int out_vc)
 {
     //printing router_id, the OutputUnit, outvc credits, outvc,
     //current cycle, and credit_link
@@ -104,7 +104,7 @@ BusOutputUnit::increment_credit(int out_vc)
 // has free credits (i..e, buffer slots).
 // This is tracked by OutVcState
 bool
-BusOutputUnit::has_credit(int out_vc)
+BusOutport::has_credit(int out_vc)
 {
     //make sure out_vc state is ACTIVE_
     assert(outVcState[out_vc].isInState(ACTIVE_, curTick()));
@@ -114,7 +114,7 @@ BusOutputUnit::has_credit(int out_vc)
 
 // Check if the output port (i.e., input port at next router) has free VCs.
 bool
-BusOutputUnit::has_free_vc(int vnet)
+BusOutport::has_free_vc(int vnet)
 {
     //the first VC in the given Vnet
     int vc_base = vnet*m_vc_per_vnet;
@@ -130,7 +130,7 @@ BusOutputUnit::has_free_vc(int vnet)
 
 // Assign a free output VC to the winner of Switch Allocation
 int
-BusOutputUnit::select_free_vc(int vnet)
+BusOutport::select_free_vc(int vnet)
 {
     //the first VC in the given Vnet
     int vc_base = vnet*m_vc_per_vnet;
@@ -155,12 +155,12 @@ BusOutputUnit::select_free_vc(int vnet)
  * the output VC is marked IDLE (meaning that VC is free).
  */
 void
-BusOutputUnit::wakeup()
+BusOutport::wakeup()
 {
     //if the credit link of the outport is ready at the current tick
     if (m_credit_link->isReady(curTick())) {
         //put the content of the credit link into t_credit
-        Credit *t_credit = (Credit*) m_credit_link->consumeLink();
+        Ack *t_credit = (Ack*) m_credit_link->consumeLink();
         //increment the credit for the outvc of t_credit
         //It means that outvc (i.e., input VC of the downstream router)
         //has one more free slot.
@@ -184,22 +184,22 @@ BusOutputUnit::wakeup()
 
 //get the OutputUnit network queue (buffer that sends the flits
 //on the output (network) link, to a VC in downstream router InputUnit)
-flitBuffer*
-BusOutputUnit::getOutQueue()
+chunkBuffer*
+BusOutport::getOutQueue()
 {
     return &outBuffer;
 }
 
 //set the output (network) link for the OutputUnit
 void
-BusOutputUnit::set_out_link(NetworkLink *link)
+BusOutport::set_out_link(NetLink *link)
 {
     m_out_link = link;
 }
 
 //set the credit link for the OutputUnit
 void
-BusOutputUnit::set_credit_link(CreditLink *credit_link)
+BusOutport::set_credit_link(AckLink *credit_link)
 {
     m_credit_link = credit_link;
 }
@@ -207,7 +207,7 @@ BusOutputUnit::set_credit_link(CreditLink *credit_link)
 //for inserting a flit into an output VC
 //(i.e., input VC of the downstream router)
 void
-BusOutputUnit::insert_flit(flit *t_flit)
+BusOutport::insert_flit(chunk *t_flit)
 {
     //insert t_flit into outBuffer flitBuffer
     outBuffer.insert(t_flit);
@@ -227,18 +227,18 @@ BusOutputUnit::insert_flit(flit *t_flit)
 }
 
 bool
-BusOutputUnit::functionalRead(Packet *pkt, WriteMask &mask)
+BusOutport::functionalRead(Packet *pkt, WriteMask &mask)
 {
     return outBuffer.functionalRead(pkt, mask);
 }
 
 //updating outBuffer flits with the data from the packet
 uint32_t
-BusOutputUnit::functionalWrite(Packet *pkt)
+BusOutport::functionalWrite(Packet *pkt)
 {
     return outBuffer.functionalWrite(pkt);
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
