@@ -29,19 +29,19 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_BUSINPUTUNIT_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_BUSINPUTUNIT_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_BUSINPORT_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_BUSINPORT_HH__
 
 #include <iostream>
 #include <vector>
 
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/network/garnet/CommonTypes.hh"
-#include "mem/ruby/network/garnet/CreditLink.hh"
-#include "mem/ruby/network/garnet/NetworkLink.hh"
-#include "mem/ruby/network/garnet/Bus.hh"
-#include "mem/ruby/network/garnet/VirtualChannel.hh"
-#include "mem/ruby/network/garnet/flitBuffer.hh"
+#include "mem/ruby/network/onyx/CommonTypes.hh"
+#include "mem/ruby/network/onyx/AckLink.hh"
+#include "mem/ruby/network/onyx/NetLink.hh"
+#include "mem/ruby/network/onyx/Bus.hh"
+#include "mem/ruby/network/onyx/VirtualPath.hh"
+#include "mem/ruby/network/onyx/chunkBuffer.hh"
 
 namespace gem5
 {
@@ -49,17 +49,17 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 //InputUnit, input port, and inport are the same thing.
-//BusInputUnit inherites from Consumer
-class BusInputUnit : public Consumer
+//BusInport inherites from Consumer
+class BusInport : public Consumer
 {
   public:
-    //BusInputUnit constructor
-    BusInputUnit(int id, PortDirection direction, Bus *bus);
+    //BusInport constructor
+    BusInport(int id, PortDirection direction, Bus *bus);
     //BusInputUnit destructor
-    ~BusInputUnit() = default;
+    ~BusInport() = default;
 
     //read input flit from upstream router if it is ready,
     //buffer the flit for m_latency-1 cycles, and mark it
@@ -141,14 +141,14 @@ class BusInputUnit : public Consumer
     void increment_credit(int in_vc, bool free_signal, Tick curTime);
 
     //peek the top flit from the VC
-    inline flit*
+    inline chunk*
     peekTopFlit(int vc)
     {
         return virtualChannels[vc].peekTopFlit();
     }
 
     //get the top flit from the VC (it peeks and pops the top flit)
-    inline flit*
+    inline chunk*
     getTopFlit(int vc)
     {
         return virtualChannels[vc].getTopFlit();
@@ -170,11 +170,11 @@ class BusInputUnit : public Consumer
     }
 
     //get the InputUnit credit queue
-    flitBuffer* getCreditQueue() { return &creditQueue; }
+    chunkBuffer* getCreditQueue() { return &creditQueue; }
 
     //set the input (network) link for the InputUnit
     inline void
-    set_in_link(NetworkLink *link)
+    set_in_link(NetLink *link)
     {
         m_in_link = link;
     }
@@ -184,7 +184,7 @@ class BusInputUnit : public Consumer
 
     //set the credit link for the InputUnit
     inline void
-    set_credit_link(CreditLink *credit_link)
+    set_credit_link(AckLink *credit_link)
     {
         m_credit_link = credit_link;
     }
@@ -213,14 +213,14 @@ class BusInputUnit : public Consumer
     //number of VCs per Vnet in the InputUnit
     int m_vc_per_vnet;
     //input (network) link of the InputUnit (inport)
-    NetworkLink *m_in_link;
+    NetLink *m_in_link;
     //credit link of the InputUnit (inport)
-    CreditLink *m_credit_link;
+    AckLink *m_credit_link;
     //InputUnit queue for holding credits
-    flitBuffer creditQueue;
+    chunkBuffer creditQueue;
 
     // Input Virtual channels (VCs of the inport)
-    std::vector<VirtualChannel> virtualChannels;
+    std::vector<VirtualPath> virtualChannels;
 
     // Statistical variables
     //InputUnit buffer write activity
@@ -229,8 +229,8 @@ class BusInputUnit : public Consumer
     std::vector<double> m_num_buffer_reads;
 };
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
 
-#endif // __MEM_RUBY_NETWORK_GARNET_0_BUSINPUTUNIT_HH__
+#endif // __MEM_RUBY_NETWORK_ONYX_0_BUSINPORT_HH__
