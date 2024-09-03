@@ -29,11 +29,11 @@
  */
 
 
-#include "mem/ruby/network/garnet/CrossbarSwitch.hh"
+#include "mem/ruby/network/onyx/CrossbarMatrix.hh"
 
 #include "debug/RubyNetwork.hh"
-#include "mem/ruby/network/garnet/OutputUnit.hh"
-#include "mem/ruby/network/garnet/Router.hh"
+#include "mem/ruby/network/onyx/OutportModule.hh"
+#include "mem/ruby/network/onyx/Switcher.hh"
 
 namespace gem5
 {
@@ -41,11 +41,11 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
 //CrossbarSwitch constructor for instantiation
-CrossbarSwitch::CrossbarSwitch(Router *router)
+CrossbarMatrix::CrossbarMatrix(Switcher *router)
   : Consumer(router), m_router(router), m_num_vcs(m_router->get_num_vcs()),
     m_crossbar_activity(0), switchBuffers(0)
 {
@@ -55,7 +55,7 @@ CrossbarSwitch::CrossbarSwitch(Router *router)
 //We have a switchBuffer for every inport (west_in, east_in, south_in,
 //north_in).
 void
-CrossbarSwitch::init()
+CrossbarMatrix::init()
 {
     switchBuffers.resize(m_router->get_num_inports());
 }
@@ -67,7 +67,7 @@ CrossbarSwitch::init()
  */
 
 void
-CrossbarSwitch::wakeup()
+CrossbarMatrix::wakeup()
 {
     //print the time that the crossbar woke up
     DPRINTF(RubyNetwork, "CrossbarSwitch at Router %d woke up "
@@ -83,7 +83,7 @@ CrossbarSwitch::wakeup()
         }
 
 	    //peek the top flit of the switch_buffer that has a ready flit
-        flit *t_flit = switch_buffer.peekTopFlit();
+        chunk *t_flit = switch_buffer.peekTopFlit();
         //if the flit is in the Switch_Traversal pipeline stage
         if (t_flit->is_stage(ST_, curTick())) {
             //find out which outport the flit is going to
@@ -107,7 +107,7 @@ CrossbarSwitch::wakeup()
 }
 
 bool
-CrossbarSwitch::functionalRead(Packet *pkt, WriteMask &mask)
+CrossbarMatrix::functionalRead(Packet *pkt, WriteMask &mask)
 {
     bool read = false;
     for (auto& switch_buffer : switchBuffers) {
@@ -121,7 +121,7 @@ CrossbarSwitch::functionalRead(Packet *pkt, WriteMask &mask)
 //needs to be updated with the data from the packet.
 //It returns the number of functional writes.
 uint32_t
-CrossbarSwitch::functionalWrite(Packet *pkt)
+CrossbarMatrix::functionalWrite(Packet *pkt)
 {
    uint32_t num_functional_writes = 0;
 
@@ -134,11 +134,11 @@ CrossbarSwitch::functionalWrite(Packet *pkt)
 
 //for resetting CrossbarSwitch statistics
 void
-CrossbarSwitch::resetStats()
+CrossbarMatrix::resetStats()
 {
     m_crossbar_activity = 0;
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
