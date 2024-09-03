@@ -28,11 +28,11 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_CREDITLINK_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_CREDITLINK_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_ACKLINK_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_ACKLINK_HH__
 
-#include "mem/ruby/network/garnet/NetworkLink.hh"
-#include "params/CreditLink.hh"
+#include "mem/ruby/network/onyx/NetLink.hh"
+#include "params/AckLink.hh"
 
 namespace gem5
 {
@@ -40,21 +40,21 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-//CreditLink is inherited from the NetworkLink
-class CreditLink : public NetworkLink
+//AckLink is inherited from the NetLink
+class AckLink : public NetLink
 {
   public:
-    typedef CreditLinkParams Params;
+    typedef AckLinkParams Params;
     //CreditLink constructor calls the NetworkLink
     //constructor.
-    CreditLink(const Params &p) : NetworkLink(p) {}
+    AckLink(const Params &p) : NetLink(p) {}
 };
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
 
-#endif // __MEM_RUBY_NETWORK_GARNET_0_CREDITLINK_HH__
+#endif // __MEM_RUBY_NETWORK_ONYX_0_ACKLINK_HH__
