@@ -30,7 +30,7 @@
  */
 
 
-#include "mem/ruby/network/garnet/InterfaceModule.hh"
+#include "mem/ruby/network/onyx/InterfaceModule.hh"
 
 #include <cassert>
 #include <cmath>
