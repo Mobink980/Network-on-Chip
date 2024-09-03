@@ -29,15 +29,15 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_BUSCROSSBARSWITCH_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_BUSCROSSBARSWITCH_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_BUSCROSSBAR_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_BUSCROSSBAR_HH__
 
 #include <iostream>
 #include <vector>
 
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/network/garnet/CommonTypes.hh"
-#include "mem/ruby/network/garnet/flitBuffer.hh"
+#include "mem/ruby/network/onyx/CommonTypes.hh"
+#include "mem/ruby/network/onyx/chunkBuffer.hh"
 
 namespace gem5
 {
@@ -45,18 +45,18 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-//BusCrossbarSwitch is part of the Bus
+//BusCrossbar is part of the Bus
 class Bus;
 
-//BusCrossbarSwitch inherites from Consumer
-class BusCrossbarSwitch : public Consumer
+//BusCrossbar inherites from Consumer
+class BusCrossbar : public Consumer
 {
   public:
-    BusCrossbarSwitch(Bus *bus); //constructor
-    ~BusCrossbarSwitch() = default; //destructor
+    BusCrossbar(Bus *bus); //constructor
+    ~BusCrossbar() = default; //destructor
     //Loop through all input ports, and send the winning
     //flit out of its output port onto the output link.
     void wakeup();
@@ -68,7 +68,7 @@ class BusCrossbarSwitch : public Consumer
 
     //insert the flit t_flit into the switchBuffer of the inport
     inline void
-    update_sw_winner(int inport, flit *t_flit)
+    update_sw_winner(int inport, chunk *t_flit)
     {
         switchBuffers[inport].insert(t_flit);
     }
@@ -91,11 +91,11 @@ class BusCrossbarSwitch : public Consumer
     //number of times the crossbar is used so far
     double m_crossbar_activity;
     //the buffers of the CrossbarSwitch to hold flits
-    std::vector<flitBuffer> switchBuffers;
+    std::vector<chunkBuffer> switchBuffers;
 };
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
 
-#endif // __MEM_RUBY_NETWORK_GARNET_0_BUSCROSSBARSWITCH_HH__
+#endif // __MEM_RUBY_NETWORK_ONYX_0_BUSCROSSBAR_HH__
