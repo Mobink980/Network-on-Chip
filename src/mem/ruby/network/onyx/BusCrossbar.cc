@@ -29,10 +29,10 @@
  */
 
 
-#include "mem/ruby/network/garnet/BusCrossbarSwitch.hh"
+#include "mem/ruby/network/onyx/BusCrossbar.hh"
 #include "debug/RubyNetwork.hh"
-#include "mem/ruby/network/garnet/BusOutputUnit.hh"
-#include "mem/ruby/network/garnet/Bus.hh"
+#include "mem/ruby/network/onyx/BusOutport.hh"
+#include "mem/ruby/network/onyx/Bus.hh"
 
 //=====================================
 #include <iostream>
@@ -44,11 +44,11 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-//BusCrossbarSwitch constructor for instantiation
-BusCrossbarSwitch::BusCrossbarSwitch(Bus *bus)
+//BusCrossbar constructor for instantiation
+BusCrossbar::BusCrossbar(Bus *bus)
   : Consumer(bus), m_bus(bus), m_num_vcs(m_bus->get_num_vcs()),
     m_crossbar_activity(0), switchBuffers(0)
 {
@@ -58,7 +58,7 @@ BusCrossbarSwitch::BusCrossbarSwitch(Bus *bus)
 //We have a switchBuffer for every inport (west_in, east_in, south_in,
 //north_in).
 void
-BusCrossbarSwitch::init()
+BusCrossbar::init()
 {
     switchBuffers.resize(m_bus->get_num_inports());
 }
@@ -70,7 +70,7 @@ BusCrossbarSwitch::init()
  */
 
 void
-BusCrossbarSwitch::wakeup()
+BusCrossbar::wakeup()
 {
     //print the time that the crossbar woke up
     DPRINTF(RubyNetwork, "BusCrossbarSwitch at Bus %d woke up "
@@ -85,8 +85,8 @@ BusCrossbarSwitch::wakeup()
             continue;
         }
 
-	    //peek the top flit of the switch_buffer that has a ready flit
-        flit *t_flit = switch_buffer.peekTopFlit();
+	//peek the top flit of the switch_buffer that has a ready flit
+        chunk *t_flit = switch_buffer.peekTopFlit();
         //if the flit is in the Switch_Traversal pipeline stage
         if (t_flit->is_stage(ST_, curTick())) {
             //find out which outport the flit is going to
@@ -112,7 +112,7 @@ BusCrossbarSwitch::wakeup()
 }
 
 bool
-BusCrossbarSwitch::functionalRead(Packet *pkt, WriteMask &mask)
+BusCrossbar::functionalRead(Packet *pkt, WriteMask &mask)
 {
     bool read = false;
     for (auto& switch_buffer : switchBuffers) {
@@ -126,7 +126,7 @@ BusCrossbarSwitch::functionalRead(Packet *pkt, WriteMask &mask)
 //needs to be updated with the data from the packet.
 //It returns the number of functional writes.
 uint32_t
-BusCrossbarSwitch::functionalWrite(Packet *pkt)
+BusCrossbar::functionalWrite(Packet *pkt)
 {
    uint32_t num_functional_writes = 0;
 
@@ -139,11 +139,11 @@ BusCrossbarSwitch::functionalWrite(Packet *pkt)
 
 //for resetting CrossbarSwitch statistics
 void
-BusCrossbarSwitch::resetStats()
+BusCrossbar::resetStats()
 {
     m_crossbar_activity = 0;
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
