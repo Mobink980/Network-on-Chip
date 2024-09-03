@@ -29,15 +29,15 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_BUSSWITCHALLOCATOR_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_BUSSWITCHALLOCATOR_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_BUSSWITCHMANAGER_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_BUSSWITCHMANAGER_HH__
 
 #include <iostream>
 #include <vector>
 
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/network/garnet/CommonTypes.hh"
-#include "mem/ruby/network/garnet/VirtualChannel.hh"
+#include "mem/ruby/network/onyx/CommonTypes.hh"
+#include "mem/ruby/network/onyx/VirtualPath.hh"
 
 namespace gem5
 {
@@ -45,19 +45,19 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
 class Bus;
-class BusInputUnit;
-class BusOutputUnit;
+class BusInport;
+class BusOutport;
 
-//BusSwitchAllocator inherits from Consumer
-class BusSwitchAllocator : public Consumer
+//BusSwitchManager inherits from Consumer
+class BusSwitchManager : public Consumer
 {
   public:
     //constructor
-    BusSwitchAllocator(Bus *bus);
+    BusSwitchManager(Bus *bus);
     //arbitrate inports (SA-I), places a request from the VC in
     //each inport to the outport it wants, arbitrate outports (SA-II),
     //read the flit out from the input vc, and send it to the CrossbarSwitch,
@@ -82,10 +82,10 @@ class BusSwitchAllocator : public Consumer
     //(that placed a request during SA-I) as the winner for this
     //outport in a round robin manner.
     void arbitrate_outports();
-    //===========================================================
+    
     //Check to see if a flit in an invc is allowed to be sent
     bool send_allowed(int inport, int invc, int outport, int outvc);
-    //===========================================================
+    
     //Assign a free VC to the winner of the outport (for HEAD/HEAD_TAIL flits)
     int vc_allocate(int outport, int inport, int invc);
 
@@ -135,8 +135,8 @@ class BusSwitchAllocator : public Consumer
     std::vector<int> m_vc_winners;
 };
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
 
-#endif // __MEM_RUBY_NETWORK_GARNET_0_BUSSWITCHALLOCATOR_HH__
+#endif // __MEM_RUBY_NETWORK_ONYX_0_BUSSWITCHMANAGER_HH__
