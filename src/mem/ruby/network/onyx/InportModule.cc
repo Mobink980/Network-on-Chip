@@ -29,11 +29,11 @@
  */
 
 
-#include "mem/ruby/network/garnet/InputUnit.hh"
+#include "mem/ruby/network/onyx/InportModule.hh"
 
 #include "debug/RubyNetwork.hh"
-#include "mem/ruby/network/garnet/Credit.hh"
-#include "mem/ruby/network/garnet/Router.hh"
+#include "mem/ruby/network/onyx/Ack.hh"
+#include "mem/ruby/network/onyx/Switcher.hh"
 
 //=====================================
 #include <iostream>
@@ -47,11 +47,11 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-//InputUnit constructor for instantiation
-InputUnit::InputUnit(int id, PortDirection direction, Router *router)
+//InportModule constructor for instantiation
+InportModule::InportModule(int id, PortDirection direction, Switcher *router)
   : Consumer(router), m_router(router), m_id(id), m_direction(direction),
     m_vc_per_vnet(m_router->get_vc_per_vnet())
 {
@@ -85,9 +85,9 @@ InputUnit::InputUnit(int id, PortDirection direction, Router *router)
  */
 
 void
-InputUnit::wakeup()
+InportModule::wakeup()
 {
-    flit *t_flit; //define a flit
+    chunk *t_flit; //define a flit
     //if the input link to the inport is ready at the current tick
     if (m_in_link->isReady(curTick())) {
         //update the flit with the link content
@@ -135,31 +135,6 @@ InputUnit::wakeup()
                 assert(virtualChannels[vc].get_state() == ACTIVE_);
             }
 
-            //========================================================
-            //if a flit has reached its destination router
-            // if (t_flit->get_route().dest_router == m_router->get_id()) {
-            //     int src_router_layer = m_router->get_router_layer(t_flit->get_route().src_router);
-            //     int dest_router_layer = m_router->get_router_layer(t_flit->get_route().dest_router);
-            //     //if the flit has come from another layer
-            //     // std::cout<<"*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=\n";
-            //     // std::cout<<"A flit has reached its destination router.\n";
-            //     if (src_router_layer != dest_router_layer) {
-            //         // std::cout<<"src router:"<<t_flit->get_route().src_router<<".\n";
-            //         // std::cout<<"dest router:"<<t_flit->get_route().dest_router<<".\n";
-            //         // std::cout<<"src router layer:"<<src_router_layer<<".\n";
-            //         // std::cout<<"dest router layer:"<<dest_router_layer<<".\n";
-            //         std::cout<<"It was from another layer. ";
-            //         if (t_flit->is_broadcast()) {
-            //             std::cout<<"This flit came from bus.\n";
-            //         } else {
-            //             std::cout<<"\n";
-            //         }
-            //     }
-                // std::cout<<"*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=\n";
-            // }
-
-            //========================================================
-
 
             // Buffer the flit (insert the flit into vc)
             virtualChannels[vc].insertFlit(t_flit);
@@ -206,13 +181,13 @@ InputUnit::wakeup()
 //Each InputUnit (inport) has one credit_link, and the credits sent back,
 //are for specific VCs, showing the upstream router the free space in each VC.
 void
-InputUnit::increment_credit(int in_vc, bool free_signal, Tick curTime)
+InportModule::increment_credit(int in_vc, bool free_signal, Tick curTime)
 {
     //printing the router_id, inport VC, free_signal, and the credit_link
     DPRINTF(RubyNetwork, "Router[%d]: Sending a credit vc:%d free:%d to %s\n",
     m_router->get_id(), in_vc, free_signal, m_credit_link->name());
     //create a credit flit with the following info
-    Credit *t_credit = new Credit(in_vc, free_signal, curTime);
+    Ack *t_credit = new Ack(in_vc, free_signal, curTime);
     //insert the created credit flit into the creditQueue
     creditQueue.insert(t_credit);
     //the credit link of the InputUnit will send t_credit in one cycle
@@ -220,7 +195,7 @@ InputUnit::increment_credit(int in_vc, bool free_signal, Tick curTime)
 }
 
 bool
-InputUnit::functionalRead(Packet *pkt, WriteMask &mask)
+InportModule::functionalRead(Packet *pkt, WriteMask &mask)
 {
     bool read = false;
     for (auto& virtual_channel : virtualChannels) {
@@ -234,7 +209,7 @@ InputUnit::functionalRead(Packet *pkt, WriteMask &mask)
 //updating InputUnit VC messages with the data from the packet
 //It returns the number of functional writes.
 uint32_t
-InputUnit::functionalWrite(Packet *pkt)
+InportModule::functionalWrite(Packet *pkt)
 {
     uint32_t num_functional_writes = 0;
     for (auto& virtual_channel : virtualChannels) {
@@ -246,7 +221,7 @@ InputUnit::functionalWrite(Packet *pkt)
 
 //for resetting InputUnit statistics
 void
-InputUnit::resetStats()
+InportModule::resetStats()
 {
     //reset buffers read & write activity
     for (int j = 0; j < m_num_buffer_reads.size(); j++) {
@@ -255,6 +230,6 @@ InputUnit::resetStats()
     }
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
