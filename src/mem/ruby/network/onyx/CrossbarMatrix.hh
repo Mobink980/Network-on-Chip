@@ -29,15 +29,15 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_CROSSBARSWITCH_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_CROSSBARSWITCH_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_CROSSBARMATRIX_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_CROSSBARMATRIX_HH__
 
 #include <iostream>
 #include <vector>
 
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/network/garnet/CommonTypes.hh"
-#include "mem/ruby/network/garnet/flitBuffer.hh"
+#include "mem/ruby/network/onyx/CommonTypes.hh"
+#include "mem/ruby/network/onyx/chunkBuffer.hh"
 
 namespace gem5
 {
@@ -45,18 +45,18 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-//CrossbarSwitch is part of the Router
-class Router;
+//CrossbarSwitch (CrossbarMatrix) is part of the Router (Switcher)
+class Switcher;
 
-//CrossbarSwitch inherites from Consumer
-class CrossbarSwitch : public Consumer
+//CrossbarMatrix inherites from Consumer
+class CrossbarMatrix : public Consumer
 {
   public:
-    CrossbarSwitch(Router *router); //constructor
-    ~CrossbarSwitch() = default; //destructor
+    CrossbarMatrix(Switcher *router); //constructor
+    ~CrossbarMatrix() = default; //destructor
     //Loop through all input ports, and send the winning
     //flit out of its output port onto the output link.
     void wakeup();
@@ -68,7 +68,7 @@ class CrossbarSwitch : public Consumer
 
     //insert the flit t_flit into the switchBuffer of the inport
     inline void
-    update_sw_winner(int inport, flit *t_flit)
+    update_sw_winner(int inport, chunk *t_flit)
     {
         switchBuffers[inport].insert(t_flit);
     }
@@ -85,17 +85,17 @@ class CrossbarSwitch : public Consumer
 
   private:
     //the router this CrossbarSwitch is part of
-    Router *m_router;
+    Switcher *m_router;
     //number of VCs
     int m_num_vcs;
     //number of times the crossbar is used so far
     double m_crossbar_activity;
     //the buffers of the CrossbarSwitch to hold flits
-    std::vector<flitBuffer> switchBuffers;
+    std::vector<chunkBuffer> switchBuffers;
 };
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
 
-#endif // __MEM_RUBY_NETWORK_GARNET_0_CROSSBARSWITCH_HH__
+#endif // __MEM_RUBY_NETWORK_ONYX_0_CROSSBARMATRIX_HH__
