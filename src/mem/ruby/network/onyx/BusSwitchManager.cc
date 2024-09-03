@@ -29,13 +29,13 @@
  */
 
 
-#include "mem/ruby/network/garnet/BusSwitchAllocator.hh"
+#include "mem/ruby/network/onyx/BusSwitchManager.hh"
 
 #include "debug/RubyNetwork.hh"
-#include "mem/ruby/network/garnet/GarnetNetwork.hh"
-#include "mem/ruby/network/garnet/BusInputUnit.hh"
-#include "mem/ruby/network/garnet/BusOutputUnit.hh"
-#include "mem/ruby/network/garnet/Bus.hh"
+#include "mem/ruby/network/onyx/OnyxNetwork.hh"
+#include "mem/ruby/network/onyx/BusInport.hh"
+#include "mem/ruby/network/onyx/BusOutport.hh"
+#include "mem/ruby/network/onyx/Bus.hh"
 
 //==================================
 #include <iostream>
@@ -47,11 +47,11 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-//BusSwitchAllocator constructor
-BusSwitchAllocator::BusSwitchAllocator(Bus *bus)
+//BusSwitchManager constructor
+BusSwitchManager::BusSwitchManager(Bus *bus)
     : Consumer(bus)
 {
     //set the bus for this SwitchAllocator
@@ -68,7 +68,7 @@ BusSwitchAllocator::BusSwitchAllocator(Bus *bus)
 
 //initializing SwitchAllocator class variables
 void
-BusSwitchAllocator::init()
+BusSwitchManager::init()
 {
     //get the number of bus inports
     m_num_inports = m_bus->get_num_inports();
@@ -118,7 +118,7 @@ BusSwitchAllocator::init()
  * next cycle for peforming SA for any flits ready next cycle.
  */
 void
-BusSwitchAllocator::wakeup()
+BusSwitchManager::wakeup()
 {
     arbitrate_inports(); // First stage of allocation
     arbitrate_outports(); // Second stage of allocation
@@ -141,7 +141,7 @@ BusSwitchAllocator::wakeup()
  */
 
 void
-BusSwitchAllocator::arbitrate_inports()
+BusSwitchManager::arbitrate_inports()
 {
     bool shouldBreak = false;
     // std::cout << "Number of VCs: " <<m_num_vcs<< ".\n";
@@ -168,7 +168,7 @@ BusSwitchAllocator::arbitrate_inports()
 
                 //==================================================
                 //checking the type of flit for printing
-                flit *my_flit = input_unit->peekTopFlit(invc);
+                chunk *my_flit = input_unit->peekTopFlit(invc);
                 std::cout << "Type of the flit in the invc is: " <<my_flit->get_type()<< "\n";
                 //==================================================
 
@@ -254,7 +254,7 @@ BusSwitchAllocator::arbitrate_inports()
  * credit is set to true.
  */
 void
-BusSwitchAllocator::arbitrate_outports()
+BusSwitchManager::arbitrate_outports()
 {
     //we need to traverse the outports only if there's a winner vc
     if (broadcast_this_cycle) {
@@ -268,7 +268,7 @@ BusSwitchAllocator::arbitrate_outports()
         auto input_unit = m_bus->getInputUnit(inport);
 
         // remove flit from Input VC
-        flit *t_flit = input_unit->getTopFlit(invc);
+        chunk *t_flit = input_unit->getTopFlit(invc);
 
         // Update Round Robin pointer to the next VC
         // We do it here to keep it fair.
@@ -388,7 +388,7 @@ BusSwitchAllocator::arbitrate_outports()
  *     that arrived before this flit and is requesting the same output port.
  */
 bool
-BusSwitchAllocator::send_allowed(int inport, int invc, int outport, int outvc)
+BusSwitchManager::send_allowed(int inport, int invc, int outport, int outvc)
 {
     // Check if outvc needed
     // Check if credit needed (for multi-flit packet)
@@ -467,7 +467,7 @@ BusSwitchAllocator::send_allowed(int inport, int invc, int outport, int outvc)
 
 // Assign a free VC to the winner of the output port.
 int
-BusSwitchAllocator::vc_allocate(int outport, int inport, int invc)
+BusSwitchManager::vc_allocate(int outport, int inport, int invc)
 {
     // Select a free VC from the output port
     int outvc =
@@ -486,7 +486,7 @@ BusSwitchAllocator::vc_allocate(int outport, int inport, int invc)
 // Wakeup the bus next cycle to perform SA again
 // if there are flits ready.
 void
-BusSwitchAllocator::check_for_wakeup()
+BusSwitchManager::check_for_wakeup()
 {
     //get the next clockEdge (cycle) of this bus
     Tick nextCycle = m_bus->clockEdge(Cycles(1));
@@ -510,7 +510,7 @@ BusSwitchAllocator::check_for_wakeup()
 
 //get the vnet of an input vc
 int
-BusSwitchAllocator::get_vnet(int invc)
+BusSwitchManager::get_vnet(int invc)
 {
     int vnet = invc/m_vc_per_vnet;
     assert(vnet < m_bus->get_num_vnets());
@@ -521,19 +521,19 @@ BusSwitchAllocator::get_vnet(int invc)
 // Clear the request vector within the allocator at end of SA-II.
 // Was populated by SA-I.
 void
-BusSwitchAllocator::clear_request_vector()
+BusSwitchManager::clear_request_vector()
 {
     std::fill(m_has_request.begin(), m_has_request.end(), false);
 }
 
 //resetting SwitchAllocator statistics
 void
-BusSwitchAllocator::resetStats()
+BusSwitchManager::resetStats()
 {
     m_input_arbiter_activity = 0;
     m_output_arbiter_activity = 0;
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
