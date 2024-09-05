@@ -28,19 +28,15 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_FLIT_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_FLIT_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_CHUNK_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_CHUNK_HH__
 
 #include <cassert>
 #include <iostream>
 
 #include "base/types.hh"
-#include "mem/ruby/network/garnet/CommonTypes.hh"
+#include "mem/ruby/network/onyx/CommonTypes.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
-
-//=====================================
-#include <iostream>
-//=====================================
 
 namespace gem5
 {
@@ -48,19 +44,19 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-class flit
+class chunk
 {
   public:
     //constructors
-    flit() {}
-    flit(int packet_id, int id, int vc, int vnet, RouteInfo route, int size,
+    chunk() {}
+    chunk(int packet_id, int id, int vc, int vnet, RouteInfo route, int size,
          MsgPtr msg_ptr, int MsgSize, uint32_t bWidth, Tick curTime);
 
     //destructor
-    virtual ~flit(){};
+    virtual ~chunk(){};
 
     int get_outport() {return m_outport; } //flit outport
     int get_size() { return m_size; } //flit size
@@ -139,7 +135,7 @@ class flit
 
     //finding out which flit is before the other one
     static bool
-    greater(flit* n1, flit* n2)
+    greater(chunk* n1, chunk* n2)
     {
         if (n1->get_time() == n2->get_time()) {
             //assert(n1->flit_id != n2->flit_id);
@@ -153,9 +149,9 @@ class flit
     bool functionalWrite(Packet *pkt);
 
     //for flit serialization (it is implemented in derived classes)
-    virtual flit* serialize(int ser_id, int parts, uint32_t bWidth);
+    virtual chunk* serialize(int ser_id, int parts, uint32_t bWidth);
     //for flit deserialization (it is implemented in derived classes)
-    virtual flit* deserialize(int des_id, int num_flits, uint32_t bWidth);
+    virtual chunk* deserialize(int des_id, int num_flits, uint32_t bWidth);
 
     uint32_t m_width; //width of the flit
     int msgSize; //message size
@@ -177,15 +173,15 @@ class flit
 
 //for printing flit information
 inline std::ostream&
-operator<<(std::ostream& out, const flit& obj)
+operator<<(std::ostream& out, const chunk& obj)
 {
     obj.print(out);
     out << std::flush;
     return out;
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
 
-#endif // __MEM_RUBY_NETWORK_GARNET_0_FLIT_HH__
+#endif // __MEM_RUBY_NETWORK_ONYX_0_CHUNK_HH__
