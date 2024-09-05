@@ -28,12 +28,12 @@
  */
 
 
-#include "mem/ruby/network/garnet/GarnetLink.hh"
+#include "mem/ruby/network/onyx/OnyxLink.hh"
 
 #include "debug/RubyNetwork.hh"
-#include "mem/ruby/network/garnet/CreditLink.hh"
-#include "mem/ruby/network/garnet/NetworkBridge.hh"
-#include "mem/ruby/network/garnet/NetworkLink.hh"
+#include "mem/ruby/network/onyx/AckLink.hh"
+#include "mem/ruby/network/onyx/NetBridge.hh"
+#include "mem/ruby/network/onyx/NetLink.hh"
 
 namespace gem5
 {
@@ -41,11 +41,11 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-//GarnetIntLink constructor
-GarnetIntLink::GarnetIntLink(const Params &p)
+//OnyxIntLink constructor
+OnyxIntLink::OnyxIntLink(const Params &p)
     : BasicIntLink(p)
 {
     // Uni-directional
@@ -84,7 +84,7 @@ GarnetIntLink::GarnetIntLink(const Params &p)
 }
 
 void
-GarnetIntLink::init()
+OnyxIntLink::init()
 {
     if (srcBridgeEn) {
         //make sure both srcNetBridge and srcCredBridge is set
@@ -103,15 +103,15 @@ GarnetIntLink::init()
     }
 }
 
-//print the GarnetIntLink
+//print the OnyxIntLink
 void
-GarnetIntLink::print(std::ostream& out) const
+OnyxIntLink::print(std::ostream& out) const
 {
     out << name();
 }
 
-//GarnetExtLink constructor
-GarnetExtLink::GarnetExtLink(const Params &p)
+//OnyxExtLink constructor
+OnyxExtLink::OnyxExtLink(const Params &p)
     : BasicExtLink(p)
 {
     // Bi-directional
@@ -162,7 +162,7 @@ GarnetExtLink::GarnetExtLink(const Params &p)
 }
 
 void
-GarnetExtLink::init()
+OnyxExtLink::init()
 {
     if (extBridgeEn) {
         //make sure extNetBridges and extCredBridges is set
@@ -187,14 +187,14 @@ GarnetExtLink::init()
     }
 }
 
-//print the GarnetExtLink
+//print the OnyxExtLink
 void
-GarnetExtLink::print(std::ostream& out) const
+OnyxExtLink::print(std::ostream& out) const
 {
     out << name();
 }
 
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
