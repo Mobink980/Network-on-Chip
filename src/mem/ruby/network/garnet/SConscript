@@ -51,7 +51,7 @@ Source('OutVcState.cc')
 Source('OutputUnit.cc')
 Source('Router.cc')
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-Source('Bus.cc')
+Source('BroadcastLink.cc')
 Source('BusCrossbarSwitch.cc')
 Source('BusInputUnit.cc')
 Source('BusOutputUnit.cc')
