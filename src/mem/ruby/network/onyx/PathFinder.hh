@@ -28,14 +28,14 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_ROUTINGUNIT_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_ROUTINGUNIT_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_PATHFINDER_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_PATHFINDER_HH__
 
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/NetDest.hh"
-#include "mem/ruby/network/garnet/CommonTypes.hh"
-#include "mem/ruby/network/garnet/GarnetNetwork.hh"
-#include "mem/ruby/network/garnet/flit.hh"
+#include "mem/ruby/network/onyx/CommonTypes.hh"
+#include "mem/ruby/network/onyx/OnyxNetwork.hh"
+#include "mem/ruby/network/onyx/chunk.hh"
 
 namespace gem5
 {
@@ -43,16 +43,16 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-class InputUnit;
-class Router;
+class InportModule;
+class Switcher;
 
-class RoutingUnit
+class PathFinder
 {
   public:
-    RoutingUnit(Router *router); //constructor
+    PathFinder(Switcher *router); //constructor
     //gets the route_info, inport, and port_direction (e.g., north),
     //and computes the outport for the flit to go
     int outportCompute(RouteInfo route,
@@ -92,7 +92,7 @@ class RoutingUnit
 
   private:
     //the router this RoutingUnit is a part of
-    Router *m_router;
+    Switcher *m_router;
 
     // Routing Table (a std::vector of type NetDest)
     std::vector<std::vector<NetDest>> m_routing_table;
@@ -106,8 +106,8 @@ class RoutingUnit
     std::map<PortDirection, int> m_outports_dirn2idx;
 };
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
 
-#endif // __MEM_RUBY_NETWORK_GARNET_0_ROUTINGUNIT_HH__
+#endif // __MEM_RUBY_NETWORK_ONYX_0_PATHFINDER_HH__
