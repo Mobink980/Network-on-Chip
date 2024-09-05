@@ -28,15 +28,15 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_FLITBUFFER_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_FLITBUFFER_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_CHUNKBUFFER_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_CHUNKBUFFER_HH__
 
 #include <algorithm>
 #include <iostream>
 #include <vector>
 
-#include "mem/ruby/network/garnet/CommonTypes.hh"
-#include "mem/ruby/network/garnet/flit.hh"
+#include "mem/ruby/network/onyx/CommonTypes.hh"
+#include "mem/ruby/network/onyx/chunk.hh"
 
 namespace gem5
 {
@@ -44,15 +44,15 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
 //buffer for holding flits
-class flitBuffer
+class chunkBuffer
 {
   public:
-    flitBuffer(); //constructor (for infinite size)
-    flitBuffer(int maximum_size); //another constructor
+    chunkBuffer(); //constructor (for infinite size)
+    chunkBuffer(int maximum_size); //another constructor
 
     //check whether the flitBuffer is ready
     bool isReady(Tick curTime);
@@ -69,17 +69,17 @@ class flitBuffer
 
     //get the top flit of the flitBuffer (it peeks the first element
     //of the flitBuffer and frees one space)
-    flit *
+    chunk *
     getTopFlit()
     {
-        flit *f = m_buffer.front();
+        chunk *f = m_buffer.front();
         m_buffer.pop_front();
         return f;
     }
 
     //peek the top flit of the flitBuffer (this doesn't free space
     //in the flitBuffer)
-    flit *
+    chunk *
     peekTopFlit()
     {
         return m_buffer.front();
@@ -87,7 +87,7 @@ class flitBuffer
 
     //insert a flit into the flitBuffer
     void
-    insert(flit *flt)
+    insert(chunk *flt)
     {
         m_buffer.push_back(flt);
     }
@@ -100,22 +100,22 @@ class flitBuffer
 
   private:
     //the container representing the flitBuffer
-    std::deque<flit *> m_buffer;
+    std::deque<chunk *> m_buffer;
     //maximum size of the buffer
     int max_size;
 };
 
 //for printing the flitBuffer
 inline std::ostream&
-operator<<(std::ostream& out, const flitBuffer& obj)
+operator<<(std::ostream& out, const chunkBuffer& obj)
 {
     obj.print(out);
     out << std::flush;
     return out;
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
 
-#endif // __MEM_RUBY_NETWORK_GARNET_0_FLITBUFFER_HH__
+#endif // __MEM_RUBY_NETWORK_ONYX_0_CHUNKBUFFER_HH__
