@@ -35,7 +35,7 @@
 #include "mem/ruby/network/garnet/GarnetNetwork.hh"
 #include "mem/ruby/network/garnet/BusInputUnit.hh"
 #include "mem/ruby/network/garnet/BusOutputUnit.hh"
-#include "mem/ruby/network/garnet/Bus.hh"
+#include "mem/ruby/network/garnet/BroadcastLink.hh"
 
 //==================================
 #include <iostream>
@@ -51,7 +51,7 @@ namespace garnet
 {
 
 //BusSwitchAllocator constructor
-BusSwitchAllocator::BusSwitchAllocator(Bus *bus)
+BusSwitchAllocator::BusSwitchAllocator(BroadcastLink *bus)
     : Consumer(bus)
 {
     //set the bus for this SwitchAllocator

@@ -33,7 +33,7 @@
 
 #include "debug/RubyNetwork.hh"
 #include "mem/ruby/network/garnet/Credit.hh"
-#include "mem/ruby/network/garnet/Bus.hh"
+#include "mem/ruby/network/garnet/BroadcastLink.hh"
 
 //=====================================
 #include <iostream>
@@ -49,7 +49,7 @@ namespace garnet
 {
 
 //BusInputUnit constructor for instantiation
-BusInputUnit::BusInputUnit(int id, PortDirection direction, Bus *bus)
+BusInputUnit::BusInputUnit(int id, PortDirection direction, BroadcastLink *bus)
   : Consumer(bus), m_bus(bus), m_id(id), m_direction(direction),
     m_vc_per_vnet(m_bus->get_vc_per_vnet())
 {

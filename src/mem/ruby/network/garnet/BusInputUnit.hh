@@ -39,7 +39,7 @@
 #include "mem/ruby/network/garnet/CommonTypes.hh"
 #include "mem/ruby/network/garnet/CreditLink.hh"
 #include "mem/ruby/network/garnet/NetworkLink.hh"
-#include "mem/ruby/network/garnet/Bus.hh"
+#include "mem/ruby/network/garnet/BroadcastLink.hh"
 #include "mem/ruby/network/garnet/VirtualChannel.hh"
 #include "mem/ruby/network/garnet/flitBuffer.hh"
 
@@ -57,7 +57,7 @@ class BusInputUnit : public Consumer
 {
   public:
     //BusInputUnit constructor
-    BusInputUnit(int id, PortDirection direction, Bus *bus);
+    BusInputUnit(int id, PortDirection direction, BroadcastLink *bus);
     //BusInputUnit destructor
     ~BusInputUnit() = default;
 
@@ -111,7 +111,7 @@ class BusInputUnit : public Consumer
     //get the outport VC for this inport VC (for BODY/TAIL flits)
     //in case of broadcast
     inline int
-    get_broadcast_outvc(int invc, int outport) 
+    get_broadcast_outvc(int invc, int outport)
     {
         return virtualChannels[invc].get_broadcast_outvc(outport);
     }
@@ -126,7 +126,7 @@ class BusInputUnit : public Consumer
     inline bool
     is_outvc_allocated(int invc)
     {
-        return virtualChannels[invc].is_outvc_allocated(); 
+        return virtualChannels[invc].is_outvc_allocated();
     }
     //===========================================================
 
@@ -154,8 +154,8 @@ class BusInputUnit : public Consumer
         return virtualChannels[vc].getTopFlit();
     }
 
-    //returns true if the VC needs a specific pipeline stage 
-    //at a specific time 
+    //returns true if the VC needs a specific pipeline stage
+    //at a specific time
     inline bool
     need_stage(int vc, flit_stage stage, Tick time)
     {
@@ -169,7 +169,7 @@ class BusInputUnit : public Consumer
         return virtualChannels[invc].isReady(curTime);
     }
 
-    //get the InputUnit credit queue  
+    //get the InputUnit credit queue
     flitBuffer* getCreditQueue() { return &creditQueue; }
 
     //set the input (network) link for the InputUnit
@@ -197,15 +197,15 @@ class BusInputUnit : public Consumer
     { return m_num_buffer_writes[vnet]; }
 
     bool functionalRead(Packet *pkt, WriteMask &mask);
-    
-    //updating InputUnit VC messages with the data from the packet 
+
+    //updating InputUnit VC messages with the data from the packet
     uint32_t functionalWrite(Packet *pkt);
     //for resetting InputUnit stats
     void resetStats();
 
   private:
     //the bus this InputUnit is part of
-    Bus *m_bus;
+    BroadcastLink *m_bus;
     //id of the InputUnit (inport)
     int m_id;
     //the direction of the InputUnit or inport
@@ -224,7 +224,7 @@ class BusInputUnit : public Consumer
 
     // Statistical variables
     //InputUnit buffer write activity
-    std::vector<double> m_num_buffer_writes; 
+    std::vector<double> m_num_buffer_writes;
     //InputUnit buffer read activity
     std::vector<double> m_num_buffer_reads;
 };
@@ -234,4 +234,3 @@ class BusInputUnit : public Consumer
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_BUSINPUTUNIT_HH__
-

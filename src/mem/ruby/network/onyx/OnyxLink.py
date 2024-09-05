@@ -35,7 +35,7 @@ from m5.proxy import *
 
 
 # CLOCK DOMAIN CROSSING
-class CDCType(Enum):
+class ONYXCDCType(Enum):
     vals = ["LINK_OBJECT", "OBJECT_LINK"]
 
 
@@ -71,8 +71,8 @@ class NetBridge(AckLink):
     cxx_header = "mem/ruby/network/onyx/NetBridge.hh"
     cxx_class = "gem5::ruby::onyx::NetBridge"
 
-    link = Param.NetworkLink("Associated Network Link")
-    vtype = Param.CDCType(
+    link = Param.NetLink("Associated Network Link")
+    vtype = Param.ONYXCDCType(
         "LINK_OBJECT", "Direction of CDC LINK->OBJECT or OBJECT->LINK"
     )
     serdes_latency = Param.Cycles(1, "Latency of SerDes Unit")

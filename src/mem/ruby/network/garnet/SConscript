@@ -39,7 +39,7 @@ SimObject('GarnetLink.py', enums=['CDCType'], sim_objects=[
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 SimObject('GarnetNetwork.py', sim_objects=[
     'GarnetNetwork', 'GarnetNetworkInterface', 'GarnetRouter',
-    'GarnetBus'])
+    'GarnetBroadcastLink'])
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 Source('GarnetLink.cc')

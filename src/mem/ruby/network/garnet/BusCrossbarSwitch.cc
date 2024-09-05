@@ -32,7 +32,7 @@
 #include "mem/ruby/network/garnet/BusCrossbarSwitch.hh"
 #include "debug/RubyNetwork.hh"
 #include "mem/ruby/network/garnet/BusOutputUnit.hh"
-#include "mem/ruby/network/garnet/Bus.hh"
+#include "mem/ruby/network/garnet/BroadcastLink.hh"
 
 //=====================================
 #include <iostream>
@@ -48,7 +48,7 @@ namespace garnet
 {
 
 //BusCrossbarSwitch constructor for instantiation
-BusCrossbarSwitch::BusCrossbarSwitch(Bus *bus)
+BusCrossbarSwitch::BusCrossbarSwitch(BroadcastLink *bus)
   : Consumer(bus), m_bus(bus), m_num_vcs(m_bus->get_num_vcs()),
     m_crossbar_activity(0), switchBuffers(0)
 {

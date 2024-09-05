@@ -49,20 +49,20 @@ namespace garnet
 {
 
 //BusCrossbarSwitch is part of the Bus
-class Bus;
+class BroadcastLink;
 
 //BusCrossbarSwitch inherites from Consumer
 class BusCrossbarSwitch : public Consumer
 {
   public:
-    BusCrossbarSwitch(Bus *bus); //constructor
+    BusCrossbarSwitch(BroadcastLink *bus); //constructor
     ~BusCrossbarSwitch() = default; //destructor
-    //Loop through all input ports, and send the winning 
+    //Loop through all input ports, and send the winning
     //flit out of its output port onto the output link.
-    void wakeup(); 
-    //for resizing switchBuffers vector to the number of 
+    void wakeup();
+    //for resizing switchBuffers vector to the number of
     //input ports (inports)
-    void init(); 
+    void init();
     //printing the CrossbarSwitch
     void print(std::ostream& out) const {};
 
@@ -77,7 +77,7 @@ class BusCrossbarSwitch : public Consumer
     inline double get_crossbar_activity() { return m_crossbar_activity; }
 
     bool functionalRead(Packet *pkt, WriteMask &mask);
-    //Function for figuring out if any of the messages in switchBuffer 
+    //Function for figuring out if any of the messages in switchBuffer
     //needs to be updated with the data from the packet.
     uint32_t functionalWrite(Packet *pkt);
     //for resetting CrossbarSwitch stats
@@ -85,7 +85,7 @@ class BusCrossbarSwitch : public Consumer
 
   private:
     //the bus this CrossbarSwitch is part of
-    Bus *m_bus;
+    BroadcastLink *m_bus;
     //number of VCs
     int m_num_vcs;
     //number of times the crossbar is used so far
@@ -99,4 +99,3 @@ class BusCrossbarSwitch : public Consumer
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_BUSCROSSBARSWITCH_HH__
-

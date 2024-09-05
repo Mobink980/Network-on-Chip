@@ -32,13 +32,13 @@ if not env['CONF']['RUBY']:
     Return()
 
 #=====================================================================
-SimObject('OnyxLink.py', enums=['CDCType'], sim_objects=[
+SimObject('OnyxLink.py', enums=['ONYXCDCType'], sim_objects=[
     'NetLink', 'AckLink', 'NetBridge', 'OnyxIntLink',
     'OnyxExtLink'])
 #=====================================================================
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 SimObject('OnyxNetwork.py', sim_objects=[
-    'OnyxNetwork', 'OnyxNetworkInterface', 'OnyxRouter',
+    'OnyxNetwork', 'OnyxNetworkInterface', 'OnyxSwitcher',
     'OnyxBus'])
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 

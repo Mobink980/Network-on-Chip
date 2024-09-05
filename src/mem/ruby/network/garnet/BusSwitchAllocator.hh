@@ -48,7 +48,7 @@ namespace ruby
 namespace garnet
 {
 
-class Bus;
+class BroadcastLink;
 class BusInputUnit;
 class BusOutputUnit;
 
@@ -57,8 +57,8 @@ class BusSwitchAllocator : public Consumer
 {
   public:
     //constructor
-    BusSwitchAllocator(Bus *bus);
-    //arbitrate inports (SA-I), places a request from the VC in 
+    BusSwitchAllocator(BroadcastLink *bus);
+    //arbitrate inports (SA-I), places a request from the VC in
     //each inport to the outport it wants, arbitrate outports (SA-II),
     //read the flit out from the input vc, and send it to the CrossbarSwitch,
     //send an increment_credit signal to the upstream router for this input vc.
@@ -75,15 +75,15 @@ class BusSwitchAllocator : public Consumer
     int get_vnet (int invc);
     //for printing the SwitchAllocator
     void print(std::ostream& out) const {};
-    //SA-I: Loop through all input VCs at every 
+    //SA-I: Loop through all input VCs at every
     //inport, and select one in a round-robin manner.
     void arbitrate_inports();
-    //SA-II: Loop through all outports, and select one input vc 
-    //(that placed a request during SA-I) as the winner for this 
+    //SA-II: Loop through all outports, and select one input vc
+    //(that placed a request during SA-I) as the winner for this
     //outport in a round robin manner.
     void arbitrate_outports();
     //===========================================================
-    //Check to see if a flit in an invc is allowed to be sent 
+    //Check to see if a flit in an invc is allowed to be sent
     bool send_allowed(int inport, int invc, int outport, int outvc);
     //===========================================================
     //Assign a free VC to the winner of the outport (for HEAD/HEAD_TAIL flits)
@@ -115,8 +115,8 @@ class BusSwitchAllocator : public Consumer
     double m_input_arbiter_activity, m_output_arbiter_activity;
 
     //the bus this SwitchAllocator is a part of
-    Bus *m_bus;
-    //to pick the invc we're choosing from every inport 
+    BroadcastLink *m_bus;
+    //to pick the invc we're choosing from every inport
     //in a round-robin manner
     std::vector<int> m_round_robin_invc;
     //for choosing an inport in a round-robin manner
@@ -131,7 +131,7 @@ class BusSwitchAllocator : public Consumer
     //the winner vc in the inport that has won the broadcast
     int m_vc_broadcast;
     //=========================================================
-    //to hold the winning invc in each inport 
+    //to hold the winning invc in each inport
     std::vector<int> m_vc_winners;
 };
 
@@ -140,4 +140,3 @@ class BusSwitchAllocator : public Consumer
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_BUSSWITCHALLOCATOR_HH__
-

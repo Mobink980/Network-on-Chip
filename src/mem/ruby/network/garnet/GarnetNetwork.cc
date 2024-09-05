@@ -45,7 +45,7 @@
 #include "mem/ruby/network/garnet/NetworkLink.hh"
 #include "mem/ruby/network/garnet/Router.hh"
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-#include "mem/ruby/network/garnet/Bus.hh"
+#include "mem/ruby/network/garnet/BroadcastLink.hh"
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 #include "mem/ruby/system/RubySystem.hh"
 
@@ -115,7 +115,7 @@ GarnetNetwork::GarnetNetwork(const Params &p)
     for (std::vector<BasicBus*>::const_iterator i =  p.busses.begin();
          i != p.busses.end(); ++i) { // for each bus
         // get the bus
-        Bus* bus = safe_cast<Bus*>(*i);
+        BroadcastLink* bus = safe_cast<BroadcastLink*>(*i);
         // push the bus in m_busses vector
         m_busses.push_back(bus);
 

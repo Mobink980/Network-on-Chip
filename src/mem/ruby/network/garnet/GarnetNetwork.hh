@@ -56,7 +56,7 @@ namespace garnet
 class NetworkInterface; //Network Interface (NI)
 class Router; //Router
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-class Bus;
+class BroadcastLink;
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 class NetworkLink; //Network Link for forwarding flits
 class NetworkBridge; //Network Bridge for heterogenous architectures
@@ -280,7 +280,7 @@ class GarnetNetwork : public Network
     std::vector<VNET_type > m_vnet_type; // type of vnet (control, data, etc.)
     std::vector<Router *> m_routers;   // All Routers in Network
     //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-    std::vector<Bus *> m_busses;   // All Busses in Network
+    std::vector<BroadcastLink *> m_busses;   // All Busses in Network
     //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     std::vector<NetworkLink *> m_networklinks; // All flit links in the network
     std::vector<NetworkBridge *> m_networkbridges; // All network bridges

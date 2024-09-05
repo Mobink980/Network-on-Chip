@@ -156,7 +156,7 @@ def create_network(options, ruby):
         ExtLinkClass = GarnetExtLink
         RouterClass = GarnetRouter
         # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-        BusClass = GarnetBus
+        BusClass = GarnetBroadcastLink
         # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         InterfaceClass = GarnetNetworkInterface
 
@@ -164,7 +164,7 @@ def create_network(options, ruby):
         NetworkClass = OnyxNetwork
         IntLinkClass = OnyxIntLink
         ExtLinkClass = OnyxExtLink
-        RouterClass = OnyxRouter
+        RouterClass = OnyxSwitcher
         # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         BusClass = OnyxBus
         # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -208,7 +208,7 @@ def create_network(options, ruby):
 
 
 def init_network(options, network, InterfaceClass):
-    if options.network == "garnet" or options.network == "onyx":
+    if options.network == "garnet":
         network.num_rows = options.mesh_rows
         network.num_columns = options.mesh_columns
         network.num_layers = options.mesh_layers
@@ -308,6 +308,109 @@ def init_network(options, network, InterfaceClass):
                 )
             )
             extLink.int_cred_bridge = int_cred_bridges
+
+    # =================================================================
+    if options.network == "onyx":
+        network.num_rows = options.mesh_rows
+        network.num_columns = options.mesh_columns
+        network.num_layers = options.mesh_layers
+        network.vcs_per_vnet = options.vcs_per_vnet
+        network.ni_flit_size = options.link_width_bits / 8
+        network.routing_algorithm = options.routing_algorithm
+        network.onyx_deadlock_threshold = options.garnet_deadlock_threshold
+
+        # Create Bridges and connect them to the corresponding links
+        for intLink in network.int_links:
+            intLink.src_net_bridge = NetBridge(
+                link=intLink.network_link,
+                vtype="OBJECT_LINK",
+                width=intLink.src_node.width,
+            )
+            intLink.src_cred_bridge = NetBridge(
+                link=intLink.credit_link,
+                vtype="LINK_OBJECT",
+                width=intLink.src_node.width,
+            )
+            intLink.dst_net_bridge = NetBridge(
+                link=intLink.network_link,
+                vtype="LINK_OBJECT",
+                width=intLink.dst_node.width,
+            )
+            intLink.dst_cred_bridge = NetBridge(
+                link=intLink.credit_link,
+                vtype="OBJECT_LINK",
+                width=intLink.dst_node.width,
+            )
+
+        for extLink in network.ext_links:
+            ext_net_bridges = []
+            ext_net_bridges.append(
+                NetBridge(
+                    link=extLink.network_links[0],
+                    vtype="OBJECT_LINK",
+                    width=extLink.width,
+                )
+            )
+            ext_net_bridges.append(
+                NetBridge(
+                    link=extLink.network_links[1],
+                    vtype="LINK_OBJECT",
+                    width=extLink.width,
+                )
+            )
+            extLink.ext_net_bridge = ext_net_bridges
+
+            ext_credit_bridges = []
+            ext_credit_bridges.append(
+                NetBridge(
+                    link=extLink.credit_links[0],
+                    vtype="LINK_OBJECT",
+                    width=extLink.width,
+                )
+            )
+            ext_credit_bridges.append(
+                NetBridge(
+                    link=extLink.credit_links[1],
+                    vtype="OBJECT_LINK",
+                    width=extLink.width,
+                )
+            )
+            extLink.ext_cred_bridge = ext_credit_bridges
+
+            int_net_bridges = []
+            int_net_bridges.append(
+                NetBridge(
+                    link=extLink.network_links[0],
+                    vtype="LINK_OBJECT",
+                    width=extLink.int_node.width,
+                )
+            )
+            int_net_bridges.append(
+                NetBridge(
+                    link=extLink.network_links[1],
+                    vtype="OBJECT_LINK",
+                    width=extLink.int_node.width,
+                )
+            )
+            extLink.int_net_bridge = int_net_bridges
+
+            int_cred_bridges = []
+            int_cred_bridges.append(
+                NetBridge(
+                    link=extLink.credit_links[0],
+                    vtype="OBJECT_LINK",
+                    width=extLink.int_node.width,
+                )
+            )
+            int_cred_bridges.append(
+                NetBridge(
+                    link=extLink.credit_links[1],
+                    vtype="LINK_OBJECT",
+                    width=extLink.int_node.width,
+                )
+            )
+            extLink.int_cred_bridge = int_cred_bridges
+    # =================================================================
 
     if options.network == "simple":
         if options.simple_physical_channels:

@@ -51,7 +51,7 @@ namespace garnet
 {
 
 class CreditLink;
-class Bus;
+class BroadcastLink;
 
 //OutputUnit, output port, and outport are the same thing.
 //BusOutputUnit inherites from Consumer
@@ -59,7 +59,7 @@ class BusOutputUnit : public Consumer
 {
   public:
     //BusOutputUnit constructor
-    BusOutputUnit(int id, PortDirection direction, Bus *bus,
+    BusOutputUnit(int id, PortDirection direction, BroadcastLink *bus,
                uint32_t consumerVcs);
     //BusOutputUnit destructor
     ~BusOutputUnit() = default;
@@ -71,7 +71,7 @@ class BusOutputUnit : public Consumer
     //increment the credit in the appropriate output VC state,
     //mark output VC as free if the credit carries is_free_signal as true.
     void wakeup();
-    //get the OutputUnit network queue 
+    //get the OutputUnit network queue
     flitBuffer* getOutQueue();
     //printing the OutputUnit
     void print(std::ostream& out) const {};
@@ -129,13 +129,13 @@ class BusOutputUnit : public Consumer
     }
 
     bool functionalRead(Packet *pkt, WriteMask &mask);
-    
-    //updating outBuffer flits with the data from the packet 
+
+    //updating outBuffer flits with the data from the packet
     uint32_t functionalWrite(Packet *pkt);
 
   private:
     //the bus this OutputUnit is part of
-    Bus *m_bus;
+    BroadcastLink *m_bus;
     //id of the OutputUnit (outport)
     GEM5_CLASS_VAR_USED int m_id;
     //the direction of the OutputUnit or outport
@@ -158,4 +158,3 @@ class BusOutputUnit : public Consumer
 } // namespace gem5
 
 #endif // __MEM_RUBY_NETWORK_GARNET_0_BUSOUTPUTUNIT_HH__
-

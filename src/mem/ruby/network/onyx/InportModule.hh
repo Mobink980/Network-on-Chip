@@ -57,7 +57,7 @@ class InportModule : public Consumer
 {
   public:
     //InportModule constructor
-    InportModule(int id, PortDirection direction, Router *router);
+    InportModule(int id, PortDirection direction, Switcher *router);
     //InportModule destructor
     ~InportModule() = default;
 

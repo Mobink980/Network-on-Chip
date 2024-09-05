@@ -189,7 +189,7 @@ OutportModule::getOutQueue()
 
 //set the output (network) link for the OutportModule
 void
-OutportModule::set_out_link(NetworkLink *link)
+OutportModule::set_out_link(NetLink *link)
 {
     m_out_link = link;
 }

@@ -34,7 +34,7 @@
 #include "debug/RubyNetwork.hh"
 #include "mem/ruby/network/garnet/Credit.hh"
 #include "mem/ruby/network/garnet/CreditLink.hh"
-#include "mem/ruby/network/garnet/Bus.hh"
+#include "mem/ruby/network/garnet/BroadcastLink.hh"
 #include "mem/ruby/network/garnet/flitBuffer.hh"
 
 //=====================================
@@ -51,7 +51,7 @@ namespace garnet
 {
 
 //BusOutputUnit constructor for instantiation
-BusOutputUnit::BusOutputUnit(int id, PortDirection direction, Bus *bus,
+BusOutputUnit::BusOutputUnit(int id, PortDirection direction, BroadcastLink *bus,
   uint32_t consumerVcs)
   : Consumer(bus), m_bus(bus), m_id(id), m_direction(direction),
     m_vc_per_vnet(consumerVcs)
