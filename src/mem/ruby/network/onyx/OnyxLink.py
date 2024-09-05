@@ -109,7 +109,7 @@ class OnyxIntLink(BasicIntLink):
     dst_serdes = Param.Bool(False, "Enable Serializer-Deserializer")
 
     # The network bridge encapsulates both the CDC and Ser-Des
-    # units in HeteroGarnet. This is automatically enabled when
+    # units in HeteroOnyx. This is automatically enabled when
     # either CDC or Ser-Des is enabled.
     src_net_bridge = Param.NetBridge(NULL, "Network Bridge at source")
     dst_net_bridge = Param.NetBridge(NULL, "Network Bridge at dest")
@@ -164,7 +164,7 @@ class OnyxExtLink(BasicExtLink):
     int_serdes = Param.Bool(False, "Enable Serializer-Deserializer")
 
     # The network bridge encapsulates both the CDC and Ser-Des
-    # units in HeteroGarnet. This is automatically enabled when
+    # units in HeteroOnyx. This is automatically enabled when
     # either CDC or Ser-Des is enabled.
     ext_net_bridge = VectorParam.NetBridge(
         [], "Network Bridge at external end"
