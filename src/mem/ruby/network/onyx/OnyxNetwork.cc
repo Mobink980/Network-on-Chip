@@ -29,7 +29,7 @@
  */
 
 
-#include "mem/ruby/network/garnet/GarnetNetwork.hh"
+#include "mem/ruby/network/onyx/OnyxNetwork.hh"
 
 #include <cassert>
 
@@ -38,17 +38,16 @@
 #include "debug/RubyNetwork.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/MessageBuffer.hh"
-#include "mem/ruby/network/garnet/CommonTypes.hh"
-#include "mem/ruby/network/garnet/CreditLink.hh"
-#include "mem/ruby/network/garnet/GarnetLink.hh"
-#include "mem/ruby/network/garnet/NetworkInterface.hh"
-#include "mem/ruby/network/garnet/NetworkLink.hh"
-#include "mem/ruby/network/garnet/Router.hh"
+#include "mem/ruby/network/onyx/CommonTypes.hh"
+#include "mem/ruby/network/onyx/AckLink.hh"
+#include "mem/ruby/network/onyx/OnyxLink.hh"
+#include "mem/ruby/network/onyx/InterfaceModule.hh"
+#include "mem/ruby/network/onyx/NetLink.hh"
+#include "mem/ruby/network/onyx/Switcher.hh"
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-#include "mem/ruby/network/garnet/Bus.hh"
+#include "mem/ruby/network/onyx/Bus.hh"
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 #include "mem/ruby/system/RubySystem.hh"
-
 //=====================================
 #include <iostream>
 //=====================================
@@ -59,17 +58,17 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
 /*
- * GarnetNetwork sets up the routers and links and collects stats.
- * Default parameters (GarnetNetwork.py) can be overwritten from command line
+ * OnyxNetwork sets up the routers and links and collects stats.
+ * Default parameters (OnyxNetwork.py) can be overwritten from command line
  * (see configs/network/Network.py)
  */
 
-// GarnetNetwork class constructor
-GarnetNetwork::GarnetNetwork(const Params &p)
+// OnyxNetwork class constructor
+OnyxNetwork::OnyxNetwork(const Params &p)
     : Network(p)
 {
     m_num_rows = p.num_rows; // number of rows
@@ -102,7 +101,7 @@ GarnetNetwork::GarnetNetwork(const Params &p)
     for (std::vector<BasicRouter*>::const_iterator i =  p.routers.begin();
          i != p.routers.end(); ++i) { // for each router
         // get the router
-        Router* router = safe_cast<Router*>(*i);
+        Switcher* router = safe_cast<Switcher*>(*i);
         // push the router in m_routers vector
         m_routers.push_back(router);
 
@@ -128,19 +127,19 @@ GarnetNetwork::GarnetNetwork(const Params &p)
     for (std::vector<ClockedObject*>::const_iterator i = p.netifs.begin();
          i != p.netifs.end(); ++i) { // for each NI
         // get the NI
-        NetworkInterface *ni = safe_cast<NetworkInterface *>(*i);
+        InterfaceModule *ni = safe_cast<InterfaceModule *>(*i);
         // push the NI into m_nis vector
         m_nis.push_back(ni);
         // initialize the NI's network pointers
         ni->init_net_ptr(this);
     }
 
-    // Print Garnet version
-    inform("Garnet version %s\n", garnetVersion);
+    // Print Onyx version
+    inform("Onyx version %s\n", onyxVersion);
 }
 
 void
-GarnetNetwork::init()
+OnyxNetwork::init()
 {
     // call the init function of the Network class
     Network::init();
@@ -154,7 +153,7 @@ GarnetNetwork::init()
     // The topology pointer should have already been initialized in the
     // parent network constructor
     assert(m_topology_ptr != NULL);
-    // create the links for the GarnetNetwork object
+    // create the links for the OnyxNetwork object
     m_topology_ptr->createLinks(this);
 
     // Initialize topology specific parameters
@@ -187,10 +186,10 @@ GarnetNetwork::init()
 
     // FaultModel: declare each router to the fault model
     if (isFaultModelEnabled()) {
-        for (std::vector<Router*>::const_iterator i= m_routers.begin();
+        for (std::vector<Switcher*>::const_iterator i= m_routers.begin();
              i != m_routers.end(); ++i) { // for each router
             // get the router
-            Router* router = safe_cast<Router*>(*i);
+            Switcher* router = safe_cast<Switcher*>(*i);
             // get the router_id from the fault_model
             [[maybe_unused]] int router_id =
                 fault_model->declare_router(router->get_num_inports(),
@@ -218,7 +217,7 @@ GarnetNetwork::init()
 */
 
 void
-GarnetNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
+OnyxNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
                              std::vector<NetDest>& routing_table_entry)
 {
     // get the local_id of the Node (or NI)
@@ -227,13 +226,13 @@ GarnetNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
     // make sure the local_id is less than the total number of nodes
     assert(local_src < m_nodes);
 
-    // create a garnet external link
-    GarnetExtLink* garnet_link = safe_cast<GarnetExtLink*>(link);
+    // create an onyx external link
+    OnyxExtLink* garnet_link = safe_cast<OnyxExtLink*>(link);
 
-    // GarnetExtLink is bi-directional (EXT_IN_ means from NI to Router)
-    NetworkLink* net_link = garnet_link->m_network_links[LinkDirection_In];
+    // OnyxExtLink is bi-directional (EXT_IN_ means from NI to Router)
+    NetLink* net_link = garnet_link->m_network_links[LinkDirection_In];
     net_link->setType(EXT_IN_); // set the type of the network link to EXT_IN_
-    CreditLink* credit_link = garnet_link->m_credit_links[LinkDirection_In];
+    AckLink* credit_link = garnet_link->m_credit_links[LinkDirection_In];
 
     m_networklinks.push_back(net_link); // add net_link to network links
     m_creditlinks.push_back(credit_link); // add credit_link to credit links
@@ -256,14 +255,14 @@ GarnetNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
      * If a bridge was enabled we connect the NI and Routers to
      * bridge before connecting the link. Example, if an external
      * bridge is enabled, we would connect:
-     * NI--->NetworkBridge--->GarnetExtLink---->Router
+     * NI--->NetworkBridge--->OnyxExtLink---->Router
      */
 
-    // add an outport at the side of the NI (for the GarnetExtLink)
+    // add an outport at the side of the NI (for the OnyxExtLink)
     if (garnet_link->extBridgeEn) {
         DPRINTF(RubyNetwork, "Enable external bridge for %s\n",
             garnet_link->name());
-        NetworkBridge *n_bridge = garnet_link->extNetBridge[LinkDirection_In];
+        NetBridge *n_bridge = garnet_link->extNetBridge[LinkDirection_In];
         m_nis[local_src]->
         addOutPort(n_bridge,
                    garnet_link->extCredBridge[LinkDirection_In],
@@ -275,11 +274,11 @@ GarnetNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
             m_routers[dest]->get_vc_per_vnet());
     }
 
-    // add an inport at the side of the router (for the GarnetExtLink)
+    // add an inport at the side of the router (for the OnyxExtLink)
     if (garnet_link->intBridgeEn) {
         DPRINTF(RubyNetwork, "Enable internal bridge for %s\n",
             garnet_link->name());
-        NetworkBridge *n_bridge = garnet_link->intNetBridge[LinkDirection_In];
+        NetBridge *n_bridge = garnet_link->intNetBridge[LinkDirection_In];
         m_routers[dest]->
             addInPort(dst_inport_dirn,
                       n_bridge,
@@ -298,7 +297,7 @@ GarnetNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
  * a Credit Link from NI to the Router
 */
 void
-GarnetNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
+OnyxNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
                               BasicLink* link,
                               std::vector<NetDest>& routing_table_entry)
 {
@@ -311,13 +310,13 @@ GarnetNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
     // make sure we have a router object for the id, and not a NULL
     assert(m_routers[src] != NULL);
 
-    // create a garnet external link
-    GarnetExtLink* garnet_link = safe_cast<GarnetExtLink*>(link);
+    // create an onyx external link
+    OnyxExtLink* garnet_link = safe_cast<OnyxExtLink*>(link);
 
-    // GarnetExtLink is bi-directional (EXT_OUT_ means from Router to NI)
-    NetworkLink* net_link = garnet_link->m_network_links[LinkDirection_Out];
+    // OnyxExtLink is bi-directional (EXT_OUT_ means from Router to NI)
+    NetLink* net_link = garnet_link->m_network_links[LinkDirection_Out];
     net_link->setType(EXT_OUT_); // set the type of the network link to EXT_OUT_
-    CreditLink* credit_link = garnet_link->m_credit_links[LinkDirection_Out];
+    AckLink* credit_link = garnet_link->m_credit_links[LinkDirection_Out];
 
     m_networklinks.push_back(net_link); // add net_link to network links
     m_creditlinks.push_back(credit_link); // add credit_link to credit links
@@ -340,14 +339,14 @@ GarnetNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
      * If a bridge was enabled we connect the NI and Routers to
      * bridge before connecting the link. Example, if an external
      * bridge is enabled, we would connect:
-     * NI<---NetworkBridge<---GarnetExtLink<----Router
+     * NI<---NetworkBridge<---OnyxExtLink<----Router
      */
 
-    // add an inport at the side of the NI (for the GarnetExtLink)
+    // add an inport at the side of the NI (for the OnyxExtLink)
     if (garnet_link->extBridgeEn) {
         DPRINTF(RubyNetwork, "Enable external bridge for %s\n",
             garnet_link->name());
-        NetworkBridge *n_bridge = garnet_link->extNetBridge[LinkDirection_Out];
+        NetBridge *n_bridge = garnet_link->extNetBridge[LinkDirection_Out];
         m_nis[local_dest]->
             addInPort(n_bridge, garnet_link->extCredBridge[LinkDirection_Out]);
         m_networkbridges.push_back(n_bridge);
@@ -356,11 +355,11 @@ GarnetNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
         m_nis[local_dest]->addInPort(net_link, credit_link);
     }
 
-    // add an outport at the side of the router (for the GarnetExtLink)
+    // add an outport at the side of the router (for the OnyxExtLink)
     if (garnet_link->intBridgeEn) {
         DPRINTF(RubyNetwork, "Enable internal bridge for %s\n",
             garnet_link->name());
-        NetworkBridge *n_bridge = garnet_link->intNetBridge[LinkDirection_Out];
+        NetBridge *n_bridge = garnet_link->intNetBridge[LinkDirection_Out];
         m_routers[src]->
             addOutPort(src_outport_dirn,
                        n_bridge,
@@ -383,18 +382,18 @@ GarnetNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
  * It adds both the network link and an opposite credit link.
 */
 void
-GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
+OnyxNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
                                 std::vector<NetDest>& routing_table_entry,
                                 PortDirection src_outport_dirn,
                                 PortDirection dst_inport_dirn)
 {
-    // create a garnet internal link
-    GarnetIntLink* garnet_link = safe_cast<GarnetIntLink*>(link);
+    // create an onyx internal link
+    OnyxIntLink* garnet_link = safe_cast<OnyxIntLink*>(link);
 
-    // GarnetIntLink is unidirectional (INT_ means from router to router)
-    NetworkLink* net_link = garnet_link->m_network_link;
+    // OnyxIntLink is unidirectional (INT_ means from router to router)
+    NetLink* net_link = garnet_link->m_network_link;
     net_link->setType(INT_);
-    CreditLink* credit_link = garnet_link->m_credit_link;
+    AckLink* credit_link = garnet_link->m_credit_link;
 
     m_networklinks.push_back(net_link); // add net_link to network links
     m_creditlinks.push_back(credit_link); // add credit_link to credit links
@@ -415,14 +414,14 @@ GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
      * If a bridge was enabled we connect the NI and Routers to
      * bridge before connecting the link. Example, if a source
      * bridge is enabled, we would connect:
-     * Router--->NetworkBridge--->GarnetIntLink---->Router
+     * Router--->NetworkBridge--->OnyxIntLink---->Router
      */
 
-    // add an inport to the destination router (for the GarnetIntLink)
+    // add an inport to the destination router (for the OnyxIntLink)
     if (garnet_link->dstBridgeEn) {
         DPRINTF(RubyNetwork, "Enable destination bridge for %s\n",
             garnet_link->name());
-        NetworkBridge *n_bridge = garnet_link->dstNetBridge;
+        NetBridge *n_bridge = garnet_link->dstNetBridge;
         m_routers[dest]->addInPort(dst_inport_dirn, n_bridge,
                                    garnet_link->dstCredBridge);
         m_networkbridges.push_back(n_bridge);
@@ -431,11 +430,11 @@ GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
         m_routers[dest]->addInPort(dst_inport_dirn, net_link, credit_link);
     }
 
-    // add an outport to the source router (for the GarnetIntLink)
+    // add an outport to the source router (for the OnyxIntLink)
     if (garnet_link->srcBridgeEn) {
         DPRINTF(RubyNetwork, "Enable source bridge for %s\n",
             garnet_link->name());
-        NetworkBridge *n_bridge = garnet_link->srcNetBridge;
+        NetBridge *n_bridge = garnet_link->srcNetBridge;
         m_routers[src]->
             addOutPort(src_outport_dirn, n_bridge,
                        routing_table_entry,
@@ -454,14 +453,14 @@ GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
 
 // Total routers in the network
 int
-GarnetNetwork::getNumRouters()
+OnyxNetwork::getNumRouters()
 {
     return m_routers.size();
 }
 
 // Get ID of router connected to a NI.
 int
-GarnetNetwork::get_router_id(int global_ni, int vnet)
+OnyxNetwork::get_router_id(int global_ni, int vnet)
 {
     // get the local_id of the NI that has global_ni global_id
     NodeID local_ni = getLocalNodeID(global_ni);
@@ -473,16 +472,15 @@ GarnetNetwork::get_router_id(int global_ni, int vnet)
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 // Total busses in the network
 int
-GarnetNetwork::getNumBusses()
+OnyxNetwork::getNumBusses()
 {
     return m_busses.size();
 }
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
-
-// for registering the GarnetNetwork stats
+// for registering the OnyxNetwork stats
 void
-GarnetNetwork::regStats()
+OnyxNetwork::regStats()
 {
     // call the regStats() function from the parent class
     Network::regStats();
@@ -655,9 +653,9 @@ GarnetNetwork::regStats()
     }
 }
 
-// Function for updating statistics of GarnetNetwork in stats.txt
+// Function for updating statistics of OnyxNetwork in stats.txt
 void
-GarnetNetwork::collateStats()
+OnyxNetwork::collateStats()
 {
     // get the ruby_system
     RubySystem *rs = params().ruby_system;
@@ -714,9 +712,9 @@ GarnetNetwork::collateStats()
 }
 
 // Reset statistics for routers, network links, and credit links
-// in GarnetNetwork
+// in OnyxNetwork
 void
-GarnetNetwork::resetStats()
+OnyxNetwork::resetStats()
 {
     for (int i = 0; i < m_routers.size(); i++) {
         m_routers[i]->resetStats();
@@ -729,16 +727,16 @@ GarnetNetwork::resetStats()
     }
 }
 
-// for printing the GarnetNetwork object
+// for printing the OnyxNetwork object
 void
-GarnetNetwork::print(std::ostream& out) const
+OnyxNetwork::print(std::ostream& out) const
 {
-    out << "[GarnetNetwork]";
+    out << "[OnyxNetwork]";
 }
 
 // Keep track of the data traffic and control traffic
 void
-GarnetNetwork::update_traffic_distribution(RouteInfo route)
+OnyxNetwork::update_traffic_distribution(RouteInfo route)
 {
     int src_node = route.src_router; // source router
     int dest_node = route.dest_router; // destination router
@@ -754,7 +752,7 @@ GarnetNetwork::update_traffic_distribution(RouteInfo route)
 // Function for performing a functional read. The return value
 // indicates the number of messages that were read.
 bool
-GarnetNetwork::functionalRead(Packet *pkt, WriteMask &mask)
+OnyxNetwork::functionalRead(Packet *pkt, WriteMask &mask)
 {
     bool read = false;
     for (unsigned int i = 0; i < m_routers.size(); i++) {
@@ -790,7 +788,7 @@ GarnetNetwork::functionalRead(Packet *pkt, WriteMask &mask)
 // Function for performing a functional write. The return value
 // indicates the number of messages that were written.
 uint32_t
-GarnetNetwork::functionalWrite(Packet *pkt)
+OnyxNetwork::functionalWrite(Packet *pkt)
 {
     uint32_t num_functional_writes = 0;
 
@@ -815,6 +813,6 @@ GarnetNetwork::functionalWrite(Packet *pkt)
     return num_functional_writes;
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
