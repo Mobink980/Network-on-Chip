@@ -28,19 +28,19 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_GARNETLINK_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_GARNETLINK_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_ONYXLINK_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_ONYXLINK_HH__
 
 #include <iostream>
 #include <string>
 #include <vector>
 
 #include "mem/ruby/network/BasicLink.hh"
-#include "mem/ruby/network/garnet/CreditLink.hh"
-#include "mem/ruby/network/garnet/NetworkBridge.hh"
-#include "mem/ruby/network/garnet/NetworkLink.hh"
-#include "params/GarnetExtLink.hh"
-#include "params/GarnetIntLink.hh"
+#include "mem/ruby/network/onyx/AckLink.hh"
+#include "mem/ruby/network/onyx/NetBridge.hh"
+#include "mem/ruby/network/onyx/NetLink.hh"
+#include "params/OnyxExtLink.hh"
+#include "params/OnyxIntLink.hh"
 
 namespace gem5
 {
@@ -48,15 +48,15 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-//GarnetIntLink is inherited from BasicIntLink
-class GarnetIntLink : public BasicIntLink
+//OnyxIntLink is inherited from BasicIntLink
+class OnyxIntLink : public BasicIntLink
 {
   public:
-    typedef GarnetIntLinkParams Params;
-    GarnetIntLink(const Params &p); //constructor
+    typedef OnyxIntLinkParams Params;
+    OnyxIntLink(const Params &p); //constructor
 
     void init(); //initializing bridge for int links
 
@@ -65,11 +65,11 @@ class GarnetIntLink : public BasicIntLink
     //Make the GarnetNetwork class a friend of GarnetIntLink.
     //This gives GarnetNetwork access to all private members
     //of GarnetIntLink class.
-    friend class GarnetNetwork;
+    friend class OnyxNetwork;
 
   protected:
-    NetworkLink* m_network_link; //network link
-    CreditLink* m_credit_link; //credit link
+    NetLink* m_network_link; //network link
+    AckLink* m_credit_link; //credit link
 
     //automatically enabled when either SerDes or
     //CDC is enabled.
@@ -85,29 +85,29 @@ class GarnetIntLink : public BasicIntLink
     bool dstCdcEn;
 
     //src and dst nodes of bridge for network link
-    NetworkBridge* srcNetBridge;
-    NetworkBridge* dstNetBridge;
+    NetBridge* srcNetBridge;
+    NetBridge* dstNetBridge;
 
     //src and dst nodes of bridge for credit link
-    NetworkBridge* srcCredBridge;
-    NetworkBridge* dstCredBridge;
+    NetBridge* srcCredBridge;
+    NetBridge* dstCredBridge;
 };
 
-//printing properties of a garnet internal link
+//printing properties of a onyx internal link
 inline std::ostream&
-operator<<(std::ostream& out, const GarnetIntLink& obj)
+operator<<(std::ostream& out, const OnyxIntLink& obj)
 {
     obj.print(out);
     out << std::flush;
     return out;
 }
 
-//GarnetExtLink is inherited from BasicExtLink
-class GarnetExtLink : public BasicExtLink
+//OnyxExtLink is inherited from BasicExtLink
+class OnyxExtLink : public BasicExtLink
 {
   public:
-    typedef GarnetExtLinkParams Params;
-    GarnetExtLink(const Params &p); //constructor
+    typedef OnyxExtLinkParams Params;
+    OnyxExtLink(const Params &p); //constructor
 
     void init(); //initializing bridge for ext links
 
@@ -116,7 +116,7 @@ class GarnetExtLink : public BasicExtLink
     //Make the GarnetNetwork class a friend of GarnetExtLink.
     //This gives GarnetNetwork access to all private members
     //of GarnetExtLink class.
-    friend class GarnetNetwork;
+    friend class OnyxNetwork;
 
   protected:
     //automatically enabled when either SerDes or
@@ -135,22 +135,22 @@ class GarnetExtLink : public BasicExtLink
     //external links are bi-directional.
     //we have two network_links and two
     //credit_links.
-    NetworkLink* m_network_links[2];
-    CreditLink* m_credit_links[2];
+    NetLink* m_network_links[2];
+    AckLink* m_credit_links[2];
 
     //ext and int nodes of bridge for network link
-    NetworkBridge* extNetBridge[2];
-    NetworkBridge* intNetBridge[2];
+    NetBridge* extNetBridge[2];
+    NetBridge* intNetBridge[2];
 
     //ext and int nodes of bridge for credit link
-    NetworkBridge* extCredBridge[2];
-    NetworkBridge* intCredBridge[2];
+    NetBridge* extCredBridge[2];
+    NetBridge* intCredBridge[2];
 
 };
 
 //printing properties of a garnet external link
 inline std::ostream&
-operator<<(std::ostream& out, const GarnetExtLink& obj)
+operator<<(std::ostream& out, const OnyxExtLink& obj)
 {
     obj.print(out);
     out << std::flush;
@@ -158,8 +158,8 @@ operator<<(std::ostream& out, const GarnetExtLink& obj)
 }
 
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
 
-#endif //__MEM_RUBY_NETWORK_GARNET_0_GARNETLINK_HH__
+#endif //__MEM_RUBY_NETWORK_ONYX_0_ONYXLINK_HH__
