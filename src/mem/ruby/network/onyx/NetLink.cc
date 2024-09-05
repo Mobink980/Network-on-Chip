@@ -30,11 +30,11 @@
  */
 
 
-#include "mem/ruby/network/garnet/NetworkLink.hh"
+#include "mem/ruby/network/onyx/NetLink.hh"
 
 #include "base/trace.hh"
 #include "debug/RubyNetwork.hh"
-#include "mem/ruby/network/garnet/CreditLink.hh"
+#include "mem/ruby/network/onyx/AckLink.hh"
 
 //=====================================
 #include <iostream>
@@ -48,11 +48,11 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-//NetworkLink constructor
-NetworkLink::NetworkLink(const Params &p)
+//NetLink constructor
+NetLink::NetLink(const Params &p)
     : ClockedObject(p), Consumer(this), m_id(p.link_id),
       m_type(NUM_LINK_TYPES_),
       m_latency(p.link_latency), m_link_utilized(0),
@@ -69,14 +69,14 @@ NetworkLink::NetworkLink(const Params &p)
 
 //set the consumer for the NetworkLink or CreditLink
 void
-NetworkLink::setLinkConsumer(Consumer *consumer)
+NetLink::setLinkConsumer(Consumer *consumer)
 {
     link_consumer = consumer;
 }
 
 //set the VCs per Vnet
 void
-NetworkLink::setVcsPerVnet(uint32_t consumerVcs)
+NetLink::setVcsPerVnet(uint32_t consumerVcs)
 {
     //update the size of m_vc_load
     m_vc_load.resize(m_virt_nets * consumerVcs);
@@ -84,7 +84,7 @@ NetworkLink::setVcsPerVnet(uint32_t consumerVcs)
 
 //set the source queue and source ClockedObject for the link
 void
-NetworkLink::setSourceQueue(flitBuffer *src_queue, ClockedObject *srcClockObj)
+NetLink::setSourceQueue(chunkBuffer *src_queue, ClockedObject *srcClockObj)
 {
     link_srcQueue = src_queue;
     src_object = srcClockObj;
@@ -93,7 +93,7 @@ NetworkLink::setSourceQueue(flitBuffer *src_queue, ClockedObject *srcClockObj)
 //This function wakes up the link to transfer flits from a
 //source ClockedObject to a destination ClockedObject.
 void
-NetworkLink::wakeup()
+NetLink::wakeup()
 {
     DPRINTF(RubyNetwork, "Woke up to transfer flits from %s\n",
         src_object->name());
@@ -102,7 +102,7 @@ NetworkLink::wakeup()
 
     if (link_srcQueue->isReady(curTick())) {
         //get the top flit from link_srcQueue
-        flit *t_flit = link_srcQueue->getTopFlit();
+        chunk *t_flit = link_srcQueue->getTopFlit();
         //it takes m_latency cycles for flit t_flit to traverse the link
         DPRINTF(RubyNetwork, "Transmission will finish at %ld :%s\n",
                 clockEdge(m_latency), *t_flit);
@@ -149,7 +149,7 @@ NetworkLink::wakeup()
 
 //for resetting link statistics
 void
-NetworkLink::resetStats()
+NetLink::resetStats()
 {
     for (int i = 0; i < m_vc_load.size(); i++) {
         m_vc_load[i] = 0;
@@ -159,18 +159,18 @@ NetworkLink::resetStats()
 }
 
 bool
-NetworkLink::functionalRead(Packet *pkt, WriteMask &mask)
+NetLink::functionalRead(Packet *pkt, WriteMask &mask)
 {
     return linkBuffer.functionalRead(pkt, mask);
 }
 
 //write the packet into the link buffer
 uint32_t
-NetworkLink::functionalWrite(Packet *pkt)
+NetLink::functionalWrite(Packet *pkt)
 {
     return linkBuffer.functionalWrite(pkt);
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
