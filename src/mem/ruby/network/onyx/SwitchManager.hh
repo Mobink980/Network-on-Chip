@@ -29,14 +29,14 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_SWITCHALLOCATOR_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_SWITCHALLOCATOR_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_SWITCHMANAGER_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_SWITCHMANAGER_HH__
 
 #include <iostream>
 #include <vector>
 
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/network/garnet/CommonTypes.hh"
+#include "mem/ruby/network/onyx/CommonTypes.hh"
 
 namespace gem5
 {
@@ -44,25 +44,25 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-class Router;
-class InputUnit;
-class OutputUnit;
+class Switcher;
+class InportModule;
+class OutportModule;
 
-//SwitchAllocator inherits from Consumer
-class SwitchAllocator : public Consumer
+//SwitchManager inherits from Consumer
+class SwitchManager : public Consumer
 {
   public:
     //constructor
-    SwitchAllocator(Router *router);
+    SwitchManager(Switcher *router);
     //arbitrate inports (SA-I), places a request from the VC in
     //each inport to the outport it wants, arbitrate outports (SA-II),
     //read the flit out from the input vc, and send it to the CrossbarSwitch,
     //send an increment_credit signal to the upstream router for this input vc.
     void wakeup();
-    //initializing SwitchAllocator class variables
+    //initializing SwitchManager class variables
     void init();
     //Clear the request vector within the allocator at end of SA-II.
     //Was populated by SA-I.
@@ -72,7 +72,7 @@ class SwitchAllocator : public Consumer
     void check_for_wakeup();
     //get the vnet of an input vc
     int get_vnet (int invc);
-    //for printing the SwitchAllocator
+    //for printing the SwitchManager
     void print(std::ostream& out) const {};
     //SA-I: Loop through all input VCs at every
     //inport, and select one in a round-robin manner.
@@ -100,7 +100,7 @@ class SwitchAllocator : public Consumer
         return m_output_arbiter_activity;
     }
 
-    //resetting SwitchAllocator stats
+    //resetting SwitchManager stats
     void resetStats();
 
   private:
@@ -112,8 +112,8 @@ class SwitchAllocator : public Consumer
     //input_arbiter/output_arbiter activity stats
     double m_input_arbiter_activity, m_output_arbiter_activity;
 
-    //the router this SwitchAllocator is a part of
-    Router *m_router;
+    //the router this SwitchManager is a part of
+    Switcher *m_router;
     //to pick the invc we're choosing from every inport
     //in a round-robin manner
     std::vector<int> m_round_robin_invc;
@@ -126,8 +126,8 @@ class SwitchAllocator : public Consumer
     std::vector<int> m_vc_winners;
 };
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
 
-#endif // __MEM_RUBY_NETWORK_GARNET_0_SWITCHALLOCATOR_HH__
+#endif // __MEM_RUBY_NETWORK_ONYX_0_SWITCHMANAGER_HH__
