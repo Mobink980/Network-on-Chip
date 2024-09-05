@@ -29,13 +29,13 @@
  */
 
 
-#include "mem/ruby/network/garnet/SwitchAllocator.hh"
+#include "mem/ruby/network/onyx/SwitchManager.hh"
 
 #include "debug/RubyNetwork.hh"
-#include "mem/ruby/network/garnet/GarnetNetwork.hh"
-#include "mem/ruby/network/garnet/InputUnit.hh"
-#include "mem/ruby/network/garnet/OutputUnit.hh"
-#include "mem/ruby/network/garnet/Router.hh"
+#include "mem/ruby/network/onyx/OnyxNetwork.hh"
+#include "mem/ruby/network/onyx/InportModule.hh"
+#include "mem/ruby/network/onyx/OutportModule.hh"
+#include "mem/ruby/network/onyx/Switcher.hh"
 
 namespace gem5
 {
@@ -43,14 +43,14 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-//SwitchAllocator constructor
-SwitchAllocator::SwitchAllocator(Router *router)
+//SwitchManager constructor
+SwitchManager::SwitchManager(Switcher *router)
     : Consumer(router)
 {
-    //set the router for this SwitchAllocator
+    //set the router for this SwitchManager
     m_router = router;
     //set the number of vcs
     m_num_vcs = m_router->get_num_vcs();
@@ -62,9 +62,9 @@ SwitchAllocator::SwitchAllocator(Router *router)
     m_output_arbiter_activity = 0;
 }
 
-//initializing SwitchAllocator class variables
+//initializing SwitchManager class variables
 void
-SwitchAllocator::init()
+SwitchManager::init()
 {
     //get the number of router inports
     m_num_inports = m_router->get_num_inports();
@@ -95,7 +95,7 @@ SwitchAllocator::init()
 }
 
 /*
- * The wakeup function of the SwitchAllocator performs a 2-stage
+ * The wakeup function of the SwitchManager performs a 2-stage
  * seperable switch allocation. At the end of the 2nd stage, a free
  * output VC is assigned to the winning flits of each output port.
  * There is no separate VCAllocator stage like the one in garnet1.0.
@@ -103,7 +103,7 @@ SwitchAllocator::init()
  * next cycle for peforming SA for any flits ready next cycle.
  */
 void
-SwitchAllocator::wakeup()
+SwitchManager::wakeup()
 {
     arbitrate_inports(); // First stage of allocation
     arbitrate_outports(); // Second stage of allocation
@@ -127,7 +127,7 @@ SwitchAllocator::wakeup()
  */
 
 void
-SwitchAllocator::arbitrate_inports()
+SwitchManager::arbitrate_inports()
 {
     // Select a VC from each input in a round robin manner
     // Independent arbiter at each input port
@@ -137,7 +137,7 @@ SwitchAllocator::arbitrate_inports()
 
         for (int invc_iter = 0; invc_iter < m_num_vcs; invc_iter++) {
             //get the InputUnit with the inport number from
-            //the router this SwitchAllocator is a part of
+            //the router this SwitchManager is a part of
             auto input_unit = m_router->getInputUnit(inport);
 
             //if the top flit in invc in input_unit is currently
@@ -190,7 +190,7 @@ SwitchAllocator::arbitrate_inports()
  * credit is set to true.
  */
 void
-SwitchAllocator::arbitrate_outports()
+SwitchManager::arbitrate_outports()
 {
     // Now there are a set of input vc requests for output vcs.
     // Again do round robin arbitration on these requests.
@@ -205,10 +205,10 @@ SwitchAllocator::arbitrate_outports()
             //if inport has a request this cycle for outport
             if (m_port_requests[inport] == outport) {
                 //get the OutputUnit with the outport number from
-                //the router this SwitchAllocator is a part of
+                //the router this SwitchManager is a part of
                 auto output_unit = m_router->getOutputUnit(outport);
                 //get the InputUnit with the inport number from
-                //the router this SwitchAllocator is a part of
+                //the router this SwitchManager is a part of
                 auto input_unit = m_router->getInputUnit(inport);
 
                 // get the winner vc for this inport
@@ -224,9 +224,9 @@ SwitchAllocator::arbitrate_outports()
                 }
 
                 // remove flit from Input VC
-                flit *t_flit = input_unit->getTopFlit(invc);
+                chunk *t_flit = input_unit->getTopFlit(invc);
                 //printing what just happened
-                DPRINTF(RubyNetwork, "SwitchAllocator at Router %d "
+                DPRINTF(RubyNetwork, "SwitchManager at Router %d "
                                      "granted outvc %d at outport %d "
                                      "to invc %d at inport %d to flit %s at "
                                      "cycle: %lld\n",
@@ -327,7 +327,7 @@ SwitchAllocator::arbitrate_outports()
  *     that arrived before this flit and is requesting the same output port.
  */
 bool
-SwitchAllocator::send_allowed(int inport, int invc, int outport, int outvc)
+SwitchManager::send_allowed(int inport, int invc, int outport, int outvc)
 {
     // Check if outvc needed
     // Check if credit needed (for multi-flit packet)
@@ -343,7 +343,7 @@ SwitchAllocator::send_allowed(int inport, int invc, int outport, int outvc)
     bool has_credit = false;
 
     //get the right outport from the router which
-    //this SwitchAllocator is a part of
+    //this SwitchManager is a part of
     auto output_unit = m_router->getOutputUnit(outport);
     if (!has_outvc) { //if we don't have an outvc for this invc
 
@@ -373,7 +373,7 @@ SwitchAllocator::send_allowed(int inport, int invc, int outport, int outvc)
     // protocol ordering check
     if ((m_router->get_net_ptr())->isVNetOrdered(vnet)) { //if vnet is ordered
         //get the right inport from the router which
-        //this SwitchAllocator is a part of
+        //this SwitchManager is a part of
         auto input_unit = m_router->getInputUnit(inport);
 
         // enqueue time of this flit
@@ -402,7 +402,7 @@ SwitchAllocator::send_allowed(int inport, int invc, int outport, int outvc)
 
 // Assign a free VC to the winner of the output port.
 int
-SwitchAllocator::vc_allocate(int outport, int inport, int invc)
+SwitchManager::vc_allocate(int outport, int inport, int invc)
 {
     // Select a free VC from the output port
     int outvc =
@@ -418,7 +418,7 @@ SwitchAllocator::vc_allocate(int outport, int inport, int invc)
 // Wakeup the router next cycle to perform SA again
 // if there are flits ready.
 void
-SwitchAllocator::check_for_wakeup()
+SwitchManager::check_for_wakeup()
 {
     //get the next clockEdge (cycle) of this router
     Tick nextCycle = m_router->clockEdge(Cycles(1));
@@ -442,7 +442,7 @@ SwitchAllocator::check_for_wakeup()
 
 //get the vnet of an input vc
 int
-SwitchAllocator::get_vnet(int invc)
+SwitchManager::get_vnet(int invc)
 {
     int vnet = invc/m_vc_per_vnet;
     assert(vnet < m_router->get_num_vnets());
@@ -453,19 +453,19 @@ SwitchAllocator::get_vnet(int invc)
 // Clear the request vector within the allocator at end of SA-II.
 // Was populated by SA-I.
 void
-SwitchAllocator::clear_request_vector()
+SwitchManager::clear_request_vector()
 {
     std::fill(m_port_requests.begin(), m_port_requests.end(), -1);
 }
 
-//resetting SwitchAllocator statistics
+//resetting SwitchManager statistics
 void
-SwitchAllocator::resetStats()
+SwitchManager::resetStats()
 {
     m_input_arbiter_activity = 0;
     m_output_arbiter_activity = 0;
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
