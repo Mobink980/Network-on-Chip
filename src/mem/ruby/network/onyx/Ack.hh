@@ -73,7 +73,7 @@ class Ack : public chunk
     bool m_is_free_signal;
 };
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
 
