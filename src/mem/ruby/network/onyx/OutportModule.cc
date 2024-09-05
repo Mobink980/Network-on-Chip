@@ -29,13 +29,13 @@
  */
 
 
-#include "mem/ruby/network/garnet/OutputUnit.hh"
+#include "mem/ruby/network/onyx/OutportModule.hh"
 
 #include "debug/RubyNetwork.hh"
-#include "mem/ruby/network/garnet/Credit.hh"
-#include "mem/ruby/network/garnet/CreditLink.hh"
-#include "mem/ruby/network/garnet/Router.hh"
-#include "mem/ruby/network/garnet/flitBuffer.hh"
+#include "mem/ruby/network/onyx/Ack.hh"
+#include "mem/ruby/network/onyx/AckLink.hh"
+#include "mem/ruby/network/onyx/Switcher.hh"
+#include "mem/ruby/network/onyx/chunkBuffer.hh"
 
 namespace gem5
 {
@@ -43,16 +43,16 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-//OutputUnit constructor for instantiation
-OutputUnit::OutputUnit(int id, PortDirection direction, Router *router,
+//OutportModule constructor for instantiation
+OutportModule::OutportModule(int id, PortDirection direction, Switcher *router,
   uint32_t consumerVcs)
   : Consumer(router), m_router(router), m_id(id), m_direction(direction),
     m_vc_per_vnet(consumerVcs)
 {
-    //number of VCs in this OutputUnit
+    //number of VCs in this OutportModule
     const int m_num_vcs = consumerVcs * m_router->get_num_vnets();
     //preallocate memory for m_num_vcs elements in outVcState vector
     //for each VC, we need to save its state in outVcState vector
@@ -66,11 +66,11 @@ OutputUnit::OutputUnit(int id, PortDirection direction, Router *router,
 
 //for decrementing the credit in the appropriate output VC
 void
-OutputUnit::decrement_credit(int out_vc)
+OutportModule::decrement_credit(int out_vc)
 {
-    //printing router_id, the OutputUnit, outvc credits, outvc,
+    //printing router_id, the OutportModule, outvc credits, outvc,
     //current cycle, and credit_link
-    DPRINTF(RubyNetwork, "Router %d OutputUnit %s decrementing credit:%d for "
+    DPRINTF(RubyNetwork, "Router %d OutportModule %s decrementing credit:%d for "
             "outvc %d at time: %lld for %s\n", m_router->get_id(),
             m_router->getPortDirectionName(get_direction()),
             outVcState[out_vc].get_credit_count(),
@@ -82,11 +82,11 @@ OutputUnit::decrement_credit(int out_vc)
 
 //for incrementing the credit in the appropriate output VC
 void
-OutputUnit::increment_credit(int out_vc)
+OutportModule::increment_credit(int out_vc)
 {
-    //printing router_id, the OutputUnit, outvc credits, outvc,
+    //printing router_id, the OutportModule, outvc credits, outvc,
     //current cycle, and credit_link
-    DPRINTF(RubyNetwork, "Router %d OutputUnit %s incrementing credit:%d for "
+    DPRINTF(RubyNetwork, "Router %d OutportModule %s incrementing credit:%d for "
             "outvc %d at time: %lld from:%s\n", m_router->get_id(),
             m_router->getPortDirectionName(get_direction()),
             outVcState[out_vc].get_credit_count(),
@@ -100,7 +100,7 @@ OutputUnit::increment_credit(int out_vc)
 // has free credits (i..e, buffer slots).
 // This is tracked by OutVcState
 bool
-OutputUnit::has_credit(int out_vc)
+OutportModule::has_credit(int out_vc)
 {
     //make sure out_vc state is ACTIVE_
     assert(outVcState[out_vc].isInState(ACTIVE_, curTick()));
@@ -110,7 +110,7 @@ OutputUnit::has_credit(int out_vc)
 
 // Check if the output port (i.e., input port at next router) has free VCs.
 bool
-OutputUnit::has_free_vc(int vnet)
+OutportModule::has_free_vc(int vnet)
 {
     //the first VC in the given Vnet
     int vc_base = vnet*m_vc_per_vnet;
@@ -126,7 +126,7 @@ OutputUnit::has_free_vc(int vnet)
 
 // Assign a free output VC to the winner of Switch Allocation
 int
-OutputUnit::select_free_vc(int vnet)
+OutportModule::select_free_vc(int vnet)
 {
     //the first VC in the given Vnet
     int vc_base = vnet*m_vc_per_vnet;
@@ -144,7 +144,7 @@ OutputUnit::select_free_vc(int vnet)
 }
 
 /*
- * The wakeup function of the OutputUnit reads the credit signal from the
+ * The wakeup function of the OutportModule reads the credit signal from the
  * downstream router for the output VC (i.e., input VC at downstream router).
  * It increments the credit count in the appropriate output VC state.
  * If the credit carries is_free_signal as true,
@@ -152,12 +152,12 @@ OutputUnit::select_free_vc(int vnet)
  */
 
 void
-OutputUnit::wakeup()
+OutportModule::wakeup()
 {
     //if the credit link of the outport is ready at the current tick
     if (m_credit_link->isReady(curTick())) {
         //put the content of the credit link into t_credit
-        Credit *t_credit = (Credit*) m_credit_link->consumeLink();
+        Ack *t_credit = (Ack*) m_credit_link->consumeLink();
         //increment the credit for the outvc of t_credit
         //It means that outvc (i.e., input VC of the downstream router)
         //has one more free slot.
@@ -179,24 +179,24 @@ OutputUnit::wakeup()
     }
 }
 
-//get the OutputUnit network queue (buffer that sends the flits
+//get the OutportModule network queue (buffer that sends the flits
 //on the output (network) link, to a VC in downstream router InputUnit)
-flitBuffer*
-OutputUnit::getOutQueue()
+chunkBuffer*
+OutportModule::getOutQueue()
 {
     return &outBuffer;
 }
 
-//set the output (network) link for the OutputUnit
+//set the output (network) link for the OutportModule
 void
-OutputUnit::set_out_link(NetworkLink *link)
+OutportModule::set_out_link(NetworkLink *link)
 {
     m_out_link = link;
 }
 
-//set the credit link for the OutputUnit
+//set the credit link for the OutportModule
 void
-OutputUnit::set_credit_link(CreditLink *credit_link)
+OutportModule::set_credit_link(AckLink *credit_link)
 {
     m_credit_link = credit_link;
 }
@@ -204,7 +204,7 @@ OutputUnit::set_credit_link(CreditLink *credit_link)
 //for inserting a flit into an output VC
 //(i.e., input VC of the downstream router)
 void
-OutputUnit::insert_flit(flit *t_flit)
+OutportModule::insert_flit(chunk *t_flit)
 {
     //insert t_flit into outBuffer flitBuffer
     outBuffer.insert(t_flit);
@@ -213,18 +213,18 @@ OutputUnit::insert_flit(flit *t_flit)
 }
 
 bool
-OutputUnit::functionalRead(Packet *pkt, WriteMask &mask)
+OutportModule::functionalRead(Packet *pkt, WriteMask &mask)
 {
     return outBuffer.functionalRead(pkt, mask);
 }
 
 //updating outBuffer flits with the data from the packet
 uint32_t
-OutputUnit::functionalWrite(Packet *pkt)
+OutportModule::functionalWrite(Packet *pkt)
 {
     return outBuffer.functionalWrite(pkt);
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
