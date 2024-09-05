@@ -201,7 +201,7 @@ InterfaceModule::incrementStats(chunk *t_flit)
     int vnet = t_flit->get_vnet();
 
     // Latency
-    //increment the received flits for the vnet in GarnetNetwork
+    //increment the received flits for the vnet in OnyxNetwork
     m_net_ptr->increment_received_flits(vnet);
 
     // std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
@@ -224,17 +224,17 @@ InterfaceModule::incrementStats(chunk *t_flit)
     //queueing_delay for the flit
     Tick queueing_delay = src_queueing_delay + dest_queueing_delay;
 
-    //increment the flit network and queuing latency for the GarnetNetwork
+    //increment the flit network and queuing latency for the OnyxNetwork
     m_net_ptr->increment_flit_network_latency(network_delay, vnet);
     m_net_ptr->increment_flit_queueing_latency(queueing_delay, vnet);
 
     //if the flit is of type TAIL_ or HEAD_TAIL_
     if (t_flit->get_type() == TAIL_ || t_flit->get_type() == HEAD_TAIL_) {
-        //increment the number of received packets for the GarnetNetwork
+        //increment the number of received packets for the OnyxNetwork
         m_net_ptr->increment_received_packets(vnet);
-        //increment packet network latency for the GarnetNetwork
+        //increment packet network latency for the OnyxNetwork
         m_net_ptr->increment_packet_network_latency(network_delay, vnet);
-        //increment packet queuing latency for the GarnetNetwork
+        //increment packet queuing latency for the OnyxNetwork
         m_net_ptr->increment_packet_queueing_latency(queueing_delay, vnet);
     }
 
@@ -571,13 +571,13 @@ InterfaceModule::flitisizeMessage(MsgPtr msg_ptr, int vnet)
         // so that the first router increments it to 0
         route.hops_traversed = -1;
 
-        //a packet was injected into the vnet in the GarnetNetwork
+        //a packet was injected into the vnet in the OnyxNetwork
         m_net_ptr->increment_injected_packets(vnet);
         //Keep track of the data traffic and control traffic
         m_net_ptr->update_traffic_distribution(route);
         int packet_id = m_net_ptr->getNextPacketID();
         for (int i = 0; i < num_flits; i++) {
-            //a flit was injected into the vnet in the GarnetNetwork
+            //a flit was injected into the vnet in the OnyxNetwork
             m_net_ptr->increment_injected_flits(vnet);
             //create a new flit and fill its fields with appropriate data
             chunk *fl = new chunk(packet_id,
@@ -737,7 +737,7 @@ InterfaceModule::getInportForVnet(int vnet)
 
 /*
  * This function returns the outport which supports the given vnet.
- * Currently, HeteroGarnet does not support multiple outports to
+ * Currently, HeteroOnyx does not support multiple outports to
  * support same vnet. Thus, this function returns the first-and
  * only outport which supports the vnet.
  */
