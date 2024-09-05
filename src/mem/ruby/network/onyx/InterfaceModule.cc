@@ -61,7 +61,7 @@ InterfaceModule::InterfaceModule(const Params &p)
   : ClockedObject(p), Consumer(this), m_id(p.id),
     m_virtual_networks(p.virt_nets), m_vc_per_vnet(0),
     m_vc_allocator(m_virtual_networks, 0),
-    m_deadlock_threshold(p.garnet_deadlock_threshold),
+    m_deadlock_threshold(p.onyx_deadlock_threshold),
     vc_busy_counter(m_virtual_networks, 0)
 {
     //counting stall numbers for each vnet
