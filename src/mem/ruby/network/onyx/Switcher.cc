@@ -30,14 +30,14 @@
  */
 
 
-#include "mem/ruby/network/garnet/Router.hh"
+#include "mem/ruby/network/onyx/Switcher.hh"
 
 #include "debug/RubyNetwork.hh"
-#include "mem/ruby/network/garnet/CreditLink.hh"
-#include "mem/ruby/network/garnet/GarnetNetwork.hh"
-#include "mem/ruby/network/garnet/InputUnit.hh"
-#include "mem/ruby/network/garnet/NetworkLink.hh"
-#include "mem/ruby/network/garnet/OutputUnit.hh"
+#include "mem/ruby/network/onyx/AckLink.hh"
+#include "mem/ruby/network/onyx/OnyxNetwork.hh"
+#include "mem/ruby/network/onyx/InportModule.hh"
+#include "mem/ruby/network/onyx/NetLink.hh"
+#include "mem/ruby/network/onyx/OutportModule.hh"
 
 //=====================================
 #include <iostream>
@@ -49,11 +49,11 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-//Router constructor
-Router::Router(const Params &p)
+//Switcher constructor
+Switcher::Switcher(const Params &p)
   : BasicRouter(p), Consumer(this), m_latency(p.latency),
     m_virtual_networks(p.virt_nets), m_vc_per_vnet(p.vcs_per_vnet),
     m_num_vcs(m_virtual_networks * m_vc_per_vnet), m_bit_width(p.width),
@@ -67,7 +67,7 @@ Router::Router(const Params &p)
 //calls the init function of BasicRouter, SwitchAllocator,
 //and CrossbarSwitch
 void
-Router::init()
+Switcher::init()
 {
     BasicRouter::init();
 
@@ -83,7 +83,7 @@ Router::init()
 //(InputUnit, OutputUnit, SwitchAllocator, CrossbarSwitch) have a
 //ready flit/credit to act upon this cycle.
 void
-Router::wakeup()
+Switcher::wakeup()
 {
     DPRINTF(RubyNetwork, "Router %d woke up\n", m_id);
     //ensure the router woke up on a clockEdge (the tick when a cycle begins)
@@ -114,15 +114,15 @@ Router::wakeup()
 //The following function of the Router class adds one input port or
 //inport to the Router object.
 void
-Router::addInPort(PortDirection inport_dirn,
-                  NetworkLink *in_link, CreditLink *credit_link)
+Switcher::addInPort(PortDirection inport_dirn,
+                  NetLink *in_link, AckLink *credit_link)
 {
     //======================================================
     // std::cout << "=================================================\n";
-    // std::cout << "name of the link (from addInPort in Router.cc): " << in_link->name() <<"\n";
-    // std::cout << "width of the link (from addInPort in Router.cc): " << in_link->bitWidth <<"\n";
-    // std::cout << "id of the router (from addInPort in Router.cc): " << m_id <<"\n";
-    // std::cout << "width of the router (from addInPort in Router.cc): " << m_bit_width <<"\n";
+    // std::cout << "name of the link (from addInPort in Switcher.cc): " << in_link->name() <<"\n";
+    // std::cout << "width of the link (from addInPort in Switcher.cc): " << in_link->bitWidth <<"\n";
+    // std::cout << "id of the router (from addInPort in Switcher.cc): " << m_id <<"\n";
+    // std::cout << "width of the router (from addInPort in Switcher.cc): " << m_bit_width <<"\n";
     // std::cout << "=================================================\n";
     //======================================================
 
@@ -139,7 +139,7 @@ Router::addInPort(PortDirection inport_dirn,
     //This refers to an object of the Router class in InputUnit
     //class instantiation. inport_dirn is the direction of the
     //input port that we are creating.
-    InputUnit *input_unit = new InputUnit(port_num, inport_dirn, this);
+    InportModule *input_unit = new InportModule(port_num, inport_dirn, this);
     //set network link for this inport (to this router)
     input_unit->set_in_link(in_link);
     //set credit link for this inport (from this router to the adjacent one)
@@ -153,7 +153,7 @@ Router::addInPort(PortDirection inport_dirn,
     //set the number of virtual channels per virtual network for the credit link
     credit_link->setVcsPerVnet(get_vc_per_vnet());
     //add the input port we created to the router object
-    m_input_unit.push_back(std::shared_ptr<InputUnit>(input_unit));
+    m_input_unit.push_back(std::shared_ptr<InportModule>(input_unit));
     //add the new inport and its direction to the routingUnit
     routingUnit.addInDirection(inport_dirn, port_num);
 }
@@ -161,17 +161,17 @@ Router::addInPort(PortDirection inport_dirn,
 //The following function of the Router class adds one output port or
 //outport to the Router object.
 void
-Router::addOutPort(PortDirection outport_dirn,
-                   NetworkLink *out_link,
+Switcher::addOutPort(PortDirection outport_dirn,
+                   NetLink *out_link,
                    std::vector<NetDest>& routing_table_entry, int link_weight,
-                   CreditLink *credit_link, uint32_t consumerVcs)
+                   AckLink *credit_link, uint32_t consumerVcs)
 {
     //======================================================
     // std::cout << "=================================================\n";
-    // std::cout << "name of the link (from addOutPort in Router.cc): " << out_link->name() <<"\n";
-    // std::cout << "width of the link (from addOutPort in Router.cc): " << out_link->bitWidth <<"\n";
-    // std::cout << "id of the router (from addOutPort in Router.cc): " << m_id <<"\n";
-    // std::cout << "width of the router (from addOutPort in Router.cc): " << m_bit_width <<"\n";
+    // std::cout << "name of the link (from addOutPort in Switcher.cc): " << out_link->name() <<"\n";
+    // std::cout << "width of the link (from addOutPort in Switcher.cc): " << out_link->bitWidth <<"\n";
+    // std::cout << "id of the router (from addOutPort in Switcher.cc): " << m_id <<"\n";
+    // std::cout << "width of the router (from addOutPort in Switcher.cc): " << m_bit_width <<"\n";
     // std::cout << "=================================================\n";
     //======================================================
     fatal_if(out_link->bitWidth != m_bit_width, "Widths of units do not match."
@@ -186,7 +186,7 @@ Router::addOutPort(PortDirection outport_dirn,
     //outport_dirn is the direction of the output port that we
     //are creating. consumerVcs is the virtual channels that
     //would consume from each outport.
-    OutputUnit *output_unit = new OutputUnit(port_num, outport_dirn, this,
+    OutportModule *output_unit = new OutportModule(port_num, outport_dirn, this,
                                              consumerVcs);
     //set network link for this outport (from this router to the adjacent one)
     output_unit->set_out_link(out_link);
@@ -202,7 +202,7 @@ Router::addOutPort(PortDirection outport_dirn,
     //set the number of virtual channels per virtual network for the network link
     out_link->setVcsPerVnet(consumerVcs);
     //add the output port we created to the router object
-    m_output_unit.push_back(std::shared_ptr<OutputUnit>(output_unit));
+    m_output_unit.push_back(std::shared_ptr<OutportModule>(output_unit));
 
     //add the route of the routing_table_entry to the routingUnit
     routingUnit.addRoute(routing_table_entry);
@@ -217,14 +217,14 @@ Router::addOutPort(PortDirection outport_dirn,
 
 //Getting the direction of an outport in the router
 PortDirection
-Router::getOutportDirection(int outport)
+Switcher::getOutportDirection(int outport)
 {
     return m_output_unit[outport]->get_direction();
 }
 
 //Getting the direction of an inport in the router
 PortDirection
-Router::getInportDirection(int inport)
+Switcher::getInportDirection(int inport)
 {
     return m_input_unit[inport]->get_direction();
 }
@@ -232,7 +232,7 @@ Router::getInportDirection(int inport)
 //The following function of the Router class computes which outport should
 //be chosen for the flits, based on route, inport, and inport direction.
 int
-Router::route_compute(RouteInfo route, int inport, PortDirection inport_dirn)
+Switcher::route_compute(RouteInfo route, int inport, PortDirection inport_dirn)
 {
     return routingUnit.outportCompute(route, inport, inport_dirn);
 }
@@ -240,14 +240,14 @@ Router::route_compute(RouteInfo route, int inport, PortDirection inport_dirn)
 //This function grants the switch to an inport, so the flit could pass
 //the crossbar.
 void
-Router::grant_switch(int inport, flit *t_flit)
+Switcher::grant_switch(int inport, chunk *t_flit)
 {
     crossbarSwitch.update_sw_winner(inport, t_flit);
 }
 
 //This function gives the router, time cycles delay.
 void
-Router::schedule_wakeup(Cycles time)
+Switcher::schedule_wakeup(Cycles time)
 {
     // wake up after time cycles
     scheduleEvent(time);
@@ -255,7 +255,7 @@ Router::schedule_wakeup(Cycles time)
 
 //get the layer of a router based on its id
 int
-Router::get_router_layer(int router_id) {
+Switcher::get_router_layer(int router_id) {
     int num_rows = m_network_ptr->getNumRows();
     int num_cols = m_network_ptr->getNumCols();
     int num_layers = m_network_ptr->getNumLayers();
@@ -270,7 +270,7 @@ Router::get_router_layer(int router_id) {
 //Getting the direction of a port as a string
 //(North, South, East, West)
 std::string
-Router::getPortDirectionName(PortDirection direction)
+Switcher::getPortDirectionName(PortDirection direction)
 {
     // PortDirection is actually a string
     // If not, then this function should add a switch
@@ -282,7 +282,7 @@ Router::getPortDirectionName(PortDirection direction)
 //This function is for creating statistics for every router
 //in the stats.txt file.
 void
-Router::regStats()
+Switcher::regStats()
 {
     //call the regStats() function of the parent class
     BasicRouter::regStats();
@@ -315,7 +315,7 @@ Router::regStats()
 
 //This function collates the stats for the router.
 void
-Router::collateStats()
+Switcher::collateStats()
 {
     for (int j = 0; j < m_virtual_networks; j++) {
         for (int i = 0; i < m_input_unit.size(); i++) {
@@ -332,7 +332,7 @@ Router::collateStats()
 
 //Resetting statistics for inports, crossbarSwitch, and switchAllocator.
 void
-Router::resetStats()
+Switcher::resetStats()
 {
     for (int i = 0; i < m_input_unit.size(); i++) {
             m_input_unit[i]->resetStats();
@@ -344,7 +344,7 @@ Router::resetStats()
 
 //For printing fault vector based on temperature.
 void
-Router::printFaultVector(std::ostream& out)
+Switcher::printFaultVector(std::ostream& out)
 {
     int temperature_celcius = BASELINE_TEMPERATURE_CELCIUS;
     int num_fault_types = m_network_ptr->fault_model->number_of_fault_types;
@@ -363,7 +363,7 @@ Router::printFaultVector(std::ostream& out)
 
 //For printing aggregate fault probability based on temperature.
 void
-Router::printAggregateFaultProbability(std::ostream& out)
+Switcher::printAggregateFaultProbability(std::ostream& out)
 {
     int temperature_celcius = BASELINE_TEMPERATURE_CELCIUS;
     float aggregate_fault_prob;
@@ -374,7 +374,7 @@ Router::printAggregateFaultProbability(std::ostream& out)
 }
 
 bool
-Router::functionalRead(Packet *pkt, WriteMask &mask)
+Switcher::functionalRead(Packet *pkt, WriteMask &mask)
 {
     bool read = false;
     if (crossbarSwitch.functionalRead(pkt, mask))
@@ -395,7 +395,7 @@ Router::functionalRead(Packet *pkt, WriteMask &mask)
 
 //getting the total number of functional writes for a packet
 uint32_t
-Router::functionalWrite(Packet *pkt)
+Switcher::functionalWrite(Packet *pkt)
 {
     uint32_t num_functional_writes = 0;
     num_functional_writes += crossbarSwitch.functionalWrite(pkt);
@@ -411,6 +411,6 @@ Router::functionalWrite(Packet *pkt)
     return num_functional_writes;
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
