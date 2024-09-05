@@ -29,8 +29,8 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_ROUTER_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_ROUTER_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_SWITCHER_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_SWITCHER_HH__
 
 #include <iostream>
 #include <memory>
@@ -39,13 +39,13 @@
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/BasicRouter.hh"
-#include "mem/ruby/network/garnet/CommonTypes.hh"
-#include "mem/ruby/network/garnet/CrossbarSwitch.hh"
-#include "mem/ruby/network/garnet/GarnetNetwork.hh"
-#include "mem/ruby/network/garnet/RoutingUnit.hh"
-#include "mem/ruby/network/garnet/SwitchAllocator.hh"
-#include "mem/ruby/network/garnet/flit.hh"
-#include "params/GarnetRouter.hh"
+#include "mem/ruby/network/onyx/CommonTypes.hh"
+#include "mem/ruby/network/onyx/CrossbarMatrix.hh"
+#include "mem/ruby/network/onyx/OnyxNetwork.hh"
+#include "mem/ruby/network/onyx/PathFinder.hh"
+#include "mem/ruby/network/onyx/SwitchManager.hh"
+#include "mem/ruby/network/onyx/chunk.hh"
+#include "params/OnyxSwitcher.hh"
 
 namespace gem5
 {
@@ -55,22 +55,22 @@ namespace ruby
 
 class FaultModel;
 
-namespace garnet
+namespace onyx
 {
 
-class NetworkLink;
-class CreditLink;
-class InputUnit;
-class OutputUnit;
+class NetLink;
+class AckLink;
+class InportModule;
+class OutportModule;
 
-//class Router inherites from both BasicRouter and Consumer
-class Router : public BasicRouter, public Consumer
+//class Switcher inherites from both BasicRouter and Consumer
+class Switcher : public BasicRouter, public Consumer
 {
   public:
-    typedef GarnetRouterParams Params;
-    Router(const Params &p); //Router constructor
+    typedef OnyxSwitcherParams Params;
+    Switcher(const Params &p); //Switcher constructor
 
-    ~Router() = default; //Router destructor
+    ~Switcher() = default; //Switcher destructor
 
     //Loop through all InputUnits and call their wakeup()
     //Loop through all OutputUnits and call their wakeup()
@@ -80,19 +80,19 @@ class Router : public BasicRouter, public Consumer
     //(InputUnit, OutputUnit, SwitchAllocator, CrossbarSwitch) have a
     //ready flit/credit to act upon this cycle.
     void wakeup();
-    //for printing this Router
+    //for printing this Switcher
     void print(std::ostream& out) const {};
 
     //calls the init function of BasicRouter,
     //SwitchAllocator, and CrossbarSwitch
     void init();
     //add an inport to the router
-    void addInPort(PortDirection inport_dirn, NetworkLink *link,
-                   CreditLink *credit_link);
+    void addInPort(PortDirection inport_dirn, NetLink *link,
+                   AckLink *credit_link);
     //add an outport to the router
-    void addOutPort(PortDirection outport_dirn, NetworkLink *link,
+    void addOutPort(PortDirection outport_dirn, NetLink *link,
                     std::vector<NetDest>& routing_table_entry,
-                    int link_weight, CreditLink *credit_link,
+                    int link_weight, AckLink *credit_link,
                     uint32_t consumerVcs);
 
     //get the latency of the router in cycles
@@ -113,17 +113,17 @@ class Router : public BasicRouter, public Consumer
     //get the layer of a router based on its id
     int get_router_layer(int router_id);
 
-    //initialize the pointer to the GarnetNetwork
-    void init_net_ptr(GarnetNetwork* net_ptr)
+    //initialize the pointer to the OnyxNetwork
+    void init_net_ptr(OnyxNetwork* net_ptr)
     {
         m_network_ptr = net_ptr;
     }
 
-    //get the pointer to the GarnetNetwork
-    GarnetNetwork* get_net_ptr()  { return m_network_ptr; }
+    //get the pointer to the OnyxNetwork
+    OnyxNetwork* get_net_ptr()  { return m_network_ptr; }
 
     //get the InputUnit (inport) by the port number
-    InputUnit*
+    InportModule*
     getInputUnit(unsigned port)
     {
         //make sure the given port number is valid
@@ -132,7 +132,7 @@ class Router : public BasicRouter, public Consumer
     }
 
     //get the OutputUnit (outport) by the port number
-    OutputUnit*
+    OutportModule*
     getOutputUnit(unsigned port)
     {
         //make sure the given port number is valid
@@ -152,7 +152,7 @@ class Router : public BasicRouter, public Consumer
     int route_compute(RouteInfo route, int inport, PortDirection direction);
     //This function grants the switch to an inport, so the flit could pass
     //the crossbar.
-    void grant_switch(int inport, flit *t_flit);
+    void grant_switch(int inport, chunk *t_flit);
     //This function gives the router, time cycles delay.
     void schedule_wakeup(Cycles time);
 
@@ -195,20 +195,20 @@ class Router : public BasicRouter, public Consumer
     uint32_t m_virtual_networks, m_vc_per_vnet, m_num_vcs;
     //link bandwidth of the router
     uint32_t m_bit_width;
-    //pointer to the GarnetNetwork
-    GarnetNetwork *m_network_ptr;
+    //pointer to the OnyxNetwork
+    OnyxNetwork *m_network_ptr;
 
     //RoutingUnit of this router
-    RoutingUnit routingUnit;
+    PathFinder routingUnit;
     //SwitchAllocator of this router
-    SwitchAllocator switchAllocator;
+    SwitchManager switchAllocator;
     //CrossbarSwitch of this router
-    CrossbarSwitch crossbarSwitch;
+    CrossbarMatrix crossbarSwitch;
 
     //vector containing the router inports
-    std::vector<std::shared_ptr<InputUnit>> m_input_unit;
+    std::vector<std::shared_ptr<InportModule>> m_input_unit;
     //vector containing the router outports
-    std::vector<std::shared_ptr<OutputUnit>> m_output_unit;
+    std::vector<std::shared_ptr<OutportModule>> m_output_unit;
 
     // Statistical variables required for power computations
     statistics::Scalar m_buffer_reads; //inport buffer_read activity
@@ -223,8 +223,8 @@ class Router : public BasicRouter, public Consumer
     statistics::Scalar m_crossbar_activity;
 };
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
 
-#endif // __MEM_RUBY_NETWORK_GARNET_0_ROUTER_HH__
+#endif // __MEM_RUBY_NETWORK_ONYX_0_SWITCHER_HH__
