@@ -30,7 +30,7 @@
  */
 
 
-#include "mem/ruby/network/garnet/Bus.hh"
+#include "mem/ruby/network/garnet/BroadcastLink.hh"
 
 #include "debug/RubyNetwork.hh"
 #include "mem/ruby/network/garnet/CreditLink.hh"
@@ -52,8 +52,8 @@ namespace ruby
 namespace garnet
 {
 
-//Bus constructor
-Bus::Bus(const Params &p)
+//BroadcastLink constructor
+BroadcastLink::BroadcastLink(const Params &p)
   : BasicBus(p), Consumer(this), m_latency(p.latency),
     m_virtual_networks(p.virt_nets), m_vc_per_vnet(p.vcs_per_vnet),
     m_num_vcs(m_virtual_networks * m_vc_per_vnet), m_bit_width(p.width),
@@ -66,7 +66,7 @@ Bus::Bus(const Params &p)
 //calls the init function of BasicBus, SwitchAllocator, 
 //and CrossbarSwitch
 void
-Bus::init()
+BroadcastLink::init()
 {
     BasicBus::init();
 
@@ -82,10 +82,10 @@ Bus::init()
 //(InputUnit, OutputUnit, SwitchAllocator, CrossbarSwitch) have a 
 //ready flit/credit to act upon this cycle.
 void
-Bus::wakeup()
+BroadcastLink::wakeup()
 {
-    DPRINTF(RubyNetwork, "Bus %d woke up\n", m_id);
-    //ensure the bus woke up on a clockEdge (the tick when a cycle begins)
+    DPRINTF(RubyNetwork, "BroadcastLink %d woke up\n", m_id);
+    //ensure the BroadcastLink woke up on a clockEdge (the tick when a cycle begins)
     assert(clockEdge() == curTick());
 
     // check for incoming flits (wake up all the inports)
@@ -113,7 +113,7 @@ Bus::wakeup()
 //The following function of the Bus class adds one input port or
 //inport to the Bus object. 
 void
-Bus::addInPort(PortDirection inport_dirn,
+BroadcastLink::addInPort(PortDirection inport_dirn,
                   NetworkLink *in_link, CreditLink *credit_link)
 {
     fatal_if(in_link->bitWidth != m_bit_width, "Widths of link %s(%d)does"
@@ -149,7 +149,7 @@ Bus::addInPort(PortDirection inport_dirn,
 //The following function of the Bus class adds one output port or
 //outport to the Bus object.
 void
-Bus::addOutPort(PortDirection outport_dirn,
+BroadcastLink::addOutPort(PortDirection outport_dirn,
                    NetworkLink *out_link,
                    std::vector<NetDest>& routing_table_entry, int link_weight,
                    CreditLink *credit_link, uint32_t consumerVcs)
@@ -187,14 +187,14 @@ Bus::addOutPort(PortDirection outport_dirn,
 
 //Getting the direction of an outport in the bus
 PortDirection
-Bus::getOutportDirection(int outport)
+BroadcastLink::getOutportDirection(int outport)
 {
     return m_output_unit[outport]->get_direction();
 }
 
 //Getting the direction of an inport in the bus
 PortDirection
-Bus::getInportDirection(int inport)
+BroadcastLink::getInportDirection(int inport)
 {
     return m_input_unit[inport]->get_direction();
 }
@@ -202,16 +202,8 @@ Bus::getInportDirection(int inport)
 //===================================================================
 //This function grants the switch to an inport, so the flit could pass
 //the crossbar.
-// void
-// Bus::grant_switch(flit *t_flit)
-// {
-//     crossbarSwitch.update_sw_winner(t_flit);
-// }
-
-//This function grants the switch to an inport, so the flit could pass
-//the crossbar.
 void
-Bus::grant_switch(int inport, flit *t_flit)
+BroadcastLink::grant_switch(int inport, flit *t_flit)
 {
     crossbarSwitch.update_sw_winner(inport, t_flit);
 }
@@ -219,7 +211,7 @@ Bus::grant_switch(int inport, flit *t_flit)
 
 //This function gives the bus, time cycles delay.
 void
-Bus::schedule_wakeup(Cycles time)
+BroadcastLink::schedule_wakeup(Cycles time)
 {
     // wake up after time cycles
     scheduleEvent(time);
@@ -228,7 +220,7 @@ Bus::schedule_wakeup(Cycles time)
 //Getting the direction of a port as a string
 //(North, South, East, West)
 std::string
-Bus::getPortDirectionName(PortDirection direction)
+BroadcastLink::getPortDirectionName(PortDirection direction)
 {
     // PortDirection is actually a string
     // If not, then this function should add a switch
@@ -240,7 +232,7 @@ Bus::getPortDirectionName(PortDirection direction)
 //This function is for creating statistics for every bus
 //in the stats.txt file.
 void
-Bus::regStats()
+BroadcastLink::regStats()
 {
     //call the regStats() function of the parent class
     BasicBus::regStats();
@@ -273,7 +265,7 @@ Bus::regStats()
 
 //This function collates the stats for the bus.
 void
-Bus::collateStats()
+BroadcastLink::collateStats()
 {
     for (int j = 0; j < m_virtual_networks; j++) {
         for (int i = 0; i < m_input_unit.size(); i++) {
@@ -290,7 +282,7 @@ Bus::collateStats()
 
 //Resetting statistics for inports, crossbarSwitch, and switchAllocator. 
 void
-Bus::resetStats()
+BroadcastLink::resetStats()
 {
     for (int i = 0; i < m_input_unit.size(); i++) {
             m_input_unit[i]->resetStats();
@@ -302,13 +294,13 @@ Bus::resetStats()
 
 //For printing fault vector based on temperature.
 void
-Bus::printFaultVector(std::ostream& out)
+BroadcastLink::printFaultVector(std::ostream& out)
 {
     int temperature_celcius = BASELINE_TEMPERATURE_CELCIUS;
     int num_fault_types = m_network_ptr->fault_model->number_of_fault_types;
     float fault_vector[num_fault_types];
     get_fault_vector(temperature_celcius, fault_vector);
-    out << "Bus-" << m_id << " fault vector: " << std::endl;
+    out << "BroadcastLink-" << m_id << " fault vector: " << std::endl;
     for (int fault_type_index = 0; fault_type_index < num_fault_types;
          fault_type_index++) {
         out << " - probability of (";
@@ -321,18 +313,18 @@ Bus::printFaultVector(std::ostream& out)
 
 //For printing aggregate fault probability based on temperature.
 void
-Bus::printAggregateFaultProbability(std::ostream& out)
+BroadcastLink::printAggregateFaultProbability(std::ostream& out)
 {
     int temperature_celcius = BASELINE_TEMPERATURE_CELCIUS;
     float aggregate_fault_prob;
     get_aggregate_fault_probability(temperature_celcius,
                                     &aggregate_fault_prob);
-    out << "Bus-" << m_id << " fault probability: ";
+    out << "BroadcastLink-" << m_id << " fault probability: ";
     out << aggregate_fault_prob << std::endl;
 }
 
 bool
-Bus::functionalRead(Packet *pkt, WriteMask &mask)
+BroadcastLink::functionalRead(Packet *pkt, WriteMask &mask)
 {
     bool read = false;
     if (crossbarSwitch.functionalRead(pkt, mask))
@@ -353,7 +345,7 @@ Bus::functionalRead(Packet *pkt, WriteMask &mask)
 
 //getting the total number of functional writes for a packet
 uint32_t
-Bus::functionalWrite(Packet *pkt)
+BroadcastLink::functionalWrite(Packet *pkt)
 {
     uint32_t num_functional_writes = 0;
     num_functional_writes += crossbarSwitch.functionalWrite(pkt);
