@@ -29,20 +29,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_NETWORK_BRIDGE_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_NETWORK_BRIDGE_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_NETBRIDGE_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_NETBRIDGE_HH__
 
 #include <iostream>
 #include <queue>
 #include <vector>
 
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/network/garnet/CommonTypes.hh"
-#include "mem/ruby/network/garnet/CreditLink.hh"
-#include "mem/ruby/network/garnet/GarnetLink.hh"
-#include "mem/ruby/network/garnet/NetworkLink.hh"
-#include "mem/ruby/network/garnet/flitBuffer.hh"
-#include "params/NetworkBridge.hh"
+#include "mem/ruby/network/onyx/CommonTypes.hh"
+#include "mem/ruby/network/onyx/AckLink.hh"
+#include "mem/ruby/network/onyx/OnyxLink.hh"
+#include "mem/ruby/network/onyx/NetLink.hh"
+#include "mem/ruby/network/onyx/chunkBuffer.hh"
+#include "params/NetBridge.hh"
 
 namespace gem5
 {
@@ -50,21 +50,21 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-class GarnetNetwork;
+class OnyxNetwork;
 
-//NetworkBridge inherites from CreditLink
-class NetworkBridge: public CreditLink
+//NetBridge inherites from AckLink
+class NetBridge: public AckLink
 {
   public:
-    typedef NetworkBridgeParams Params;
-    NetworkBridge(const Params &p); //constructor
-    ~NetworkBridge(); //destructor
+    typedef NetBridgeParams Params;
+    NetBridge(const Params &p); //constructor
+    ~NetBridge(); //destructor
 
     //initialize NetworkBridge class variables
-    void initBridge(NetworkBridge *coBrid, bool cdc_en, bool serdes_en);
+    void initBridge(NetBridge *coBrid, bool cdc_en, bool serdes_en);
 
     //Check if SerDes is enabled and do appropriate calculations for
     //serializing or deserializing the flits.
@@ -75,21 +75,21 @@ class NetworkBridge: public CreditLink
     void neutralize(int vc, int eCredit);
 
     //schedule a flit to traverse the link
-    void scheduleFlit(flit *t_flit, Cycles latency);
+    void scheduleFlit(chunk *t_flit, Cycles latency);
     //to flitisize a flit (for SerDes) and sending it
-    void flitisizeAndSend(flit *t_flit);
+    void flitisizeAndSend(chunk *t_flit);
     //set the number of vcs per vnet
     void setVcsPerVnet(uint32_t consumerVcs);
 
   protected:
     // Pointer to co-existing bridge
     // CreditBridge for Network Bridge and vice versa
-    NetworkBridge *coBridge;
+    NetBridge *coBridge;
 
     // Link connected toBridge
     // could be a source or destination
     // depending on mType
-    NetworkLink *nLink;
+    NetLink *nLink;
 
     // CDC enable/disable
     bool enCdc;
@@ -115,8 +115,8 @@ class NetworkBridge: public CreditLink
 
 };
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
 
-#endif // __MEM_RUBY_NETWORK_GARNET_0_NETWORK_BRIDGE_HH__
+#endif // __MEM_RUBY_NETWORK_ONYX_0_NETBRIDGE_HH__
