@@ -28,7 +28,7 @@
  */
 
 
-#include "mem/ruby/network/garnet/OutVcState.hh"
+#include "mem/ruby/network/onyx/VcState.hh"
 
 #include "mem/ruby/system/RubySystem.hh"
 
@@ -38,11 +38,11 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-//OutVcState constructor
-OutVcState::OutVcState(int id, GarnetNetwork *network_ptr,
+//VcState constructor
+VcState::VcState(int id, OnyxNetwork *network_ptr,
     uint32_t consumerVcs)
     : m_time(0)
 {
@@ -70,7 +70,7 @@ OutVcState::OutVcState(int id, GarnetNetwork *network_ptr,
 
 //incrementing credit for the vc
 void
-OutVcState::increment_credit()
+VcState::increment_credit()
 {
     m_credit_count++;
     assert(m_credit_count <= m_max_credit_count);
@@ -78,12 +78,12 @@ OutVcState::increment_credit()
 
 //decrementing credit for the vc
 void
-OutVcState::decrement_credit()
+VcState::decrement_credit()
 {
     m_credit_count--;
     assert(m_credit_count >= 0);
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
