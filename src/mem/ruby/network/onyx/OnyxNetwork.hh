@@ -29,16 +29,16 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_GARNETNETWORK_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_GARNETNETWORK_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_ONYXNETWORK_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_ONYXNETWORK_HH__
 
 #include <iostream>
 #include <vector>
 
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/network/fault_model/FaultModel.hh"
-#include "mem/ruby/network/garnet/CommonTypes.hh"
-#include "params/GarnetNetwork.hh"
+#include "mem/ruby/network/onyx/CommonTypes.hh"
+#include "params/OnyxNetwork.hh"
 
 namespace gem5
 {
@@ -50,30 +50,30 @@ class FaultModel;
 //NetDest specifies the network destination of a Message
 class NetDest;
 
-namespace garnet
+namespace onyx
 {
 //We need these classes to create the network
-class NetworkInterface; //Network Interface (NI)
-class Router; //Router
+class InterfaceModule; //Network Interface (NI)
+class Switcher; //Router
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 class Bus;
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-class NetworkLink; //Network Link for forwarding flits
-class NetworkBridge; //Network Bridge for heterogenous architectures
-class CreditLink; //Credit Link for flow-control information
+class NetLink; //Network Link for forwarding flits
+class NetBridge; //Network Bridge for heterogenous architectures
+class AckLink; //Credit Link for flow-control information
 
-//GarnetNetwork inherites from Network (in Network.hh)
-class GarnetNetwork : public Network
+//OnyxNetwork inherites from Network (in Network.hh)
+class OnyxNetwork : public Network
 {
   public:
-    typedef GarnetNetworkParams Params;
-    //GarnetNetwork constructor and destructor
-    GarnetNetwork(const Params &p); //constructor declaration
-    ~GarnetNetwork() = default; //destructor declaration
+    typedef OnyxNetworkParams Params;
+    //OnyxNetwork constructor and destructor
+    OnyxNetwork(const Params &p); //constructor declaration
+    ~OnyxNetwork() = default; //destructor declaration
 
     void init(); //initializing the network
 
-    const char *garnetVersion = "3.0"; //use Heterogarnet
+    const char *onyxVersion = "3.0"; //use Heteroonyx
 
     // Configuration (set externally)
 
@@ -140,10 +140,10 @@ class GarnetNetwork : public Network
     uint32_t functionalWrite(Packet *pkt);
 
     // Stats
-    void collateStats(); //for collating the GarnetNetwork stats
-    void regStats(); //for registering the GarnetNetwork stats
-    void resetStats(); //reset the GarnetNetwork stats
-    //for printing a GarnetNetwork object
+    void collateStats(); //for collating the OnyxNetwork stats
+    void regStats(); //for registering the OnyxNetwork stats
+    void resetStats(); //reset the OnyxNetwork stats
+    //for printing a OnyxNetwork object
     void print(std::ostream& out) const;
 
     // increment counters
@@ -273,33 +273,33 @@ class GarnetNetwork : public Network
     std::vector<std::vector<statistics::Scalar *>> m_ctrl_traffic_distribution;
 
   private:
-    //GarnetNetwork constructor for instantiation
-    GarnetNetwork(const GarnetNetwork& obj);
-    GarnetNetwork& operator=(const GarnetNetwork& obj);
+    //OnyxNetwork constructor for instantiation
+    OnyxNetwork(const OnyxNetwork& obj);
+    OnyxNetwork& operator=(const OnyxNetwork& obj);
 
     std::vector<VNET_type > m_vnet_type; // type of vnet (control, data, etc.)
-    std::vector<Router *> m_routers;   // All Routers in Network
+    std::vector<Switcher *> m_routers;   // All Routers in Network
     //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     std::vector<Bus *> m_busses;   // All Busses in Network
     //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-    std::vector<NetworkLink *> m_networklinks; // All flit links in the network
-    std::vector<NetworkBridge *> m_networkbridges; // All network bridges
-    std::vector<CreditLink *> m_creditlinks; // All credit links in the network
-    std::vector<NetworkInterface *> m_nis;   // All NI's in Network
+    std::vector<NetLink *> m_networklinks; // All flit links in the network
+    std::vector<NetBridge *> m_networkbridges; // All network bridges
+    std::vector<AckLink *> m_creditlinks; // All credit links in the network
+    std::vector<InterfaceModule *> m_nis;   // All NI's in Network
     int m_next_packet_id; // static vairable for packet id allocation
 };
 
-//for printing a GarnetNetwork object
+//for printing an OnyxNetwork object
 inline std::ostream&
-operator<<(std::ostream& out, const GarnetNetwork& obj)
+operator<<(std::ostream& out, const OnyxNetwork& obj)
 {
     obj.print(out);
     out << std::flush;
     return out;
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
 
-#endif //__MEM_RUBY_NETWORK_GARNET_0_GARNETNETWORK_HH__
+#endif //__MEM_RUBY_NETWORK_ONYX_0_ONYXNETWORK_HH__
