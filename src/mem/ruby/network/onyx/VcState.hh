@@ -28,11 +28,11 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_OUTVCSTATE_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_OUTVCSTATE_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_VCSTATE_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_VCSTATE_HH__
 
-#include "mem/ruby/network/garnet/CommonTypes.hh"
-#include "mem/ruby/network/garnet/GarnetNetwork.hh"
+#include "mem/ruby/network/onyx/CommonTypes.hh"
+#include "mem/ruby/network/onyx/OnyxNetwork.hh"
 
 namespace gem5
 {
@@ -40,14 +40,14 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-class OutVcState
+class VcState
 {
   public:
-    //OutVcState constructor
-    OutVcState(int id, GarnetNetwork *network_ptr, uint32_t consumerVcs);
+    //VcState constructor
+    VcState(int id, OnyxNetwork *network_ptr, uint32_t consumerVcs);
 
     //get the number of credits (free slots) in an outvc
     int get_credit_count()          { return m_credit_count; }
@@ -85,8 +85,8 @@ class OutVcState
     int m_max_credit_count;
 };
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
 
-#endif //__MEM_RUBY_NETWORK_GARNET_0_OUTVCSTATE_HH__
+#endif //__MEM_RUBY_NETWORK_ONYX_0_VCSTATE_HH__
