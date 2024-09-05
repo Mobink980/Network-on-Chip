@@ -30,16 +30,16 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_NETWORKLINK_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_NETWORKLINK_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_NETLINK_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_NETLINK_HH__
 
 #include <iostream>
 #include <vector>
 
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/network/garnet/CommonTypes.hh"
-#include "mem/ruby/network/garnet/flitBuffer.hh"
-#include "params/NetworkLink.hh"
+#include "mem/ruby/network/onyx/CommonTypes.hh"
+#include "mem/ruby/network/onyx/chunkBuffer.hh"
+#include "params/NetLink.hh"
 #include "sim/clocked_object.hh"
 
 namespace gem5
@@ -48,24 +48,24 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-class GarnetNetwork;
+class OnyxNetwork;
 
-//NetworkLink inherites from ClockedObject and Consumer
-class NetworkLink : public ClockedObject, public Consumer
+//NetLink inherites from ClockedObject and Consumer
+class NetLink : public ClockedObject, public Consumer
 {
   public:
-    typedef NetworkLinkParams Params;
-    NetworkLink(const Params &p); //constructor
-    ~NetworkLink() = default; //destructor
+    typedef NetLinkParams Params;
+    NetLink(const Params &p); //constructor
+    ~NetLink() = default; //destructor
 
     //NetworkLink consumes flits
     void setLinkConsumer(Consumer *consumer);
     //setting the source queue (or flit buffer) on srcClockObject
     //for the NetworkLink
-    void setSourceQueue(flitBuffer *src_queue, ClockedObject *srcClockObject);
+    void setSourceQueue(chunkBuffer *src_queue, ClockedObject *srcClockObject);
     //number of VCs per Vnet (e.g., 4)
     virtual void setVcsPerVnet(uint32_t consumerVcs);
     //set the type of the link (int_, ext_in, ext_out, etc)
@@ -77,7 +77,7 @@ class NetworkLink : public ClockedObject, public Consumer
     //get the NetworkLink id
     int get_id() const { return m_id; }
     //get the buffer of the link
-    flitBuffer *getBuffer() { return &linkBuffer;}
+    chunkBuffer *getBuffer() { return &linkBuffer;}
     //link like buffer is a consumer, so it needs a wakeup() function
     virtual void wakeup();
 
@@ -94,8 +94,8 @@ class NetworkLink : public ClockedObject, public Consumer
     }
 
     //for peeking and getting the top flit from the linkBuffer
-    inline flit* peekLink() { return linkBuffer.peekTopFlit(); }
-    inline flit* consumeLink() { return linkBuffer.getTopFlit(); }
+    inline chunk* peekLink() { return linkBuffer.peekTopFlit(); }
+    inline chunk* consumeLink() { return linkBuffer.getTopFlit(); }
 
     bool functionalRead(Packet *pkt, WriteMask &mask);
     uint32_t functionalWrite(Packet *); //functional write
@@ -117,15 +117,15 @@ class NetworkLink : public ClockedObject, public Consumer
 
   protected:
     uint32_t m_virt_nets; //Vnets
-    flitBuffer linkBuffer; //link buffer (for holding flits)
+    chunkBuffer linkBuffer; //link buffer (for holding flits)
     Consumer *link_consumer; //link consumes flits
     //the queue or flitBuffer the link receives flits from
-    flitBuffer *link_srcQueue;
+    chunkBuffer *link_srcQueue;
 
 };
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
 
-#endif // __MEM_RUBY_NETWORK_GARNET_0_NETWORKLINK_HH__
+#endif // __MEM_RUBY_NETWORK_ONYX_0_NETLINK_HH__
