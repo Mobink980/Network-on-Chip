@@ -32,36 +32,36 @@ if not env['CONF']['RUBY']:
     Return()
 
 #=====================================================================
-SimObject('GarnetLink.py', enums=['CDCType'], sim_objects=[
-    'NetworkLink', 'CreditLink', 'NetworkBridge', 'GarnetIntLink',
-    'GarnetExtLink'])
+SimObject('OnyxLink.py', enums=['CDCType'], sim_objects=[
+    'NetLink', 'AckLink', 'NetBridge', 'OnyxIntLink',
+    'OnyxExtLink'])
 #=====================================================================
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-SimObject('GarnetNetwork.py', sim_objects=[
-    'GarnetNetwork', 'GarnetNetworkInterface', 'GarnetRouter',
-    'GarnetBus'])
+SimObject('OnyxNetwork.py', sim_objects=[
+    'OnyxNetwork', 'OnyxNetworkInterface', 'OnyxRouter',
+    'OnyxBus'])
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
-Source('GarnetLink.cc')
-Source('GarnetNetwork.cc')
-Source('InputUnit.cc')
-Source('NetworkInterface.cc')
-Source('NetworkLink.cc')
-Source('OutVcState.cc')
-Source('OutputUnit.cc')
-Source('Router.cc')
+Source('OnyxLink.cc')
+Source('OnyxNetwork.cc')
+Source('InportModule.cc')
+Source('InterfaceModule.cc')
+Source('NetLink.cc')
+Source('VcState.cc')
+Source('OutportModule.cc')
+Source('Switcher.cc')
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 Source('Bus.cc')
-Source('BusCrossbarSwitch.cc')
-Source('BusInputUnit.cc')
-Source('BusOutputUnit.cc')
-Source('BusSwitchAllocator.cc')
+Source('BusCrossbar.cc')
+Source('BusInport.cc')
+Source('BusOutport.cc')
+Source('BusSwitchManager.cc')
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-Source('RoutingUnit.cc')
-Source('SwitchAllocator.cc')
-Source('CrossbarSwitch.cc')
-Source('VirtualChannel.cc')
-Source('flitBuffer.cc')
-Source('flit.cc')
-Source('Credit.cc')
-Source('NetworkBridge.cc')
+Source('PathFinder.cc')
+Source('SwitchManager.cc')
+Source('CrossbarMatrix.cc')
+Source('VirtualPath.cc')
+Source('chunkBuffer.cc')
+Source('chunk.cc')
+Source('Ack.cc')
+Source('NetBridge.cc')
