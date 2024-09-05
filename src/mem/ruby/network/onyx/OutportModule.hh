@@ -29,8 +29,8 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_ONYX_0_OUTPUTMODULE_HH__
-#define __MEM_RUBY_NETWORK_ONYX_0_OUTPUTMODULE_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_OUTPORTMODULE_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_OUTPORTMODULE_HH__
 
 #include <iostream>
 #include <vector>
@@ -53,27 +53,27 @@ namespace onyx
 class AckLink;
 class Switcher;
 
-//OutputUnit, output port, and outport are the same thing.
-//OutputUnit inherites from Consumer
-class OutputModule : public Consumer
+//OutportModule, output port, and outport are the same thing.
+//OutportModule inherites from Consumer
+class OutportModule : public Consumer
 {
   public:
-    //OutputModule constructor
-    OutputModule(int id, PortDirection direction, Switcher *router,
+    //OutportModule constructor
+    OutportModule(int id, PortDirection direction, Switcher *router,
                uint32_t consumerVcs);
-    //OutputModule destructor
-    ~OutputModule() = default;
-    //set the output (network) link for the OutputUnit
+    //OutportModule destructor
+    ~OutportModule() = default;
+    //set the output (network) link for the OutportModule
     void set_out_link(NetLink *link);
-    //set the credit link for the OutputUnit
+    //set the credit link for the OutportModule
     void set_credit_link(AckLink *credit_link);
     //read input credit from downstream router if it is ready,
     //increment the credit in the appropriate output VC state,
     //mark output VC as free if the credit carries is_free_signal as true.
     void wakeup();
-    //get the OutputUnit network queue
+    //get the OutportModule network queue
     chunkBuffer* getOutQueue();
-    //printing the OutputUnit
+    //printing the OutportModule
     void print(std::ostream& out) const {};
     //for decrementing the credit in the appropriate output VC
     void decrement_credit(int out_vc);
@@ -96,14 +96,14 @@ class OutputModule : public Consumer
         return outVcState[vc].get_credit_count();
     }
 
-    //get the id of the output (network) link for the OutputUnit
+    //get the id of the output (network) link for the OutportModule
     inline int
     get_outlink_id()
     {
         return m_out_link->get_id();
     }
 
-    //set the state of the OutputUnit VC at current time
+    //set the state of the OutportModule VC at current time
     //(IDLE_, VC_AB_, ACTIVE_)
     inline void
     set_vc_state(VC_state_type state, int vc, Tick curTime)
@@ -111,7 +111,7 @@ class OutputModule : public Consumer
       outVcState[vc].setState(state, curTime);
     }
 
-    //check to see whether the state of a OutputUnit VC is IDLE_
+    //check to see whether the state of a OutportModule VC is IDLE_
     inline bool
     is_vc_idle(int vc, Tick curTime)
     {
@@ -121,7 +121,7 @@ class OutputModule : public Consumer
     //for inserting a flit into an output VC
     void insert_flit(chunk *t_flit);
 
-    //get the number of VCs per Vnet in the OutputUnit
+    //get the number of VCs per Vnet in the OutportModule
     inline int
     getVcsPerVnet()
     {
@@ -134,17 +134,17 @@ class OutputModule : public Consumer
     uint32_t functionalWrite(Packet *pkt);
 
   private:
-    //the router this OutputUnit is part of
+    //the router this OutportModule is part of
     Switcher *m_router;
-    //id of the OutputUnit (outport)
+    //id of the OutportModule (outport)
     GEM5_CLASS_VAR_USED int m_id;
-    //the direction of the OutputUnit or outport
+    //the direction of the OutportModule or outport
     PortDirection m_direction;
-    //number of VCs per Vnet in the OutputUnit
+    //number of VCs per Vnet in the OutportModule
     int m_vc_per_vnet;
-    //output (network) link of the OutputUnit (outport)
+    //output (network) link of the OutportModule (outport)
     NetLink *m_out_link;
-    //credit link of the OutputUnit (outport)
+    //credit link of the OutportModule (outport)
     AckLink *m_credit_link;
 
     // This is for the network link to consume
@@ -157,4 +157,4 @@ class OutputModule : public Consumer
 } // namespace ruby
 } // namespace gem5
 
-#endif // __MEM_RUBY_NETWORK_ONYX_0_OUTPUTMODULE_HH__
+#endif // __MEM_RUBY_NETWORK_ONYX_0_OUTPORTMODULE_HH__
