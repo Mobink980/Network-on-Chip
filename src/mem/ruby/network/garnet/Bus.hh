@@ -29,8 +29,8 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_BUS_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_BUS_HH__
+#ifndef __MEM_RUBY_NETWORK_GARNET_0_BROADCASTLINK_HH__
+#define __MEM_RUBY_NETWORK_GARNET_0_BROADCASTLINK_HH__
 
 #include <iostream>
 #include <memory>
@@ -46,7 +46,7 @@
 #include "mem/ruby/network/garnet/BusSwitchAllocator.hh"
 #include "mem/ruby/network/garnet/flit.hh"
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-#include "params/GarnetBus.hh"
+#include "params/GarnetBroadcastLink.hh"
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 namespace gem5
@@ -65,24 +65,24 @@ class CreditLink;
 class BusInputUnit;
 class BusOutputUnit;
 
-//class Bus inherites from both BasicBus and Consumer
-class Bus : public BasicBus, public Consumer
+//class BroadcastLink inherites from both BasicBus and Consumer
+class BroadcastLink : public BasicBus, public Consumer
 {
   public:
-    typedef GarnetBusParams Params;
-    Bus(const Params &p); //Bus constructor
+    typedef GarnetBroadcastLinkParams Params;
+    BroadcastLink(const Params &p); //BroadcastLink constructor
 
-    ~Bus() = default; //Bus destructor
+    ~BroadcastLink() = default; //BroadcastLink destructor
 
     //Loop through all InputUnits and call their wakeup()
     //Loop through all OutputUnits and call their wakeup()
     //Call SwitchAllocator's wakeup()
     //Call CrossbarSwitch's wakeup()
-    //The bus's wakeup function is called whenever any of its modules
+    //The BroadcastLink's wakeup function is called whenever any of its modules
     //(InputUnit, OutputUnit, SwitchAllocator, CrossbarSwitch) have a 
     //ready flit/credit to act upon this cycle.
     void wakeup();
-    //for printing this bus
+    //for printing this BroadcastLink
     void print(std::ostream& out) const {};
 
     //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -229,5 +229,5 @@ class Bus : public BasicBus, public Consumer
 } // namespace ruby
 } // namespace gem5
 
-#endif // __MEM_RUBY_NETWORK_GARNET_0_BUS_HH__
+#endif // __MEM_RUBY_NETWORK_GARNET_0_BROADCASTLINK_HH__
 
