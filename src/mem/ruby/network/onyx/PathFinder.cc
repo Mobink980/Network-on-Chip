@@ -28,13 +28,13 @@
  */
 
 
-#include "mem/ruby/network/garnet/RoutingUnit.hh"
+#include "mem/ruby/network/onyx/PathFinder.hh"
 
 #include "base/cast.hh"
 #include "base/compiler.hh"
 #include "debug/RubyNetwork.hh"
-#include "mem/ruby/network/garnet/InputUnit.hh"
-#include "mem/ruby/network/garnet/Router.hh"
+#include "mem/ruby/network/onyx/InportModule.hh"
+#include "mem/ruby/network/onyx/Switcher.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 //==================================
 #include <cmath>
@@ -48,20 +48,20 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-//RoutingUnit constructor
-RoutingUnit::RoutingUnit(Router *router)
+//PathFinder constructor
+PathFinder::PathFinder(Switcher *router)
 {
-    m_router = router; //set the router for this RoutingUnit
+    m_router = router; //set the router for this PathFinder
     m_routing_table.clear(); //clear m_routing_table vector
     m_weight_table.clear(); //clear m_weight_table vector
 }
 
 //add a routing_table_entry (a route) to the routing table
 void
-RoutingUnit::addRoute(std::vector<NetDest>& routing_table_entry)
+PathFinder::addRoute(std::vector<NetDest>& routing_table_entry)
 {
     //update the size of m_routing_table according to routing_table_entry
     if (routing_table_entry.size() > m_routing_table.size()) {
@@ -75,7 +75,7 @@ RoutingUnit::addRoute(std::vector<NetDest>& routing_table_entry)
 
 //add the link weight to m_weight_table
 void
-RoutingUnit::addWeight(int link_weight)
+PathFinder::addWeight(int link_weight)
 {
     m_weight_table.push_back(link_weight);
 }
@@ -83,7 +83,7 @@ RoutingUnit::addWeight(int link_weight)
 //Returns true if vnet is present in the vector of vnets,
 //or if the vector supports all vnets.
 bool
-RoutingUnit::supportsVnet(int vnet, std::vector<int> sVnets)
+PathFinder::supportsVnet(int vnet, std::vector<int> sVnets)
 {
     // If all vnets are supported, return true
     if (sVnets.size() == 0) {
@@ -100,13 +100,13 @@ RoutingUnit::supportsVnet(int vnet, std::vector<int> sVnets)
 }
 
 /*
- * This is the default routing algorithm in garnet.
+ * This is the default routing algorithm in onyx.
  * The routing table is populated during topology creation.
  * Routes can be biased via weight assignments in the topology file.
  * Correct weight assignments are critical to provide deadlock avoidance.
  */
 int
-RoutingUnit::lookupRoutingTable(int vnet, NetDest msg_destination)
+PathFinder::lookupRoutingTable(int vnet, NetDest msg_destination)
 {
     // First find all possible output link candidates.
     // For ordered vnet, just choose the first
@@ -171,7 +171,7 @@ RoutingUnit::lookupRoutingTable(int vnet, NetDest msg_destination)
 
 //add inport direction to the routing table
 void
-RoutingUnit::addInDirection(PortDirection inport_dirn, int inport_idx)
+PathFinder::addInDirection(PortDirection inport_dirn, int inport_idx)
 {
     m_inports_dirn2idx[inport_dirn] = inport_idx; //inport id
     m_inports_idx2dirn[inport_idx]  = inport_dirn; //inport direction
@@ -179,7 +179,7 @@ RoutingUnit::addInDirection(PortDirection inport_dirn, int inport_idx)
 
 //add outport direction to the routing table
 void
-RoutingUnit::addOutDirection(PortDirection outport_dirn, int outport_idx)
+PathFinder::addOutDirection(PortDirection outport_dirn, int outport_idx)
 {
     m_outports_dirn2idx[outport_dirn] = outport_idx; //outport id
     m_outports_idx2dirn[outport_idx]  = outport_dirn; //outport direction
@@ -191,7 +191,7 @@ RoutingUnit::addOutDirection(PortDirection outport_dirn, int outport_idx)
 // implementations using port directions rather than a static routing
 // table is provided here.
 int
-RoutingUnit::outportCompute(RouteInfo route, int inport,
+PathFinder::outportCompute(RouteInfo route, int inport,
                             PortDirection inport_dirn)
 {
     //the outport we want to send the flit to
@@ -203,7 +203,7 @@ RoutingUnit::outportCompute(RouteInfo route, int inport,
 
         //======================================================
         // std::cout << "=================================================\n";
-        // std::cout << "This flit has reached its destination (in RoutingUnit.cc).\n";
+        // std::cout << "This flit has reached its destination (in PathFinder.cc).\n";
         // std::cout << "Source router of the flit: R" << route.src_router <<"\n";
         // std::cout << "Destination router of the flit: R" << route.dest_router <<"\n";
         // std::cout << "Current router: R" << m_router->get_id() <<"\n";
@@ -220,7 +220,7 @@ RoutingUnit::outportCompute(RouteInfo route, int inport,
         return outport;
     }
 
-    // Routing Algorithm set in GarnetNetwork.py
+    // Routing Algorithm set in OnyxNetwork.py
     // Can be over-ridden from command line using --routing-algorithm = 1
     RoutingAlgorithm routing_algorithm =
         (RoutingAlgorithm) m_router->get_net_ptr()->getRoutingAlgorithm();
@@ -244,7 +244,7 @@ RoutingUnit::outportCompute(RouteInfo route, int inport,
 
 //Find the layer of a router based on its id
 int
-RoutingUnit::get_layer(int router_id)
+PathFinder::get_layer(int router_id)
 {
     int num_rows = m_router->get_net_ptr()->getNumRows();
     int num_cols = m_router->get_net_ptr()->getNumCols();
@@ -269,9 +269,9 @@ int getNextNumber(int bus_port) {
 
 // XYZ routing implemented using port directions.
 // Only for reference purpose in a Mesh.
-// By default Garnet uses the routing table.
+// By default Onyx uses the routing table.
 int
-RoutingUnit::outportComputeXY(RouteInfo route,
+PathFinder::outportComputeXY(RouteInfo route,
                               int inport,
                               PortDirection inport_dirn)
 {
@@ -394,13 +394,13 @@ RoutingUnit::outportComputeXY(RouteInfo route,
 // Template for implementing custom routing algorithm
 // using port directions. (Example adaptive)
 int
-RoutingUnit::outportComputeCustom(RouteInfo route,
+PathFinder::outportComputeCustom(RouteInfo route,
                                  int inport,
                                  PortDirection inport_dirn)
 {
     panic("%s placeholder executed", __FUNCTION__);
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
