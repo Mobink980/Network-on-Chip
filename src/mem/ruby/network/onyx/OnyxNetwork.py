@@ -29,13 +29,11 @@
 #
 
 from m5.citations import add_citation
-
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 from m5.objects.BasicRouter import (
     BasicBus,
     BasicRouter,
 )
-
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.Network import RubyNetwork
@@ -43,11 +41,11 @@ from m5.params import *
 from m5.proxy import *
 
 
-# GarnetNetwork inherites from RubyNetwork class (in Network.py)
-class GarnetNetwork(RubyNetwork):
-    type = "GarnetNetwork"
-    cxx_header = "mem/ruby/network/garnet/GarnetNetwork.hh"
-    cxx_class = "gem5::ruby::garnet::GarnetNetwork"
+# OnyxNetwork inherites from RubyNetwork class (in Network.py)
+class OnyxNetwork(RubyNetwork):
+    type = "OnyxNetwork"
+    cxx_header = "mem/ruby/network/onyx/OnyxNetwork.hh"
+    cxx_class = "gem5::ruby::onyx::OnyxNetwork"
 
     num_rows = Param.Int(0, "number of rows if 2D (mesh/torus/..) topology")
     num_columns = Param.Int(
@@ -63,16 +61,16 @@ class GarnetNetwork(RubyNetwork):
     routing_algorithm = Param.Int(0, "0: Weight-based Table, 1: XY, 2: Custom")
     enable_fault_model = Param.Bool(False, "enable network fault model")
     fault_model = Param.FaultModel(NULL, "network fault model")
-    garnet_deadlock_threshold = Param.UInt32(
+    onyx_deadlock_threshold = Param.UInt32(
         50000, "network-level deadlock threshold"
     )
 
 
-# GarnetNetworkInterface inherites from ClockedObject
-class GarnetNetworkInterface(ClockedObject):
-    type = "GarnetNetworkInterface"
-    cxx_class = "gem5::ruby::garnet::NetworkInterface"
-    cxx_header = "mem/ruby/network/garnet/NetworkInterface.hh"
+# OnyxNetworkInterface inherites from ClockedObject
+class OnyxNetworkInterface(ClockedObject):
+    type = "OnyxNetworkInterface"
+    cxx_class = "gem5::ruby::onyx::InterfaceModule"
+    cxx_header = "mem/ruby/network/onyx/InterfaceModule.hh"
 
     id = Param.UInt32("ID in relation to other network interfaces")
     vcs_per_vnet = Param.UInt32(
@@ -81,16 +79,16 @@ class GarnetNetworkInterface(ClockedObject):
     virt_nets = Param.UInt32(
         Parent.number_of_virtual_networks, "number of virtual networks"
     )
-    garnet_deadlock_threshold = Param.UInt32(
+    onyx_deadlock_threshold = Param.UInt32(
         Parent.garnet_deadlock_threshold, "network-level deadlock threshold"
     )
 
 
-# GarnetRouter inherites from BasicRouter
-class GarnetRouter(BasicRouter):
-    type = "GarnetRouter"
-    cxx_class = "gem5::ruby::garnet::Router"
-    cxx_header = "mem/ruby/network/garnet/Router.hh"
+# OnyxSwitcher inherites from BasicRouter
+class OnyxSwitcher(BasicRouter):
+    type = "OnyxSwitcher"
+    cxx_class = "gem5::ruby::onyx::Switcher"
+    cxx_header = "mem/ruby/network/onyx/Switcher.hh"
     vcs_per_vnet = Param.UInt32(
         Parent.vcs_per_vnet, "virtual channels per virtual network"
     )
@@ -103,11 +101,11 @@ class GarnetRouter(BasicRouter):
 
 
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-# GarnetBus inherites from BasicBus
-class GarnetBus(BasicBus):
-    type = "GarnetBus"
-    cxx_class = "gem5::ruby::garnet::Bus"
-    cxx_header = "mem/ruby/network/garnet/Bus.hh"
+# OnyxBus inherites from BasicBus
+class OnyxBus(BasicBus):
+    type = "OnyxBus"
+    cxx_class = "gem5::ruby::onyx::Bus"
+    cxx_header = "mem/ruby/network/onyx/Bus.hh"
     vcs_per_vnet = Param.UInt32(
         Parent.vcs_per_vnet, "virtual channels per virtual network"
     )
