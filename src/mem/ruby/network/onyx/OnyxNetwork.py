@@ -119,7 +119,7 @@ class OnyxBus(BasicBus):
 
 
 add_citation(
-    GarnetNetwork,
+    OnyxNetwork,
     """@inproceedings{Bharadwaj:2020:kite,
   author       = {Srikant Bharadwaj and
                   Jieming Yin and
