@@ -30,12 +30,12 @@
  */
 
 
-#include "mem/ruby/network/garnet/NetworkBridge.hh"
+#include "mem/ruby/network/onyx/NetBridge.hh"
 
 #include <cmath>
 
 #include "debug/RubyNetwork.hh"
-#include "params/GarnetIntLink.hh"
+#include "params/OnyxIntLink.hh"
 
 namespace gem5
 {
@@ -43,12 +43,12 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-//NetworkBridge constructor
-NetworkBridge::NetworkBridge(const Params &p)
-    :CreditLink(p)
+//NetBridge constructor
+NetBridge::NetBridge(const Params &p)
+    :AckLink(p)
 {
     //enable cdc
     enCdc = true;
@@ -82,11 +82,11 @@ NetworkBridge::NetworkBridge(const Params &p)
 
 //set the number of vcs per vnet
 void
-NetworkBridge::setVcsPerVnet(uint32_t consumerVcs)
+NetBridge::setVcsPerVnet(uint32_t consumerVcs)
 {
     DPRINTF(RubyNetwork, "VcsPerVnet VC: %d\n", consumerVcs);
     //call the setVcsPerVnet function of the NetworkLink class
-    NetworkLink::setVcsPerVnet(consumerVcs);
+    NetLink::setVcsPerVnet(consumerVcs);
     //bufffer_length = num_vnets * num_vcs_per_vnet
     lenBuffer.resize(consumerVcs * m_virt_nets);
     sizeSent.resize(consumerVcs * m_virt_nets);
@@ -100,7 +100,7 @@ NetworkBridge::setVcsPerVnet(uint32_t consumerVcs)
 
 //initialize NetworkBridge class variables
 void
-NetworkBridge::initBridge(NetworkBridge *coBrid, bool cdc_en, bool serdes_en)
+NetBridge::initBridge(NetBridge *coBrid, bool cdc_en, bool serdes_en)
 {
     coBridge = coBrid; //set the pointer to the coexisting bridge
     enCdc = cdc_en; //set the CDC enable/disable
@@ -108,13 +108,13 @@ NetworkBridge::initBridge(NetworkBridge *coBrid, bool cdc_en, bool serdes_en)
 }
 
 //NetworkBridge destructor
-NetworkBridge::~NetworkBridge()
+NetBridge::~NetBridge()
 {
 }
 
 //schedule a flit to traverse the link after latency cycles (for cdc)
 void
-NetworkBridge::scheduleFlit(flit *t_flit, Cycles latency)
+NetBridge::scheduleFlit(chunk *t_flit, Cycles latency)
 {
     //total latency in cycles
     Cycles totLatency = latency;
@@ -144,14 +144,14 @@ NetworkBridge::scheduleFlit(flit *t_flit, Cycles latency)
 
 //pushes the eCredit in extraCredit queue for vc
 void
-NetworkBridge::neutralize(int vc, int eCredit)
+NetBridge::neutralize(int vc, int eCredit)
 {
     extraCredit[vc].push(eCredit);
 }
 
 //to flitisize a flit (for SerDes) and sending it
 void
-NetworkBridge::flitisizeAndSend(flit *t_flit)
+NetBridge::flitisizeAndSend(chunk *t_flit)
 {
     // Serialize-Deserialize only if it is enabled
     if (enSerDes) {
@@ -223,7 +223,7 @@ NetworkBridge::flitisizeAndSend(flit *t_flit)
             DPRINTF(RubyNetwork, "Deserialize :%dB -----> %dB "
                 " vc:%d\n", cur_width, target_width, vc);
 
-            flit *fl = NULL;
+            chunk *fl = NULL;
             if (flitPossible) {
                 fl = t_flit->deserialize(lenBuffer[vc], num_flits,
                     target_width);
@@ -278,7 +278,7 @@ NetworkBridge::flitisizeAndSend(flit *t_flit)
             // num_flits could be zero for credits
             for (int i = 0; i < flitPossible; i++) {
                 // Ignore neutralized credits
-                flit *fl = t_flit->serialize(i, flitPossible, target_width);
+                chunk *fl = t_flit->serialize(i, flitPossible, target_width);
                 scheduleFlit(fl, serDesLatency);
                 DPRINTF(RubyNetwork, "Serialized to flit[%d of %d parts]:"
                 " %s\n", i+1, flitPossible, *fl);
@@ -302,9 +302,9 @@ NetworkBridge::flitisizeAndSend(flit *t_flit)
 //Check if CDC is enabled and schedule all the flits according to
 //the consumers clock domain.
 void
-NetworkBridge::wakeup()
+NetBridge::wakeup()
 {
-    flit *t_flit;
+    chunk *t_flit;
     //if the link queue has a ready flit
     if (link_srcQueue->isReady(curTick())) {
         //get the top flit from the link queue
@@ -321,6 +321,6 @@ NetworkBridge::wakeup()
     }
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
