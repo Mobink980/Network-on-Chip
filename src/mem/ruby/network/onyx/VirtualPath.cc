@@ -29,7 +29,7 @@
  */
 
 
-#include "mem/ruby/network/garnet/VirtualChannel.hh"
+#include "mem/ruby/network/onyx/VirtualPath.hh"
 
 namespace gem5
 {
@@ -37,11 +37,11 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
 //VC constructor
-VirtualChannel::VirtualChannel()
+VirtualPath::VirtualPath()
   : inputBuffer(), m_vc_state(IDLE_, Tick(0)), m_output_port(-1),
     m_enqueue_time(INFINITE_), m_output_vc(-1), m_broadcast_output_vcs()
 {
@@ -49,7 +49,7 @@ VirtualChannel::VirtualChannel()
 
 //set the vc state to idle (the VC is free)
 void
-VirtualChannel::set_idle(Tick curTime)
+VirtualPath::set_idle(Tick curTime)
 {
     m_vc_state.first = IDLE_;
     m_vc_state.second = curTime;
@@ -64,7 +64,7 @@ VirtualChannel::set_idle(Tick curTime)
 
 //set the vc state to active (the VC is in use)
 void
-VirtualChannel::set_active(Tick curTime)
+VirtualPath::set_active(Tick curTime)
 {
     m_vc_state.first = ACTIVE_;
     m_vc_state.second = curTime;
@@ -74,14 +74,14 @@ VirtualChannel::set_active(Tick curTime)
 //check the stage of the inputBuffer top flit at time and
 //see if it is a specific state
 bool
-VirtualChannel::need_stage(flit_stage stage, Tick time)
+VirtualPath::need_stage(flit_stage stage, Tick time)
 {
     if (inputBuffer.isReady(time)) {
         //make sure the vc state is active and the time is greater than
         //or equal to the time the active state was set
         assert(m_vc_state.first == ACTIVE_ && m_vc_state.second <= time);
         //peek the top flit from inputBuffer
-        flit *t_flit = inputBuffer.peekTopFlit();
+        chunk *t_flit = inputBuffer.peekTopFlit();
         //if the stage of the flit at time is the given stage, return true
         return(t_flit->is_stage(stage, time));
     }
@@ -90,18 +90,18 @@ VirtualChannel::need_stage(flit_stage stage, Tick time)
 }
 
 bool
-VirtualChannel::functionalRead(Packet *pkt, WriteMask &mask)
+VirtualPath::functionalRead(Packet *pkt, WriteMask &mask)
 {
     return inputBuffer.functionalRead(pkt, mask);
 }
 
 //updating inputBuffer flits with the data from the packet
 uint32_t
-VirtualChannel::functionalWrite(Packet *pkt)
+VirtualPath::functionalWrite(Packet *pkt)
 {
     return inputBuffer.functionalWrite(pkt);
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
