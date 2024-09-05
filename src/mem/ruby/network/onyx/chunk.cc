@@ -28,7 +28,7 @@
  */
 
 
-#include "mem/ruby/network/garnet/flit.hh"
+#include "mem/ruby/network/onyx/chunk.hh"
 
 #include "base/intmath.hh"
 #include "debug/RubyNetwork.hh"
@@ -39,11 +39,11 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
 // Constructor for the flit
-flit::flit(int packet_id, int id, int  vc, int vnet, RouteInfo route, int size,
+chunk::chunk(int packet_id, int id, int vc, int vnet, RouteInfo route, int size,
     MsgPtr msg_ptr, int MsgSize, uint32_t bWidth, Tick curTime)
 {
     //flit properties when creating a flit object
@@ -79,8 +79,8 @@ flit::flit(int packet_id, int id, int  vc, int vnet, RouteInfo route, int size,
 }
 
 //function for serializing a flit into parts
-flit *
-flit::serialize(int ser_id, int parts, uint32_t bWidth)
+chunk *
+chunk::serialize(int ser_id, int parts, uint32_t bWidth)
 {
     //ensure flit width is more than link bandwidth,
     //otherwise we won't be needing serialization.
@@ -95,7 +95,7 @@ flit::serialize(int ser_id, int parts, uint32_t bWidth)
     assert(new_id < new_size);
 
     //create the new flit by calling the constructor
-    flit *fl = new flit(m_packet_id, new_id, m_vc, m_vnet, m_route,
+    chunk *fl = new chunk(m_packet_id, new_id, m_vc, m_vnet, m_route,
                     new_size, m_msg_ptr, msgSize, bWidth, m_time);
     //set the enqueue_time and src_delay for the created flit
     fl->set_enqueue_time(m_enqueue_time);
@@ -104,8 +104,8 @@ flit::serialize(int ser_id, int parts, uint32_t bWidth)
 }
 
 //function for deserialization of parts into a flit
-flit *
-flit::deserialize(int des_id, int num_flits, uint32_t bWidth)
+chunk *
+chunk::deserialize(int des_id, int num_flits, uint32_t bWidth)
 {
     //ratio = div_ceiling(link_bandwidth/flit_width)
     int ratio = (int)divCeil((float)bWidth, (float)m_width);
@@ -116,7 +116,7 @@ flit::deserialize(int des_id, int num_flits, uint32_t bWidth)
     assert(new_id < new_size);
 
     //create the new flit by calling the constructor
-    flit *fl = new flit(m_packet_id, new_id, m_vc, m_vnet, m_route,
+    chunk *fl = new chunk(m_packet_id, new_id, m_vc, m_vnet, m_route,
                     new_size, m_msg_ptr, msgSize, bWidth, m_time);
     //set the enqueue_time and src_delay for the created flit
     fl->set_enqueue_time(m_enqueue_time);
@@ -127,7 +127,7 @@ flit::deserialize(int des_id, int num_flits, uint32_t bWidth)
 // Flit can be printed out for debugging purposes
 //printing flit information
 void
-flit::print(std::ostream& out) const
+chunk::print(std::ostream& out) const
 {
     out << "[flit:: ";
     out << "PacketId=" << m_packet_id << " ";
@@ -146,19 +146,19 @@ flit::print(std::ostream& out) const
 }
 
 bool
-flit::functionalRead(Packet *pkt, WriteMask &mask)
+chunk::functionalRead(Packet *pkt, WriteMask &mask)
 {
     Message *msg = m_msg_ptr.get();
     return msg->functionalRead(pkt, mask);
 }
 
 bool
-flit::functionalWrite(Packet *pkt)
+chunk::functionalWrite(Packet *pkt)
 {
     Message *msg = m_msg_ptr.get();
     return msg->functionalWrite(pkt);
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
