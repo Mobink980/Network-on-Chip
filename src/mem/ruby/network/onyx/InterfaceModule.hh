@@ -88,7 +88,7 @@ class InterfaceModule : public ClockedObject, public Consumer
     void print(std::ostream& out) const;
     //get the vnet for a vc
     int get_vnet(int vc);
-    //set or initialize a pointer to the GarnetNetwork
+    //set or initialize a pointer to the OnyxNetwork
     void init_net_ptr(OnyxNetwork *net_ptr) { m_net_ptr = net_ptr; }
 
     bool functionalRead(Packet *pkt, WriteMask &mask);
@@ -337,7 +337,7 @@ class InterfaceModule : public ClockedObject, public Consumer
 
 
   private:
-    //pointer to the GarnetNetwork
+    //pointer to the OnyxNetwork
     OnyxNetwork *m_net_ptr;
     //id of the NI or node (num_NIs = num_cores)
     const NodeID m_id;
