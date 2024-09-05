@@ -29,7 +29,7 @@
  */
 
 
-#include "mem/ruby/network/garnet/flitBuffer.hh"
+#include "mem/ruby/network/onyx/chunkBuffer.hh"
 
 namespace gem5
 {
@@ -37,24 +37,24 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
 //flitBuffer constructor (no size limit)
-flitBuffer::flitBuffer()
+chunkBuffer::chunkBuffer()
 {
     max_size = INFINITE_;
 }
 
 //flitBuffer constructor (with limited size)
-flitBuffer::flitBuffer(int maximum_size)
+chunkBuffer::chunkBuffer(int maximum_size)
 {
     max_size = maximum_size;
 }
 
 //check to see if the flitBuffer is empty
 bool
-flitBuffer::isEmpty()
+chunkBuffer::isEmpty()
 {
     return (m_buffer.size() == 0);
 }
@@ -63,10 +63,10 @@ flitBuffer::isEmpty()
 //greater than zero, and the time of the top flit of the
 //flitBuffer should be less than or equal to the current_time.
 bool
-flitBuffer::isReady(Tick curTime)
+chunkBuffer::isReady(Tick curTime)
 {
     if (m_buffer.size() != 0 ) {
-        flit *t_flit = peekTopFlit();
+        chunk *t_flit = peekTopFlit();
         if (t_flit->get_time() <= curTime)
             return true;
     }
@@ -75,28 +75,28 @@ flitBuffer::isReady(Tick curTime)
 
 //print the size of the flitBuffer
 void
-flitBuffer::print(std::ostream& out) const
+chunkBuffer::print(std::ostream& out) const
 {
     out << "[flitBuffer: " << m_buffer.size() << "] " << std::endl;
 }
 
 //check to see if the flitBuffer is full
 bool
-flitBuffer::isFull()
+chunkBuffer::isFull()
 {
     return (m_buffer.size() >= max_size);
 }
 
 //set the maximum size for the flitBuffer
 void
-flitBuffer::setMaxSize(int maximum)
+chunkBuffer::setMaxSize(int maximum)
 {
     max_size = maximum;
 }
 
 
 bool
-flitBuffer::functionalRead(Packet *pkt, WriteMask &mask)
+chunkBuffer::functionalRead(Packet *pkt, WriteMask &mask)
 {
     bool read = false;
     for (unsigned int i = 0; i < m_buffer.size(); ++i) {
@@ -111,7 +111,7 @@ flitBuffer::functionalRead(Packet *pkt, WriteMask &mask)
 //for writing the data of the packet into the messages of the
 //flitBuffer. It returns the number of functional writes.
 uint32_t
-flitBuffer::functionalWrite(Packet *pkt)
+chunkBuffer::functionalWrite(Packet *pkt)
 {
     uint32_t num_functional_writes = 0;
 
@@ -124,6 +124,6 @@ flitBuffer::functionalWrite(Packet *pkt)
     return num_functional_writes;
 }
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
