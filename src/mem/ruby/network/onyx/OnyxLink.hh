@@ -62,9 +62,9 @@ class OnyxIntLink : public BasicIntLink
 
     void print(std::ostream& out) const;
 
-    //Make the GarnetNetwork class a friend of GarnetIntLink.
-    //This gives GarnetNetwork access to all private members
-    //of GarnetIntLink class.
+    //Make the OnyxNetwork class a friend of OnyxIntLink.
+    //This gives OnyxNetwork access to all private members
+    //of OnyxIntLink class.
     friend class OnyxNetwork;
 
   protected:
@@ -113,9 +113,9 @@ class OnyxExtLink : public BasicExtLink
 
     void print(std::ostream& out) const;
 
-    //Make the GarnetNetwork class a friend of GarnetExtLink.
-    //This gives GarnetNetwork access to all private members
-    //of GarnetExtLink class.
+    //Make the OnyxNetwork class a friend of OnyxExtLink.
+    //This gives OnyxNetwork access to all private members
+    //of OnyxExtLink class.
     friend class OnyxNetwork;
 
   protected:
@@ -148,7 +148,7 @@ class OnyxExtLink : public BasicExtLink
 
 };
 
-//printing properties of a garnet external link
+//printing properties of a Onyx external link
 inline std::ostream&
 operator<<(std::ostream& out, const OnyxExtLink& obj)
 {
