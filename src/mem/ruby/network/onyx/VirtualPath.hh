@@ -29,14 +29,14 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_VIRTUALCHANNEL_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_VIRTUALCHANNEL_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_VIRTUALPATH_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_VIRTUALPATH_HH__
 
 #include <utility>
 #include <vector>
 
-#include "mem/ruby/network/garnet/CommonTypes.hh"
-#include "mem/ruby/network/garnet/flitBuffer.hh"
+#include "mem/ruby/network/onyx/CommonTypes.hh"
+#include "mem/ruby/network/onyx/chunkBuffer.hh"
 
 namespace gem5
 {
@@ -44,16 +44,16 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-class VirtualChannel
+class VirtualPath
 {
   public:
     //VC constructor
-    VirtualChannel();
+    VirtualPath();
     //VC destructor
-    ~VirtualChannel() = default;
+    ~VirtualPath() = default;
 
     //check the stage of the inputBuffer top flit at time and
     //see if it is a specific state
@@ -105,7 +105,7 @@ class VirtualChannel
 
     //insert a flit into the VC inputBuffer
     inline void
-    insertFlit(flit *t_flit)
+    insertFlit(chunk *t_flit)
     {
         inputBuffer.insert(t_flit);
     }
@@ -119,14 +119,14 @@ class VirtualChannel
     }
 
     //peek the top flit from the VC (i.e., inputBuffer)
-    inline flit*
+    inline chunk*
     peekTopFlit()
     {
         return inputBuffer.peekTopFlit();
     }
 
     //get the top flit from the VC (i.e., inputBuffer)
-    inline flit*
+    inline chunk*
     getTopFlit()
     {
         return inputBuffer.getTopFlit();
@@ -139,7 +139,7 @@ class VirtualChannel
 
   private:
     //the flitBuffer for holding the flits of the VC
-    flitBuffer inputBuffer;
+    chunkBuffer inputBuffer;
     //state of the virtual channel (VC)
     std::pair<VC_state_type, Tick> m_vc_state;
     //outport of the vc
@@ -154,8 +154,8 @@ class VirtualChannel
     //========================================
 };
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
 
-#endif // __MEM_RUBY_NETWORK_GARNET_0_VIRTUALCHANNEL_HH__
+#endif // __MEM_RUBY_NETWORK_ONYX_0_VIRTUALPATH_HH__
