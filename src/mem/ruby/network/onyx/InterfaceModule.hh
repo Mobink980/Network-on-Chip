@@ -354,7 +354,7 @@ class InterfaceModule : public ClockedObject, public Consumer
     //to check for possible network deadlock in a vnet
     int m_deadlock_threshold;
     //for knowing the states of the VCs
-    std::vector<OutVcState> outVcState;
+    std::vector<VcState> outVcState;
 
     //number of stalls
     std::vector<int> m_stall_count;
@@ -399,7 +399,7 @@ class InterfaceModule : public ClockedObject, public Consumer
     OutputPort *getOutportForVnet(int vnet);
 };
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
 
