@@ -29,17 +29,17 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_0_OUTPUTUNIT_HH__
-#define __MEM_RUBY_NETWORK_GARNET_0_OUTPUTUNIT_HH__
+#ifndef __MEM_RUBY_NETWORK_ONYX_0_OUTPUTMODULE_HH__
+#define __MEM_RUBY_NETWORK_ONYX_0_OUTPUTMODULE_HH__
 
 #include <iostream>
 #include <vector>
 
 #include "base/compiler.hh"
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/network/garnet/CommonTypes.hh"
-#include "mem/ruby/network/garnet/NetworkLink.hh"
-#include "mem/ruby/network/garnet/OutVcState.hh"
+#include "mem/ruby/network/onyx/CommonTypes.hh"
+#include "mem/ruby/network/onyx/NetLink.hh"
+#include "mem/ruby/network/onyx/VcState.hh"
 
 namespace gem5
 {
@@ -47,32 +47,32 @@ namespace gem5
 namespace ruby
 {
 
-namespace garnet
+namespace onyx
 {
 
-class CreditLink;
-class Router;
+class AckLink;
+class Switcher;
 
 //OutputUnit, output port, and outport are the same thing.
 //OutputUnit inherites from Consumer
-class OutputUnit : public Consumer
+class OutputModule : public Consumer
 {
   public:
-    //OutputUnit constructor
-    OutputUnit(int id, PortDirection direction, Router *router,
+    //OutputModule constructor
+    OutputModule(int id, PortDirection direction, Switcher *router,
                uint32_t consumerVcs);
-    //OutputUnit destructor
-    ~OutputUnit() = default;
+    //OutputModule destructor
+    ~OutputModule() = default;
     //set the output (network) link for the OutputUnit
-    void set_out_link(NetworkLink *link);
+    void set_out_link(NetLink *link);
     //set the credit link for the OutputUnit
-    void set_credit_link(CreditLink *credit_link);
+    void set_credit_link(AckLink *credit_link);
     //read input credit from downstream router if it is ready,
     //increment the credit in the appropriate output VC state,
     //mark output VC as free if the credit carries is_free_signal as true.
     void wakeup();
     //get the OutputUnit network queue
-    flitBuffer* getOutQueue();
+    chunkBuffer* getOutQueue();
     //printing the OutputUnit
     void print(std::ostream& out) const {};
     //for decrementing the credit in the appropriate output VC
@@ -119,7 +119,7 @@ class OutputUnit : public Consumer
     }
 
     //for inserting a flit into an output VC
-    void insert_flit(flit *t_flit);
+    void insert_flit(chunk *t_flit);
 
     //get the number of VCs per Vnet in the OutputUnit
     inline int
@@ -135,7 +135,7 @@ class OutputUnit : public Consumer
 
   private:
     //the router this OutputUnit is part of
-    Router *m_router;
+    Switcher *m_router;
     //id of the OutputUnit (outport)
     GEM5_CLASS_VAR_USED int m_id;
     //the direction of the OutputUnit or outport
@@ -143,18 +143,18 @@ class OutputUnit : public Consumer
     //number of VCs per Vnet in the OutputUnit
     int m_vc_per_vnet;
     //output (network) link of the OutputUnit (outport)
-    NetworkLink *m_out_link;
+    NetLink *m_out_link;
     //credit link of the OutputUnit (outport)
-    CreditLink *m_credit_link;
+    AckLink *m_credit_link;
 
     // This is for the network link to consume
-    flitBuffer outBuffer;
+    chunkBuffer outBuffer;
     // vc state of downstream router
-    std::vector<OutVcState> outVcState;
+    std::vector<VcState> outVcState;
 };
 
-} // namespace garnet
+} // namespace onyx
 } // namespace ruby
 } // namespace gem5
 
-#endif // __MEM_RUBY_NETWORK_GARNET_0_OUTPUTUNIT_HH__
+#endif // __MEM_RUBY_NETWORK_ONYX_0_OUTPUTMODULE_HH__
