@@ -80,7 +80,7 @@ class OnyxNetworkInterface(ClockedObject):
         Parent.number_of_virtual_networks, "number of virtual networks"
     )
     onyx_deadlock_threshold = Param.UInt32(
-        Parent.garnet_deadlock_threshold, "network-level deadlock threshold"
+        Parent.onyx_deadlock_threshold, "network-level deadlock threshold"
     )
 
 
