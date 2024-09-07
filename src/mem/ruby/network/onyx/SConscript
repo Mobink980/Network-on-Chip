@@ -56,6 +56,7 @@ Source('BusCrossbar.cc')
 Source('BusInport.cc')
 Source('BusOutport.cc')
 Source('BusSwitchManager.cc')
+Source('RoutingTable.cc')
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 Source('PathFinder.cc')
 Source('SwitchManager.cc')
