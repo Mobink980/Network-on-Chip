@@ -37,7 +37,6 @@
 
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/network/onyx/CommonTypes.hh"
-#include "mem/ruby/network/onyx/VirtualPath.hh"
 
 namespace gem5
 {
@@ -61,19 +60,19 @@ class BusSwitchManager : public Consumer
     //arbitrate inports (SA-I), places a request from the VC in
     //each inport to the outport it wants, arbitrate outports (SA-II),
     //read the flit out from the input vc, and send it to the CrossbarSwitch,
-    //send an increment_credit signal to the upstream router for this input vc.
+    //send an increment_credit signal to the upstream bus for this input vc.
     void wakeup();
-    //initializing SwitchAllocator class variables
+    //initializing BusSwitchManager class variables
     void init();
     //Clear the request vector within the allocator at end of SA-II.
     //Was populated by SA-I.
     void clear_request_vector();
-    //Wakeup the router next cycle to perform SA again
+    //Wakeup the bus next cycle to perform SA again
     //if there are flits ready.
     void check_for_wakeup();
     //get the vnet of an input vc
     int get_vnet (int invc);
-    //for printing the SwitchAllocator
+    //for printing the BusSwitchManager
     void print(std::ostream& out) const {};
     //SA-I: Loop through all input VCs at every
     //inport, and select one in a round-robin manner.
@@ -82,10 +81,9 @@ class BusSwitchManager : public Consumer
     //(that placed a request during SA-I) as the winner for this
     //outport in a round robin manner.
     void arbitrate_outports();
-    
     //Check to see if a flit in an invc is allowed to be sent
+    //to its desired output
     bool send_allowed(int inport, int invc, int outport, int outvc);
-    
     //Assign a free VC to the winner of the outport (for HEAD/HEAD_TAIL flits)
     int vc_allocate(int outport, int inport, int invc);
 
@@ -102,11 +100,11 @@ class BusSwitchManager : public Consumer
         return m_output_arbiter_activity;
     }
 
-    //resetting SwitchAllocator stats
+    //resetting BusSwitchManager stats
     void resetStats();
 
   private:
-    //number of inports/outports in the router
+    //number of inports/outports in the bus
     int m_num_inports, m_num_outports;
     //number of VCs; how many VCs per vnet
     int m_num_vcs, m_vc_per_vnet;
@@ -114,23 +112,16 @@ class BusSwitchManager : public Consumer
     //input_arbiter/output_arbiter activity stats
     double m_input_arbiter_activity, m_output_arbiter_activity;
 
-    //the bus this SwitchAllocator is a part of
+    //the bus this BusSwitchManager is a part of
     Bus *m_bus;
     //to pick the invc we're choosing from every inport
     //in a round-robin manner
     std::vector<int> m_round_robin_invc;
     //for choosing an inport in a round-robin manner
     std::vector<int> m_round_robin_inport;
-    //=========================================================
-    //to check whether an inport has a request to broadcast
-    std::vector<bool> m_has_request;
-    //to check whether there is a broadcast available in this cycle
-    bool broadcast_this_cycle;
-    //the inport that has won the broadcast
-    int m_inport_broadcast;
-    //the winner vc in the inport that has won the broadcast
-    int m_vc_broadcast;
-    //=========================================================
+    //to hold each inport (the winning invc in that inport) wants
+    //what outport in a cycle
+    std::vector<int> m_port_requests;
     //to hold the winning invc in each inport
     std::vector<int> m_vc_winners;
 };
