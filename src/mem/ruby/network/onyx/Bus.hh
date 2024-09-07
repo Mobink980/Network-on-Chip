@@ -38,16 +38,14 @@
 
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/NetDest.hh"
-//BasicBus is defined in BasicRouter.hh
-#include "mem/ruby/network/BasicRouter.hh"
+#include "mem/ruby/network/BasicBus.hh"
 #include "mem/ruby/network/onyx/CommonTypes.hh"
 #include "mem/ruby/network/onyx/BusCrossbar.hh"
 #include "mem/ruby/network/onyx/OnyxNetwork.hh"
+#include "mem/ruby/network/onyx/RoutingTable.hh"
 #include "mem/ruby/network/onyx/BusSwitchManager.hh"
 #include "mem/ruby/network/onyx/chunk.hh"
-//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 #include "params/OnyxBus.hh"
-//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 namespace gem5
 {
@@ -78,49 +76,42 @@ class Bus : public BasicBus, public Consumer
     //Loop through all OutputUnits and call their wakeup()
     //Call SwitchAllocator's wakeup()
     //Call CrossbarSwitch's wakeup()
-    //The bus's wakeup function is called whenever any of its modules
+    //The router's wakeup function is called whenever any of its modules
     //(InputUnit, OutputUnit, SwitchAllocator, CrossbarSwitch) have a
     //ready flit/credit to act upon this cycle.
     void wakeup();
-    //for printing this bus
+    //for printing this Bus
     void print(std::ostream& out) const {};
-
-    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-    //This function grants the switch to an inport, so the flit could pass
-    //the crossbar.
-    // void grant_switch(flit *t_flit);
-
-    //This function grants the switch to an inport, so the flit could pass
-    //the crossbar.
-    void grant_switch(int inport, chunk *t_flit);
-    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
     //calls the init function of BasicBus,
     //SwitchAllocator, and CrossbarSwitch
     void init();
-    //add an inport to the bus
+    //add an inport to the router
     void addInPort(PortDirection inport_dirn, NetLink *link,
                    AckLink *credit_link);
-    //add an outport to the bus
+    //add an outport to the router
     void addOutPort(PortDirection outport_dirn, NetLink *link,
                     std::vector<NetDest>& routing_table_entry,
                     int link_weight, AckLink *credit_link,
                     uint32_t consumerVcs);
 
-    //get the latency of the bus in cycles
+    //get the latency of the router in cycles
     Cycles get_pipe_stages(){ return m_latency; }
-    //get the number of vcs for bus
+    //get the number of vcs for router
     uint32_t get_num_vcs()       { return m_num_vcs; }
-    //get the number of vnets for bus
+    //get the number of vnets for router
     uint32_t get_num_vnets()     { return m_virtual_networks; }
-    //get the number of vcs per vnet for bus
+    //get the number of vcs per vnet for router
     uint32_t get_vc_per_vnet()   { return m_vc_per_vnet; }
-    //get the number of bus inports
+    //get the number of router inports
     int get_num_inports()   { return m_input_unit.size(); }
-    //get the number of bus outports
+    //get the number of router outports
     int get_num_outports()  { return m_output_unit.size(); }
-    //get the id of the bus
+    //get the id of the router
     int get_id()            { return m_id; }
+
+    //get the layer of a router based on its id
+    int get_router_layer(int router_id);
 
     //initialize the pointer to the OnyxNetwork
     void init_net_ptr(OnyxNetwork* net_ptr)
@@ -149,7 +140,7 @@ class Bus : public BasicBus, public Consumer
         return m_output_unit[port].get();
     }
 
-    //get the link bandwidth for the bus
+    //get the link bandwidth for the router
     int getBitWidth() { return m_bit_width; }
 
     //get the direction of an outport
@@ -157,7 +148,12 @@ class Bus : public BasicBus, public Consumer
     //get the direction of an inport
     PortDirection getInportDirection(int inport);
 
-    //This function gives the bus, time cycles delay.
+    //compute the route for the flit by having RouteInfo, inport, and PortDirection
+    int route_compute(RouteInfo route, int inport, PortDirection direction);
+    //This function grants the switch to an inport, so the flit could pass
+    //the crossbar.
+    void grant_switch(int inport, chunk *t_flit);
+    //This function gives the router, time cycles delay.
     void schedule_wakeup(Cycles time);
 
     //Getting the direction of a port as a string
@@ -168,10 +164,10 @@ class Bus : public BasicBus, public Consumer
     //For printing aggregate fault probability based on temperature.
     void printAggregateFaultProbability(std::ostream& out);
 
-    //This function is for creating statistics for every bus
+    //This function is for creating statistics for every router
     //in the stats.txt file.
     void regStats();
-    //This function collates the stats for the bus.
+    //This function collates the stats for the router.
     void collateStats();
     //Resetting statistics for inports, crossbarSwitch, and switchAllocator.
     void resetStats();
@@ -193,23 +189,25 @@ class Bus : public BasicBus, public Consumer
     uint32_t functionalWrite(Packet *);
 
   private:
-    //latency of this bus
+    //latency of this router
     Cycles m_latency;
     //number of vnets, vcs, and vcs_per_vnet
     uint32_t m_virtual_networks, m_vc_per_vnet, m_num_vcs;
-    //link bandwidth of the bus
+    //link bandwidth of the router
     uint32_t m_bit_width;
     //pointer to the OnyxNetwork
     OnyxNetwork *m_network_ptr;
 
-    //SwitchAllocator of this bus
+    //RoutingUnit of this router
+    RoutingTable routingUnit;
+    //SwitchAllocator of this router
     BusSwitchManager switchAllocator;
-    //CrossbarSwitch of this bus
+    //CrossbarSwitch of this router
     BusCrossbar crossbarSwitch;
 
-    //vector containing the bus inports
+    //vector containing the router inports
     std::vector<std::shared_ptr<BusInport>> m_input_unit;
-    //vector containing the bus outports
+    //vector containing the router outports
     std::vector<std::shared_ptr<BusOutport>> m_output_unit;
 
     // Statistical variables required for power computations
