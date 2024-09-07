@@ -37,10 +37,6 @@
 #include "mem/ruby/network/onyx/BusOutport.hh"
 #include "mem/ruby/network/onyx/Bus.hh"
 
-//==================================
-#include <iostream>
-//==================================
-
 namespace gem5
 {
 
@@ -54,7 +50,7 @@ namespace onyx
 BusSwitchManager::BusSwitchManager(Bus *bus)
     : Consumer(bus)
 {
-    //set the bus for this SwitchAllocator
+    //set the bus for this BusSwitchManager
     m_bus = bus;
     //set the number of vcs
     m_num_vcs = m_bus->get_num_vcs();
@@ -66,7 +62,7 @@ BusSwitchManager::BusSwitchManager(Bus *bus)
     m_output_arbiter_activity = 0;
 }
 
-//initializing SwitchAllocator class variables
+//initializing BusSwitchManager class variables
 void
 BusSwitchManager::init()
 {
@@ -79,28 +75,17 @@ BusSwitchManager::init()
     //set the size of m_round_robin_invc to the size of inports
     //(we choose one input vc from each inport)
     m_round_robin_invc.resize(m_num_inports);
-    //===============================================================
-    //set the size of m_has_request to the size of inports
+    //set the size of m_port_requests to the size of inports
     //(one request from each inport is sent to outports every cycle)
-    m_has_request.resize(m_num_inports);
-    //at first, there is no broadcast available
-    broadcast_this_cycle = false;
-    //initialize the inport of the broadcast
-    m_inport_broadcast = -1;
-    //initialize the vc of the broadcast
-    m_vc_broadcast = -1;
-
-    //===============================================================
+    m_port_requests.resize(m_num_inports);
     //set the size of m_vc_winners to the size of inports
     //(one vc wins in each inport)
     m_vc_winners.resize(m_num_inports);
 
-    //initialize m_round_robin_invc, m_has_request, m_vc_winners
+    //initialize m_round_robin_invc, m_port_requests, m_vc_winners
     for (int i = 0; i < m_num_inports; i++) {
         m_round_robin_invc[i] = 0;
-        //=================================
-        m_has_request[i] = false;
-        //=================================
+        m_port_requests[i] = -1;
         m_vc_winners[i] = -1;
     }
     //initialize m_round_robin_inport
@@ -110,7 +95,7 @@ BusSwitchManager::init()
 }
 
 /*
- * The wakeup function of the SwitchAllocator performs a 2-stage
+ * The wakeup function of the BusSwitchManager performs a 2-stage
  * seperable switch allocation. At the end of the 2nd stage, a free
  * output VC is assigned to the winning flits of each output port.
  * There is no separate VCAllocator stage like the one in garnet1.0.
@@ -122,6 +107,7 @@ BusSwitchManager::wakeup()
 {
     arbitrate_inports(); // First stage of allocation
     arbitrate_outports(); // Second stage of allocation
+
     //Clear the request vector within the allocator at end of SA-II.
     //Was populated by SA-I.
     clear_request_vector();
@@ -143,87 +129,43 @@ BusSwitchManager::wakeup()
 void
 BusSwitchManager::arbitrate_inports()
 {
-    bool shouldBreak = false;
-    // std::cout << "Number of VCs: " <<m_num_vcs<< ".\n";
-    // std::cout << "Number of Vnets: " <<m_bus->get_num_vnets()<< ".\n";
-    std::cout << "Number of VCs per vnet: " <<m_vc_per_vnet<< ".\n";
-
-    // Select a VC from each inport in a round robin manner
+    // Select a VC from each input in a round robin manner
     // Independent arbiter at each input port
-    for (int inport = 0; inport < m_num_inports && !shouldBreak; inport++) {
-        //the round-robin pinter is on what vc at this inport
+    for (int inport = 0; inport < m_num_inports; inport++) {
+        //the pointer is on what vc at this inport (e.g., third vc)
         int invc = m_round_robin_invc[inport];
 
-        for (int invc_iter = 0; invc_iter < m_num_vcs  && !shouldBreak; invc_iter++) {
+        for (int invc_iter = 0; invc_iter < m_num_vcs; invc_iter++) {
             //get the InputUnit with the inport number from
-            //the bus this SwitchAllocator is a part of
+            //the bus this BusSwitchManager is a part of
             auto input_unit = m_bus->getInputUnit(inport);
 
-            // std::cout << "+++++++++++++++++++++++++++++++++++++++++++++\n";
-            // std::cout << "Checking invc " <<invc<< " from inport "<<inport<<" for broadcast.\n";
-            // std::cout << "+++++++++++++++++++++++++++++++++++++++++++++\n";
             //if the top flit in invc in input_unit is currently
             //in SwitchAllocation stage
             if (input_unit->need_stage(invc, SA_, curTick())) {
+                // This flit is in SA stage
 
-                //==================================================
-                //checking the type of flit for printing
-                chunk *my_flit = input_unit->peekTopFlit(invc);
-                std::cout << "Type of the flit in the invc is: " <<my_flit->get_type()<< "\n";
-                //==================================================
+                //get the outport the flit in invc wants to go to
+                int outport = input_unit->get_outport(invc);
+                //get the output vc the flit in invc wants to go to
+                // (ex: fifth outvc in the third outport)
+                int outvc = input_unit->get_outvc(invc);
 
-                bool broadcast = true;
-                //if the outvc vector is not empty for this invc, check them
-                if (input_unit->is_outvc_allocated(invc)) {
-                    for (int outport = 0; outport < m_num_outports; outport++) {
-                        //get the outvc for this inport
-                        int outvc = input_unit->get_broadcast_outvc(invc, outport);
-                        //check whether we can send to this outvc in this outport
-                        bool port_request = send_allowed(inport, invc, outport, outvc);
-                        //if we can't send to one of the outports, then can't broadcast
-                        if (!port_request) {
-                            std::cout << "*********************************************\n";
-                            std::cout << "Top flit in invc " <<invc<< " from inport "<<inport<<" cannot go to outvc " <<outvc<< " of outport " <<outport<<".\n";
-                            std::cout << "*********************************************\n";
-                            broadcast = false;
-                        }
-                    }
-                } else {
-                    //if the outvc vector for this invc is empty,
-                    //then all the outvcs should be -1
-                    for (int outport = 0; outport < m_num_outports; outport++) {
-                        //get the outvc for this inport
-                        int outvc = -1;
-                        //check whether we can send to this outvc in this outport
-                        bool port_request = send_allowed(inport, invc, outport, outvc);
-                        //if we can't send to one of the outports, then can't broadcast
-                        if (!port_request) {
-                            std::cout << "*********************************************\n";
-                            std::cout << "Top flit in invc " <<invc<< " from inport "<<inport<<" cannot find a free outvc in outport " <<outport<<".\n";
-                            std::cout << "*********************************************\n";
-                            broadcast = false;
-                        }
-                    }
-                }
+                // Check if the flit in this InputVC is allowed to be sent.
+                // send_allowed conditions are described in that function.
+                bool make_request =
+                    send_allowed(inport, invc, outport, outvc);
 
-
-                if(broadcast) {
-                    std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
-                    std::cout << "Top flit in invc " <<invc<< " from inport "<<inport<<" could go to all the outports.\n";
-                    std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
+                if (make_request) { //if we're allowed to send
                     //increment the input_arbiter activity
                     m_input_arbiter_activity++;
-                    //we have a broadcast request this cycle
-                    broadcast_this_cycle = true;
-                    //update inport broadcast
-                    m_inport_broadcast = inport;
-                    //update vc broadcast
-                    m_vc_broadcast = invc;
-                    //got one winner vc for broadcast this cycle
-                    shouldBreak = true;
+                    //allocate outport to inport
+                    m_port_requests[inport] = outport;
+                    //the winner of inport in this round is invc
+                    m_vc_winners[inport] = invc;
 
+                    break; // got one vc winner for this port
                 }
-                //======================================================
             }
 
             invc++; //choose the next invc in inport next time
@@ -231,12 +173,6 @@ BusSwitchManager::arbitrate_inports()
             if (invc >= m_num_vcs)
                 invc = 0;
         }
-    }
-
-    if (broadcast_this_cycle == false) {
-        std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-        std::cout << "No broadcast for this cycle.\n";
-        std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
     }
 }
 
@@ -256,122 +192,125 @@ BusSwitchManager::arbitrate_inports()
 void
 BusSwitchManager::arbitrate_outports()
 {
-    //we need to traverse the outports only if there's a winner vc
-    if (broadcast_this_cycle) {
-        //the inport that has won the broadcast
-        int inport = m_inport_broadcast;
-        //the winner vc in that inport
-        int invc = m_vc_broadcast;
+    // Now there are a set of input vc requests for output vcs.
+    // Again do round robin arbitration on these requests.
+    // Independent arbiter at each output port
+    for (int outport = 0; outport < m_num_outports; outport++) {
+        //choose an inport in a round-robin manner
+        int inport = m_round_robin_inport[outport];
 
-        //get the InputUnit with the inport number from
-        //the bus this SwitchAllocator is a part of
-        auto input_unit = m_bus->getInputUnit(inport);
+        for (int inport_iter = 0; inport_iter < m_num_inports;
+                 inport_iter++) {
 
-        // remove flit from Input VC
-        chunk *t_flit = input_unit->getTopFlit(invc);
+            //if inport has a request this cycle for outport
+            if (m_port_requests[inport] == outport) {
+                //get the OutputUnit with the outport number from
+                //the bus this BusSwitchManager is a part of
+                auto output_unit = m_bus->getOutputUnit(outport);
+                //get the InputUnit with the inport number from
+                //the bus this BusSwitchManager is a part of
+                auto input_unit = m_bus->getInputUnit(inport);
 
-        // Update Round Robin pointer to the next VC
-        // We do it here to keep it fair.
-        // Only the VC which got switch traversal
-        // is updated.
+                // get the winner vc for this inport
+                int invc = m_vc_winners[inport];
 
-        m_round_robin_invc[inport] = 0;
+                //get the outvc for this invc
+                int outvc = input_unit->get_outvc(invc);
+                //if no outvc is already assigned to the flit in invc
+                //for HEAD/HEAD_TAIL flits
+                if (outvc == -1) {
+                    // VC Allocation - select any free VC from outport
+                    outvc = vc_allocate(outport, inport, invc);
+                }
 
-        //vector containing the output vcs for an invc
-        std::vector<int> outvcs;
-        // Make sure the vector is empty
-        outvcs.clear();
-        //if the outvcs are already allocated, retrieve them
-        if (input_unit->is_outvc_allocated(invc)) {
-            std::cout << "#############################################\n";
-            std::cout << "Outvcs already allocated to this invc are:\n";
-            for (int outport = 0; outport < m_num_outports; outport++) {
-                outvcs.push_back(input_unit->get_broadcast_outvc(invc, outport));
-                std::cout << outvcs[outport] <<", ";
+                // remove flit from Input VC
+                chunk *t_flit = input_unit->getTopFlit(invc);
+                //printing what just happened
+                DPRINTF(RubyNetwork, "BusSwitchManager at Router %d "
+                                     "granted outvc %d at outport %d "
+                                     "to invc %d at inport %d to flit %s at "
+                                     "cycle: %lld\n",
+                        m_bus->get_id(), outvc,
+                        m_bus->getPortDirectionName(
+                            output_unit->get_direction()),
+                        invc,
+                        m_bus->getPortDirectionName(
+                            input_unit->get_direction()),
+                            *t_flit,
+                        m_bus->curCycle());
+
+
+                // Update outport field in the flit since this is
+                // used by CrossbarSwitch code to send it out of
+                // correct outport.
+                // Note: post route compute in InputUnit,
+                // outport is updated in VC, but not in flit
+                t_flit->set_outport(outport);
+
+                // set outvc (i.e., invc for next hop) in flit
+                // (This was updated in VC by vc_allocate, but not in flit)
+                t_flit->set_vc(outvc);
+
+                // decrement credit in outvc (i.e., invc of the next bus)
+                output_unit->decrement_credit(outvc);
+
+                // flit ready for Switch Traversal
+                //change the flit stage from SA_ to ST_
+                t_flit->advance_stage(ST_, curTick());
+                //grant the switch (crossbar) to t_flit
+                m_bus->grant_switch(inport, t_flit);
+                //increment the activity of output_arbiter
+                m_output_arbiter_activity++;
+
+                if ((t_flit->get_type() == TAIL_) ||
+                    t_flit->get_type() == HEAD_TAIL_) {
+
+                    // This Input VC should now be empty
+                    assert(!(input_unit->isReady(invc, curTick())));
+
+                    // Free this VC (change invc state from active to idle)
+                    //this invc became free and now is available for outvc allocation
+                    input_unit->set_vc_idle(invc, curTick());
+
+                    // Send a credit back
+                    // along with the information that this VC is now idle
+                    input_unit->increment_credit(invc, true, curTick());
+                } else { //flit type is HEAD or BODY
+                    // Send a credit back
+                    // but do not indicate that the VC is idle
+                    input_unit->increment_credit(invc, false, curTick());
+                }
+
+                // remove this request
+                m_port_requests[inport] = -1;
+
+                // Update Round Robin pointer
+                //go to the next inport for this outport (we now check invcs
+                //in this inport to see if any flit needs this outport)
+                m_round_robin_inport[outport] = inport + 1;
+                //start from the beginning again (round-robin)
+                if (m_round_robin_inport[outport] >= m_num_inports)
+                    m_round_robin_inport[outport] = 0;
+
+                // Update Round Robin pointer to the next VC
+                // We do it here to keep it fair.
+                // Only the VC which got switch traversal
+                // is updated.
+                m_round_robin_invc[inport] = invc + 1; //go to the next invc
+                //start from the beginning again (round-robin)
+                if (m_round_robin_invc[inport] >= m_num_vcs)
+                    m_round_robin_invc[inport] = 0;
+
+
+                break; // got a input winner for this outport
             }
-            std::cout << "#############################################\n";
 
-        } else {
-            //if outvcs are not allocatd for broadcast, allocate them
-            std::cout << "#############################################\n";
-            std::cout << "Outvcs being allocated to this invc are:\n";
-            for (int outport = 0; outport < m_num_outports; outport++) {
-                outvcs.push_back(vc_allocate(outport, inport, invc));
-                std::cout << outvcs[outport] <<", ";
-            }
-            std::cout << "#############################################\n";
+            inport++; //go to the next inport
+            //start from the beginning again (round-robin)
+            if (inport >= m_num_inports)
+                inport = 0;
         }
-
-        //Sending a credit flit back for the winner vc in the winner inport
-        if ((t_flit->get_type() == TAIL_) ||
-            t_flit->get_type() == HEAD_TAIL_) {
-            // This Input VC should now be empty
-            assert(!(input_unit->isReady(invc, curTick())));
-
-            // Free this VC (change invc state from active to idle)
-            //this invc became free and now is available for outvc allocation
-            input_unit->set_vc_idle(invc, curTick());
-
-            // Send a credit back
-            // along with the information that this VC is now idle
-            input_unit->increment_credit(invc, true, curTick());
-        } else { //flit type is HEAD or BODY
-            // Send a credit back
-            // but do not indicate that the VC is idle
-            input_unit->increment_credit(invc, false, curTick());
-        }
-
-        for (int outport = 0; outport < m_num_outports; outport++) {
-
-            //get the OutputUnit with the outport number from
-            //the bus this SwitchAllocator is a part of
-            auto output_unit = m_bus->getOutputUnit(outport);
-
-            //get the outvc for this specific outport
-            int outvc = outvcs[outport];
-
-            //printing what just happened
-            DPRINTF(RubyNetwork, "SwitchAllocator at Bus %d "
-                                    "granted outvc %d at outport %d "
-                                    "to invc %d at inport %d to flit %s at "
-                                    "cycle: %lld\n",
-                    m_bus->get_id(), outvc,
-                    m_bus->getPortDirectionName(
-                        output_unit->get_direction()),
-                    invc,
-                    m_bus->getPortDirectionName(
-                        input_unit->get_direction()),
-                        *t_flit,
-                    m_bus->curCycle());
-
-
-            // Update outport field in the flit since this is
-            // used by CrossbarSwitch code to send it out of
-            // correct outport.
-            // Note: post route compute in InputUnit,
-            // outport is updated in VC, but not in flit
-            t_flit->set_outport(outport);
-
-            // set outvc (i.e., invc for next hop) in flit
-            // (This was updated in VC by vc_allocate, but not in flit)
-            t_flit->set_vc(outvc);
-
-            // decrement credit in outvc (i.e., invc of the next bus)
-            output_unit->decrement_credit(outvc);
-
-            // flit ready for Switch Traversal
-            //change the flit stage from SA_ to ST_
-            t_flit->advance_stage(ST_, curTick());
-            //grant the switch (crossbar) to t_flit
-            m_bus->grant_switch(inport, t_flit);
-            //increment the activity of output_arbiter
-            m_output_arbiter_activity++;
-
-        }
-
     }
-    //we answered to the broadcast request in this cycle
-    broadcast_this_cycle = false;
 }
 
 /*
@@ -404,7 +343,7 @@ BusSwitchManager::send_allowed(int inport, int invc, int outport, int outvc)
     bool has_credit = false;
 
     //get the right outport from the bus which
-    //this SwitchAllocator is a part of
+    //this BusSwitchManager is a part of
     auto output_unit = m_bus->getOutputUnit(outport);
     if (!has_outvc) { //if we don't have an outvc for this invc
 
@@ -413,10 +352,6 @@ BusSwitchManager::send_allowed(int inport, int invc, int outport, int outvc)
 
         //check if output_unit in vnet has any free vc
         if (output_unit->has_free_vc(vnet)) {
-
-            // std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
-            // std::cout << "Found free outvc for invc " <<invc<< " in inport "<<inport<<" from outport "<<outport<<".\n";
-            // std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
 
             //if yes, set has_outvc to true
             has_outvc = true;
@@ -438,7 +373,7 @@ BusSwitchManager::send_allowed(int inport, int invc, int outport, int outvc)
     // protocol ordering check
     if ((m_bus->get_net_ptr())->isVNetOrdered(vnet)) { //if vnet is ordered
         //get the right inport from the bus which
-        //this SwitchAllocator is a part of
+        //this BusSwitchManager is a part of
         auto input_unit = m_bus->getInputUnit(inport);
 
         // enqueue time of this flit
@@ -475,11 +410,8 @@ BusSwitchManager::vc_allocate(int outport, int inport, int invc)
 
     // has to get a valid VC since it checked before performing SA
     assert(outvc != -1);
-    //grant the free outvc to the winner invc (push the outvc in the outvcs vector of invc)
-    m_bus->getInputUnit(inport)->grant_broadcast_outvc(invc, outvc);
-    std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&\n";
-    std::cout << "The outvc " <<outvc<< " from outport "<<outport<<" is allocated to invc " <<invc<< " from inport "<<inport<<".\n";
-    std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&\n";
+    //grant the free outvc to the winner invc (winner of the output port)
+    m_bus->getInputUnit(inport)->grant_outvc(invc, outvc);
     return outvc; //return the free outvc (free invc of the next bus)
 }
 
@@ -523,10 +455,10 @@ BusSwitchManager::get_vnet(int invc)
 void
 BusSwitchManager::clear_request_vector()
 {
-    std::fill(m_has_request.begin(), m_has_request.end(), false);
+    std::fill(m_port_requests.begin(), m_port_requests.end(), -1);
 }
 
-//resetting SwitchAllocator statistics
+//resetting BusSwitchManager statistics
 void
 BusSwitchManager::resetStats()
 {
