@@ -76,7 +76,7 @@ class Bus : public BasicBus, public Consumer
     //Loop through all OutputUnits and call their wakeup()
     //Call SwitchAllocator's wakeup()
     //Call CrossbarSwitch's wakeup()
-    //The router's wakeup function is called whenever any of its modules
+    //The bus's wakeup function is called whenever any of its modules
     //(InputUnit, OutputUnit, SwitchAllocator, CrossbarSwitch) have a
     //ready flit/credit to act upon this cycle.
     void wakeup();
@@ -86,32 +86,32 @@ class Bus : public BasicBus, public Consumer
     //calls the init function of BasicBus,
     //SwitchAllocator, and CrossbarSwitch
     void init();
-    //add an inport to the router
+    //add an inport to the bus
     void addInPort(PortDirection inport_dirn, NetLink *link,
                    AckLink *credit_link);
-    //add an outport to the router
+    //add an outport to the bus
     void addOutPort(PortDirection outport_dirn, NetLink *link,
                     std::vector<NetDest>& routing_table_entry,
                     int link_weight, AckLink *credit_link,
                     uint32_t consumerVcs);
 
-    //get the latency of the router in cycles
+    //get the latency of the bus in cycles
     Cycles get_pipe_stages(){ return m_latency; }
-    //get the number of vcs for router
+    //get the number of vcs for bus
     uint32_t get_num_vcs()       { return m_num_vcs; }
-    //get the number of vnets for router
+    //get the number of vnets for bus
     uint32_t get_num_vnets()     { return m_virtual_networks; }
-    //get the number of vcs per vnet for router
+    //get the number of vcs per vnet for bus
     uint32_t get_vc_per_vnet()   { return m_vc_per_vnet; }
-    //get the number of router inports
+    //get the number of bus inports
     int get_num_inports()   { return m_input_unit.size(); }
-    //get the number of router outports
+    //get the number of bus outports
     int get_num_outports()  { return m_output_unit.size(); }
-    //get the id of the router
+    //get the id of the bus
     int get_id()            { return m_id; }
 
-    //get the layer of a router based on its id
-    int get_router_layer(int router_id);
+    //get the layer of a bus based on its id
+    int get_bus_layer(int bus_id);
 
     //initialize the pointer to the OnyxNetwork
     void init_net_ptr(OnyxNetwork* net_ptr)
@@ -140,7 +140,7 @@ class Bus : public BasicBus, public Consumer
         return m_output_unit[port].get();
     }
 
-    //get the link bandwidth for the router
+    //get the link bandwidth for the bus
     int getBitWidth() { return m_bit_width; }
 
     //get the direction of an outport
@@ -153,7 +153,7 @@ class Bus : public BasicBus, public Consumer
     //This function grants the switch to an inport, so the flit could pass
     //the crossbar.
     void grant_switch(int inport, chunk *t_flit);
-    //This function gives the router, time cycles delay.
+    //This function gives the bus, time cycles delay.
     void schedule_wakeup(Cycles time);
 
     //Getting the direction of a port as a string
@@ -164,10 +164,10 @@ class Bus : public BasicBus, public Consumer
     //For printing aggregate fault probability based on temperature.
     void printAggregateFaultProbability(std::ostream& out);
 
-    //This function is for creating statistics for every router
+    //This function is for creating statistics for every bus
     //in the stats.txt file.
     void regStats();
-    //This function collates the stats for the router.
+    //This function collates the stats for the bus.
     void collateStats();
     //Resetting statistics for inports, crossbarSwitch, and switchAllocator.
     void resetStats();
@@ -189,25 +189,25 @@ class Bus : public BasicBus, public Consumer
     uint32_t functionalWrite(Packet *);
 
   private:
-    //latency of this router
+    //latency of this bus
     Cycles m_latency;
     //number of vnets, vcs, and vcs_per_vnet
     uint32_t m_virtual_networks, m_vc_per_vnet, m_num_vcs;
-    //link bandwidth of the router
+    //link bandwidth of the bus
     uint32_t m_bit_width;
     //pointer to the OnyxNetwork
     OnyxNetwork *m_network_ptr;
 
-    //RoutingUnit of this router
+    //RoutingUnit of this bus
     RoutingTable routingUnit;
-    //SwitchAllocator of this router
+    //SwitchAllocator of this bus
     BusSwitchManager switchAllocator;
-    //CrossbarSwitch of this router
+    //CrossbarSwitch of this bus
     BusCrossbar crossbarSwitch;
 
-    //vector containing the router inports
+    //vector containing the bus inports
     std::vector<std::shared_ptr<BusInport>> m_input_unit;
-    //vector containing the router outports
+    //vector containing the bus outports
     std::vector<std::shared_ptr<BusOutport>> m_output_unit;
 
     // Statistical variables required for power computations
