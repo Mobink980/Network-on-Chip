@@ -356,7 +356,7 @@ class InterfaceModule : public ClockedObject, public Consumer
     //for knowing the states of the VCs
     std::vector<VcState> outVcState;
 
-    //number of stalls
+    //number of stalls for every vnet
     std::vector<int> m_stall_count;
 
     // Input Flit Buffers
