@@ -257,16 +257,6 @@ PathFinder::get_layer(int router_id)
     return 0;
 }
 
-// Generating sequence number 0 to bus_port repeatedly
-int getNextNumber(int bus_port) {
-    static int count = 0; // Initialize count only once
-
-    int result = count % bus_port;
-    count = (count + 1) % bus_port; // Increment count and wrap around
-
-    return result;
-}
-
 // XYZ routing implemented using port directions.
 // Only for reference purpose in a Mesh.
 // By default Onyx uses the routing table.
@@ -361,25 +351,8 @@ PathFinder::outportComputeXY(RouteInfo route,
             outport_dirn = "South"; //the outport to go is south
         }
     } else if (z_hops > 0) { //we need to use the bus
-        //===============================================================
-        outport_dirn = "Up" + std::to_string(getNextNumber(4));
+        outport_dirn = "Up";
 
-        // std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n";
-        // std::cout << "The selected bus port is: " <<outport_dirn<< "\n";
-        // std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n";
-
-        // std::cout << "************************************************\n";
-        // std::cout << "Now the router should pass the packet to the bus!\n";
-        if (m_outports_dirn2idx.find(outport_dirn) != m_outports_dirn2idx.end()) {
-            // Key exists, you can access the value using m_outports_dirn2idx[outport_dirn]
-            // std::cout << "The outport number for Up is: " << m_outports_dirn2idx[outport_dirn] <<"\n";
-        } else {
-            // Key does not exist
-            // std::cout << "Router port Up is not properly created and thus the segmentation fault!\n";
-        }
-        // std::cout << "************************************************\n";
-        // outport_dirn = "Down" + std::to_string(my_z);
-        //===============================================================
     } else { //we have neither horizontal nor vertical hops
         // x_hops == 0 and y_hops == 0
         // this is not possible

@@ -38,7 +38,7 @@
 
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/NetDest.hh"
-#include "mem/ruby/network/BasicBus.hh"
+#include "mem/ruby/network/BasicRouter.hh"
 #include "mem/ruby/network/onyx/CommonTypes.hh"
 #include "mem/ruby/network/onyx/BusCrossbar.hh"
 #include "mem/ruby/network/onyx/OnyxNetwork.hh"

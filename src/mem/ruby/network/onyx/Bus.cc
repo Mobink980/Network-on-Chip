@@ -261,7 +261,7 @@ Bus::get_bus_layer(int bus_id) {
     int num_layers = m_network_ptr->getNumLayers();
     assert(num_rows > 0 && num_cols > 0 && num_layers > 0);
     //number of buss or RLIs per layer
-    int num_buss_layer = num_rows * num_cols;
+    int num_routers_layer = num_rows * num_cols;
     if (num_layers > 1) { return floor(bus_id/num_routers_layer); }
     //return 0 if we only have one layer
     return 0;
