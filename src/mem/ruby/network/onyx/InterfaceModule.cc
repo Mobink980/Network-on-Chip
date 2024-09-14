@@ -161,6 +161,101 @@ InterfaceModule::addOutPort(NetLink *out_link,
     credit_link->setVcsPerVnet(m_vc_per_vnet);
 }
 
+//=======================================================================
+//=======================================================================
+//add an NI inport (for bus communication) to the NetworkInterface
+void
+InterfaceModule::addNIInPort(NetLink *in_link,
+                              AckLink *credit_link)
+{
+    //instantiate a new input port for bus communication
+    NIInport *new_inport = new NIInport(in_link, credit_link);
+    //push the newly created input port in inPorts vector
+    ni_inports.push_back(new_inport);
+    //printing the input port that was added and its vnets
+    DPRINTF(RubyNetwork, "Adding input port:%s with vnets %s\n",
+    in_link->name(), new_inport->printVnets());
+
+    //NetworkInterface is the consumer of the inport network link
+    in_link->setLinkConsumer(this);
+    //set the source queue for the credit_link
+    //this source queue is the flitBuffer for sending credit flits to the network
+    credit_link->setSourceQueue(new_inport->outCreditQueue(), this);
+    //if number of VCs per vnet is not zero,
+    //setVcsPerVnet for the network and credit link of the inport
+    if (m_vc_per_vnet != 0) {
+        in_link->setVcsPerVnet(m_vc_per_vnet);
+        credit_link->setVcsPerVnet(m_vc_per_vnet);
+    }
+
+}
+
+//add an NI output port (for bus communication) to the NetworkInterface
+void
+InterfaceModule::addNIOutPort(NetLink *out_link,
+                             AckLink *credit_link,
+                             SwitchID bus_id, uint32_t consumerVcs)
+{
+    //instantiate a new output port for bus communication
+    NIOutport *new_outport = new NIOutport(out_link, credit_link, bus_id);
+    //push the newly created output port in ni_outports vector
+    ni_outports.push_back(new_outport);
+
+    //ensure we have at least one consumer vc
+    assert(consumerVcs > 0);
+    // We are not allowing different physical links to have different vcs.
+    // If it is required that the Network Interface support different VCs
+    // for every physical link connected to it, then they need to change
+    // the logic within outport and inport.
+    if (niOutVcs.size() == 0) { //if the size of outvcs for NI is zero
+        //number of VCs per vnet becomes number of consumer VCs
+        m_vc_per_vnet = consumerVcs;
+        //number of vcs = num_vc_per_vnet * num_vnets
+        int m_num_vcs = consumerVcs * m_virtual_networks;
+        //the size of niOutVcs becomes the number of vcs
+        niOutVcs.resize(m_num_vcs);
+        //we need to hold the state of each outvc in NI
+        outVcState.reserve(m_num_vcs);
+        //we need to hold the enqueue time for each vc in niOutVcs
+        m_ni_out_vcs_enqueue_time.resize(m_num_vcs);
+        // instantiating the NI flit buffers
+        for (int i = 0; i < m_num_vcs; i++) {
+            m_ni_out_vcs_enqueue_time[i] = Tick(INFINITE_);
+            outVcState.emplace_back(i, m_net_ptr, consumerVcs);
+        }
+
+        // Reset VC Per VNET for input links already instantiated
+        for (auto &iPort: ni_inports) {
+            //network link of the inport
+            NetLink *inNetLink = iPort->inNetLink();
+            inNetLink->setVcsPerVnet(m_vc_per_vnet);
+            credit_link->setVcsPerVnet(m_vc_per_vnet);
+        }
+    } else { //if the size of outvcs for NI is greater than zero
+        fatal_if(consumerVcs != m_vc_per_vnet,
+        "%s: Connected Physical links have different vc requests: %d and %d\n",
+        name(), consumerVcs, m_vc_per_vnet);
+    }
+
+    //print the NI outport and its vnets
+    DPRINTF(RubyNetwork, "OutputPort:%s Vnet: %s\n",
+    out_link->name(), new_outport->printVnets());
+
+    //set the source queue for newOutPort (the flitBuffer for sending
+    //out flits to the network)
+    out_link->setSourceQueue(new_outport->outFlitQueue(), this);
+    //set the number of VCs per Vnet (e.g., 4) for
+    //out_link (outport network link)
+    out_link->setVcsPerVnet(m_vc_per_vnet);
+    //NetworkInterface is the consumer of credit_link for outport
+    credit_link->setLinkConsumer(this);
+    //set the number of VCs per Vnet (e.g., 4) for
+    //credit_link (outport credit link)
+    credit_link->setVcsPerVnet(m_vc_per_vnet);
+}
+//=======================================================================
+//=======================================================================
+
 //add a node to the NetworkInterface (e.g., east, west, etc.)
 void
 InterfaceModule::addNode(std::vector<MessageBuffer *>& in,
@@ -254,7 +349,7 @@ InterfaceModule::incrementStats(chunk *t_flit)
 
 void
 InterfaceModule::wakeup()
-{
+{ //TODO: Need to add Bus communication functionality
     //define an std::ostringstream
     std::ostringstream oss;
     //get the router_id and vnets for all the outports of the NI
