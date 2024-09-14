@@ -75,6 +75,14 @@ class InterfaceModule : public ClockedObject, public Consumer
     void addOutPort(NetLink *out_link, AckLink *credit_link,
         SwitchID router_id, uint32_t consumerVcs);
 
+    //====================================================
+    //add a bus-specific inport to the NI
+    void addNIInPort(NetLink *in_link, AckLink *credit_link);
+    //add a bus-specific outport to the NI
+    void addNIOutPort(NetLink *out_link, AckLink *credit_link,
+        SwitchID bus_id, uint32_t consumerVcs);
+    //=====================================================
+
     //for enqueuing a stalled message into the MessageBuffer
     //in the next cycle, after a message was dequeued this cycle
     void dequeueCallback();
@@ -335,6 +343,231 @@ class InterfaceModule : public ClockedObject, public Consumer
           uint32_t _bitWidth;
     };
 
+//=============================================================================
+    //class NIOutport is a member of the NetworkInterface class
+    class NIOutport
+    {
+      public:
+          //NIOutport constructor
+          //We need a NetworkLink, a CreditLink, and a bus id to
+          //instantiate an NI outport
+          NIOutport(NetLink *outLink, AckLink *creditLink,
+              int busID)
+          {
+              //outport vnet
+              _vnets = outLink->mVnets;
+              //the flitBuffer for sending out flits to the network
+              _outFlitQueue = new chunkBuffer();
+
+              //set the network link going out of the outport
+              _outNetLink = outLink;
+              //set the credit link coming into the outport
+              _inCreditLink = creditLink;
+
+              //set the id of the router connected to this NI
+              _busID = busID;
+              //set the outport link bitWidth (from network link)
+              _bitWidth = outLink->bitWidth;
+              //set the VC round-robin to zero
+              _vcRoundRobin = 0;
+
+          }
+
+          //get the flitBuffer for sending out flits to the network
+          chunkBuffer *
+          outFlitQueue()
+          {
+              return _outFlitQueue;
+          }
+
+          //get the network link going out of the outport
+          NetLink *
+          outNetLink()
+          {
+              return _outNetLink;
+          }
+
+          //get the credit link coming into the outport
+          AckLink *
+          inCreditLink()
+          {
+              return _inCreditLink;
+          }
+
+          //get the id of the bus connected to the NI
+          int
+          busID()
+          {
+              return _busID;
+          }
+
+          //get the outport links bitWidth
+          uint32_t bitWidth()
+          {
+              return _bitWidth;
+          }
+
+          //check whether vnet is supported
+          bool isVnetSupported(int pVnet)
+          {
+              if (!_vnets.size()) {
+                  return true;
+              }
+
+              for (auto &it : _vnets) {
+                  if (it == pVnet) {
+                      return true;
+                  }
+              }
+              return false;
+
+          }
+
+          //for printing the outport vnets
+          std::string
+          printVnets()
+          {
+              std::stringstream ss;
+              for (auto &it : _vnets) {
+                  ss << it;
+                  ss << " ";
+              }
+              return ss.str();
+          }
+
+          //get the vc round-robin has selected
+          int vcRoundRobin()
+          {
+              return _vcRoundRobin;
+          }
+
+          //set the vc for round-robin
+          void vcRoundRobin(int vc)
+          {
+              _vcRoundRobin = vc;
+          }
+
+
+      private:
+          //vnets vector
+          std::vector<int> _vnets;
+          //for sending out flits to the network
+          chunkBuffer *_outFlitQueue;
+          //network link going out of the outport
+          NetLink *_outNetLink;
+          //credit link coming into the outport
+          AckLink *_inCreditLink;
+          // For round robin scheduling
+          int _vcRoundRobin; 
+          //id of the bus connected to the NI
+          int _busID; 
+          //bitWidth of the outport links
+          uint32_t _bitWidth; 
+    };
+
+
+    //class NIInport is a member of the NetworkInterface class
+    class NIInport
+    {
+      public:
+          //NIInport constructor
+          //We need a NetworkLink, and a CreditLink to instantiate
+          //an NI inport
+          NIInport(NetLink *inLink, AckLink *creditLink)
+          {
+              //inport vnets
+              _vnets = inLink->mVnets;
+              //set the flitBuffer for sending credit flits to the network
+              _outCreditQueue = new chunkBuffer();
+
+              //set the network link coming into the inport
+              _inNetLink = inLink;
+              //set the credit link going out of the inport
+              _outCreditLink = creditLink;
+              //set the inport link bitWidth (from network link)
+              _bitWidth = inLink->bitWidth;
+          }
+
+          //get the flitBuffer for sending credit flits to the network
+          chunkBuffer *
+          outCreditQueue()
+          {
+              return _outCreditQueue;
+          }
+
+          //get the network link coming into the inport
+          NetLink *
+          inNetLink()
+          {
+              return _inNetLink;
+          }
+
+          //get the credit link going out of the inport
+          AckLink *
+          outCreditLink()
+          {
+              return _outCreditLink;
+          }
+
+          //check whether vnet is supported
+          bool isVnetSupported(int pVnet)
+          {
+              if (!_vnets.size()) {
+                  return true;
+              }
+
+              for (auto &it : _vnets) {
+                  if (it == pVnet) {
+                      return true;
+                  }
+              }
+              return false;
+
+          }
+
+          //for sending credit flits to the network
+          void sendCredit(Ack *cFlit)
+          {
+              //insert the given flit into _outCreditQueue flitBuffer
+              _outCreditQueue->insert(cFlit);
+          }
+
+          //get the inport links bitWidth
+          uint32_t bitWidth()
+          {
+              return _bitWidth;
+          }
+
+          //for printing inport vnets
+          std::string
+          printVnets()
+          {
+              std::stringstream ss;
+              for (auto &it : _vnets) {
+                  ss << it;
+                  ss << " ";
+              }
+              return ss.str();
+          }
+
+          // Queue for stalled flits
+          std::deque<chunk *> m_stall_queue;
+          //check to see if the message enqueued in this cycle
+          bool messageEnqueuedThisCycle;
+      private:
+          //inport vnets
+          std::vector<int> _vnets;
+          //the flitBuffer for sending credit flits to the network
+          chunkBuffer *_outCreditQueue;
+          //the network link coming into the inport
+          NetLink *_inNetLink;
+          //the credit link going out of the inport
+          AckLink *_outCreditLink;
+          //bitWidth of the inport links
+          uint32_t _bitWidth;
+    };
+//=============================================================================
+
 
   private:
     //pointer to the OnyxNetwork
@@ -351,6 +584,12 @@ class InterfaceModule : public ClockedObject, public Consumer
     std::vector<OutputPort *> outPorts;
     //NetworkInterface inports
     std::vector<InputPort *> inPorts;
+    //===============================================
+    //NetworkInterface outports
+    std::vector<NIOutport *> ni_outports;
+    //NetworkInterface inports
+    std::vector<NIInport *> ni_inports;
+    //===============================================
     //to check for possible network deadlock in a vnet
     int m_deadlock_threshold;
     //for knowing the states of the VCs
@@ -397,6 +636,13 @@ class InterfaceModule : public ClockedObject, public Consumer
     InputPort *getInportForVnet(int vnet);
     //get the outport for the given vnet
     OutputPort *getOutportForVnet(int vnet);
+
+    //==========================================
+    //get a bus-specific inport for the given vnet
+    NIInport *getNIInportForVnet(int vnet);
+    //get a bus-specific outport for the given vnet
+    OutputPort *getNIOutportForVnet(int vnet);
+    //==========================================
 };
 
 } // namespace onyx
