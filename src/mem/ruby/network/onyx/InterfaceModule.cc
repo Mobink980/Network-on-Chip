@@ -274,6 +274,7 @@ InterfaceModule::addNode(std::vector<MessageBuffer *>& in,
     for (auto& it : in) {
         if (it != nullptr) {
             //NI is the consumer for the MessageBuffer
+            //(consumes from protocol)
             it->setConsumer(this);
         }
     }
@@ -297,42 +298,35 @@ InterfaceModule::incrementStats(chunk *t_flit)
 {
     //get the vnet of the flit
     int vnet = t_flit->get_vnet();
-
-    // Latency
+  
     //increment the received flits for the vnet in OnyxNetwork
     m_net_ptr->increment_received_flits(vnet);
-
-    // std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+    //===============================================================
     // std::cout<<"One flit received.\n";
-
-    //**************************************************
-    // if (t_flit->is_broadcast()) {
-    //     std::cout<<"The received flit was from bus!\n";
-    // }
-    //**************************************************
-    // std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
-    //network delay = flit_dequeue_time - flit_enqueue_time - Ticks(1_cycle)
+    // if (t_flit->is_broadcast()) {std::cout<<"Received flit from bus!\n";}
+    //===============================================================
+    //network delay for the flit
     Tick network_delay =
         t_flit->get_dequeue_time() -
         t_flit->get_enqueue_time() - cyclesToTicks(Cycles(1));
     //queuing delay at src node
     Tick src_queueing_delay = t_flit->get_src_delay();
-    //queuing delay at dest node = current_tick - last time the flit was dequeued
+    //queuing delay at dest node = current_tick - time the flit was dequeued
     Tick dest_queueing_delay = (curTick() - t_flit->get_dequeue_time());
     //queueing_delay for the flit
     Tick queueing_delay = src_queueing_delay + dest_queueing_delay;
 
-    //increment the flit network and queuing latency for the OnyxNetwork
+    //increment the flit network and queuing latency for the vnet in OnyxNetwork
     m_net_ptr->increment_flit_network_latency(network_delay, vnet);
     m_net_ptr->increment_flit_queueing_latency(queueing_delay, vnet);
 
-    //if the flit is of type TAIL_ or HEAD_TAIL_
+    //if the flit is of type TAIL_ or HEAD_TAIL_ (a packet received)
     if (t_flit->get_type() == TAIL_ || t_flit->get_type() == HEAD_TAIL_) {
-        //increment the number of received packets for the OnyxNetwork
+        //increment the number of received packets for the vnet
         m_net_ptr->increment_received_packets(vnet);
-        //increment packet network latency for the OnyxNetwork
+        //increment packet network latency for the vnet
         m_net_ptr->increment_packet_network_latency(network_delay, vnet);
-        //increment packet queuing latency for the OnyxNetwork
+        //increment packet queuing latency for the vnet
         m_net_ptr->increment_packet_queueing_latency(queueing_delay, vnet);
     }
 
@@ -349,19 +343,25 @@ InterfaceModule::incrementStats(chunk *t_flit)
  * into the protocol buffer. It also checks for credits being sent by the
  * downstream router.
  */
-
 void
 InterfaceModule::wakeup()
-{ //TODO: Need to add Bus communication functionality
+{ 
     //define an std::ostringstream
     std::ostringstream oss;
     //get the router_id and vnets for all the outports of the NI
     for (auto &oPort: outPorts) {
         oss << oPort->routerID() << "[" << oPort->printVnets() << "] ";
     }
+    //===========================================================
+    std::ostringstream bus_oss;
+    //get the bus_id and vnets for all the outports of the NI
+    for (auto &ni_outport: ni_outports) {
+        bus_oss << ni_outport->busID() << "[" << ni_outport->printVnets() << "] ";
+    }
+    //===========================================================
     //for printing what NI waked up when
-    DPRINTF(RubyNetwork, "Network Interface %d connected to router:%s "
-            "woke up. Period: %ld\n", m_id, oss.str(), clockPeriod());
+    DPRINTF(RubyNetwork, "Network Interface %d connected to router:%s and bus:%s"
+            " woke up. Period: %ld\n", m_id, oss.str(), bus_oss.str(), clockPeriod());
 
     //make sure the current_tick is a clock edge (the tick a cycle begins)
     assert(curTick() == clockEdge());
@@ -395,7 +395,7 @@ InterfaceModule::wakeup()
     // message is enqueued to restrict ejection to one message per cycle.
     checkStallQueue();
 
-    /*********** Check the incoming flit link **********/
+    /**************** Check the incoming flit link ****************/
     DPRINTF(RubyNetwork, "Number of input ports: %d\n", inPorts.size());
     for (auto &iPort: inPorts) { //for every inport
         //get the network link for that inport
@@ -470,8 +470,7 @@ InterfaceModule::wakeup()
         }
     }
 
-    /****************** Check the incoming credit link *******/
-
+    /**************** Check the incoming credit link ****************/
     for (auto &oPort: outPorts) { //for every outport
         //get the credit link for that outport
         AckLink *inCreditLink = oPort->inCreditLink();
@@ -496,7 +495,6 @@ InterfaceModule::wakeup()
         }
     }
 
-
     // It is possible to enqueue multiple outgoing credit flits if a message
     // was unstalled in the same cycle as a new message arrives. In this
     // case, we should schedule another wakeup to ensure the credit is sent
@@ -516,6 +514,139 @@ InterfaceModule::wakeup()
         }
     }
 
+  //========================================================================
+  //========================================================================
+    /**************** Check the incoming flit link ****************/
+    DPRINTF(RubyNetwork, "Number of bus inports: %d\n", ni_inports.size());
+    for (auto &ni_inport: ni_inports) { //for every NI inport (from bus)
+        //get the network link for that inport
+        NetLink *inNetLink = ni_inport->inNetLink();
+        //if the network link buffer has a ready flit at the current tick
+        if (inNetLink->isReady(curTick())) {
+            //consume that flit on the network link and put it in t_flit
+            chunk *t_flit = inNetLink->consumeLink();
+            //print the flit that was received by the NI
+            DPRINTF(RubyNetwork, "Recieved flit:%s\n", *t_flit);
+            //make sure the flit width and the bitWidth of the inport
+            //are the same
+            assert(t_flit->m_width == ni_inport->bitWidth());
+
+            //get the vnet of t_flit
+            int vnet = t_flit->get_vnet();
+            //set the flit dequeue time from FIFO to current_tick
+            //(dequeue the flit)
+            t_flit->set_dequeue_time(curTick());
+
+
+
+            //The flit that comes in from a NetworkInport is either for this
+            //NetworkInterface or for another NI in this layer. In first case,
+            //when the flit belongs to this NI, we need to eject just as we do 
+            //when the flit comes in from an InputPort.
+            if (t_flit->get_route().dest_ni == m_id) { 
+              // If a tail flit is received, enqueue into the protocol buffers
+              // if space is available. Otherwise, exchange non-tail flits for
+              // credits.
+              if (t_flit->get_type() == TAIL_ ||
+                  t_flit->get_type() == HEAD_TAIL_) {
+                  if (!ni_inport->messageEnqueuedThisCycle &&
+                      outNode_ptr[vnet]->areNSlotsAvailable(1, curTime)) {
+                      // Space is available. Enqueue to protocol buffer.
+                      outNode_ptr[vnet]->enqueue(t_flit->get_msg_ptr(), curTime,
+                                                 cyclesToTicks(Cycles(1)));
+  
+                      // Simply send a credit back since we are not buffering
+                      // this flit in the NI
+                      Ack *cFlit = new Ack(t_flit->get_vc(),
+                                                 true, curTick());
+                      //send the cFlit credit from NI to the network
+                      ni_inport->sendCredit(cFlit);
+                      // Update stats and delete flit pointer
+                      incrementStats(t_flit);
+                      delete t_flit;
+                  } else {
+                      // No space available- Place tail flit in stall queue and
+                      // set up a callback for when protocol buffer is dequeued.
+                      // Stat update and flit pointer deletion will occur upon
+                      // unstall.
+                      ////push the flit into stall queue
+                      ni_inport->m_stall_queue.push_back(t_flit);
+                      //increment the number of stalls for the vnet
+                      m_stall_count[vnet]++;
+  
+                      //set up a callback for when protocol buffer is dequeued
+                      outNode_ptr[vnet]->registerDequeueCallback([this]() {
+                          dequeueCallback(); });
+                  }
+              } else { //HEAD or BODY flit
+                  // Non-tail flit. Send back a credit but not VC free signal.
+                  Ack *cFlit = new Ack(t_flit->get_vc(), false,
+                                                 curTick());
+                  // Simply send a credit back since we are not buffering
+                  // this flit in the NI
+                  ni_inport->sendCredit(cFlit);
+  
+                  // Update stats and delete flit pointer.
+                  incrementStats(t_flit);
+                  delete t_flit;
+              }
+     
+            } else { 
+              //But when a flit comes in from a NetworkInport and does not belong
+              //to this NI, then it belongs to some other NI in the current layer
+              //and we need to pass it to the router (just like when we do that
+              //when the flit was produced in this NI).   
+              // Schedule the flit to go to the network again
+              scheduleFlit(t_flit);
+            }
+        }
+    }
+
+    /**************** Check the incoming credit link ****************/
+    for (auto &ni_outport: ni_outports) { //for every NI outport (to bus)
+        //get the credit link for that outport
+        AckLink *inCreditLink = ni_outport->inCreditLink();
+        //if that credit link has a ready flit at current tick
+        if (inCreditLink->isReady(curTick())) {
+            //consume that flit on the credit link and put it in t_credit
+            Ack *t_credit = (Ack*) inCreditLink->consumeLink();
+            //increment credit (free space) for the vc of t_credit in
+            //outVcState vector (It means that the downstream router got
+            //and consumed the flit that we sent and now that vc has another
+            //free slot or credit for us to send more)
+            outVcState[t_credit->get_vc()].increment_credit();
+            //if is_free_signal is true (meaning vc got totally free)
+            if (t_credit->is_free_signal()) {
+                //change the state for that vc from active to idle
+                //at current_tick
+                outVcState[t_credit->get_vc()].setState(IDLE_,
+                    curTick());
+            }
+            //delete t_credit variable
+            delete t_credit;
+        }
+    }
+
+    // It is possible to enqueue multiple outgoing credit flits if a message
+    // was unstalled in the same cycle as a new message arrives. In this
+    // case, we should schedule another wakeup to ensure the credit is sent
+    // back.
+    for (auto &ni_inport: ni_inports) { //for every inport (from bus)
+        //if we have more than one credit in the inport credit queue
+        if (ni_inport->outCreditQueue()->getSize() > 0) {
+            //print the credit flit we are sending back, the credit queue
+            //we are sending from, and the time we are sending it
+            DPRINTF(RubyNetwork, "Sending a credit %s via %s at %ld\n",
+            *(ni_inport->outCreditQueue()->peekTopFlit()),
+            ni_inport->outCreditLink()->name(), clockEdge(Cycles(1)));
+            //the credit link of the inport should consume the credit flit
+            //in the next clock edge
+            ni_inport->outCreditLink()->
+                scheduleEventAbsolute(clockEdge(Cycles(1)));
+        }
+    }
+  //========================================================================
+  //========================================================================
     checkReschedule();
 }
 
