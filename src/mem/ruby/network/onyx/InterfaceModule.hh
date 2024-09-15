@@ -649,6 +649,10 @@ class InterfaceModule : public ClockedObject, public Consumer
     //incremet the stats within the flit
     void incrementStats(chunk *t_flit);
 
+    //incremet the stats within the flit 
+    //when came from bus and not going to be ejected
+    void incrementStatsSpecial(chunk *t_flit);
+
     //get the inport for the given vnet
     InputPort *getInportForVnet(int vnet);
     //get the outport for the given vnet
