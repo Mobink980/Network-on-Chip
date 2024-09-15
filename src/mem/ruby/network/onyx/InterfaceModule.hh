@@ -77,9 +77,9 @@ class InterfaceModule : public ClockedObject, public Consumer
 
     //====================================================
     //add a bus-specific inport to the NI
-    void addNIInPort(NetLink *in_link, AckLink *credit_link);
+    void addNetworkInport(NetLink *in_link, AckLink *credit_link);
     //add a bus-specific outport to the NI
-    void addNIOutPort(NetLink *out_link, AckLink *credit_link,
+    void addNetworkOutport(NetLink *out_link, AckLink *credit_link,
         SwitchID bus_id, uint32_t consumerVcs);
     //=====================================================
 
@@ -89,6 +89,7 @@ class InterfaceModule : public ClockedObject, public Consumer
     //function that wakes the NI up to do its job
     void wakeup();
     //add a node to the NetworkInterface
+    //inNode (into the network), outNode (outside of network)
     void addNode(std::vector<MessageBuffer *> &inNode,
                  std::vector<MessageBuffer *> &outNode);
 
@@ -119,6 +120,20 @@ class InterfaceModule : public ClockedObject, public Consumer
         //return the router id of that outport
         return oPort->routerID();
     }
+
+    //=========================================================
+    //get the id of the bus connected to the NI with a network outport
+    //each port has a specific vnet number
+    int get_bus_id(int vnet)
+    {
+        //get the outport for the given vnet
+        NetworkOutport *ni_outport = getNetworkOutportForVnet(vnet);
+        //make sure the outport exists
+        assert(ni_outport);
+        //return the bus id of that outport
+        return ni_outport->busID();
+    }
+    //=========================================================
 
     //class OutputPort is a member of the NetworkInterface class
     class OutputPort
@@ -344,14 +359,14 @@ class InterfaceModule : public ClockedObject, public Consumer
     };
 
 //=============================================================================
-    //class NIOutport is a member of the NetworkInterface class
-    class NIOutport
+    //class NetworkOutport is a member of the NetworkInterface class
+    class NetworkOutport
     {
       public:
-          //NIOutport constructor
+          //NetworkOutport constructor
           //We need a NetworkLink, a CreditLink, and a bus id to
           //instantiate an NI outport
-          NIOutport(NetLink *outLink, AckLink *creditLink,
+          NetworkOutport(NetLink *outLink, AckLink *creditLink,
               int busID)
           {
               //outport vnet
@@ -364,7 +379,7 @@ class InterfaceModule : public ClockedObject, public Consumer
               //set the credit link coming into the outport
               _inCreditLink = creditLink;
 
-              //set the id of the router connected to this NI
+              //set the id of the bus connected to this NI
               _busID = busID;
               //set the outport link bitWidth (from network link)
               _bitWidth = outLink->bitWidth;
@@ -466,14 +481,14 @@ class InterfaceModule : public ClockedObject, public Consumer
     };
 
 
-    //class NIInport is a member of the NetworkInterface class
-    class NIInport
+    //class NetworkInport is a member of the NetworkInterface class
+    class NetworkInport
     {
       public:
-          //NIInport constructor
+          //NetworkInport constructor
           //We need a NetworkLink, and a CreditLink to instantiate
           //an NI inport
-          NIInport(NetLink *inLink, AckLink *creditLink)
+          NetworkInport(NetLink *inLink, AckLink *creditLink)
           {
               //inport vnets
               _vnets = inLink->mVnets;
@@ -574,7 +589,7 @@ class InterfaceModule : public ClockedObject, public Consumer
     OnyxNetwork *m_net_ptr;
     //id of the NI or node (num_NIs = num_cores)
     const NodeID m_id;
-    //number of VCs
+    //number of Vnets
     const int m_virtual_networks;
     //number of VCs per Vnet
     int m_vc_per_vnet;
@@ -586,9 +601,9 @@ class InterfaceModule : public ClockedObject, public Consumer
     std::vector<InputPort *> inPorts;
     //===============================================
     //NetworkInterface outports
-    std::vector<NIOutport *> ni_outports;
+    std::vector<NetworkOutport *> ni_outports;
     //NetworkInterface inports
-    std::vector<NIInport *> ni_inports;
+    std::vector<NetworkInport *> ni_inports;
     //===============================================
     //to check for possible network deadlock in a vnet
     int m_deadlock_threshold;
@@ -600,6 +615,8 @@ class InterfaceModule : public ClockedObject, public Consumer
 
     // Input Flit Buffers
     // The flit buffers which will serve the Consumer
+    // "out" means coming out of the network (the flits in niOutVcs will 
+    // convert to messages and these messages will be consumed by the protocol)
     std::vector<chunkBuffer>  niOutVcs;
     std::vector<Tick> m_ni_out_vcs_enqueue_time;
 
@@ -639,9 +656,9 @@ class InterfaceModule : public ClockedObject, public Consumer
 
     //==========================================
     //get a bus-specific inport for the given vnet
-    NIInport *getNIInportForVnet(int vnet);
+    NetworkInport *getNetworkInportForVnet(int vnet);
     //get a bus-specific outport for the given vnet
-    OutputPort *getNIOutportForVnet(int vnet);
+    OutputPort *getNetworkOutportForVnet(int vnet);
     //==========================================
 };
 
