@@ -98,6 +98,9 @@ InterfaceModule::addInPort(NetLink *in_link,
 }
 
 //add an output port to the NetworkInterface
+//"consumerVcs" ==> When a flit arrives at a consumer node (NI in our case)
+//it needs to be buffered in a virtual channel before being processed by 
+//the protocol. 
 void
 InterfaceModule::addOutPort(NetLink *out_link,
                              AckLink *credit_link,
@@ -165,11 +168,11 @@ InterfaceModule::addOutPort(NetLink *out_link,
 //=======================================================================
 //add an NI inport (for bus communication) to the NetworkInterface
 void
-InterfaceModule::addNIInPort(NetLink *in_link,
+InterfaceModule::addNetworkInport(NetLink *in_link,
                               AckLink *credit_link)
 {
     //instantiate a new input port for bus communication
-    NIInport *new_inport = new NIInport(in_link, credit_link);
+    NetworkInport *new_inport = new NetworkInport(in_link, credit_link);
     //push the newly created input port in inPorts vector
     ni_inports.push_back(new_inport);
     //printing the input port that was added and its vnets
@@ -192,12 +195,12 @@ InterfaceModule::addNIInPort(NetLink *in_link,
 
 //add an NI output port (for bus communication) to the NetworkInterface
 void
-InterfaceModule::addNIOutPort(NetLink *out_link,
+InterfaceModule::addNetworkOutport(NetLink *out_link,
                              AckLink *credit_link,
                              SwitchID bus_id, uint32_t consumerVcs)
 {
     //instantiate a new output port for bus communication
-    NIOutport *new_outport = new NIOutport(out_link, credit_link, bus_id);
+    NetworkOutport *new_outport = new NetworkOutport(out_link, credit_link, bus_id);
     //push the newly created output port in ni_outports vector
     ni_outports.push_back(new_outport);
 
@@ -849,6 +852,27 @@ InterfaceModule::getOutportForVnet(int vnet)
     //if no outport in the NI has that vnet number
     return nullptr;
 }
+
+//==========================================================
+/*
+ * This function returns the outport which supports the given vnet.
+ * Currently, HeteroOnyx does not support multiple outports to
+ * support same vnet. Thus, this function returns the first-and
+ * only outport which supports the vnet.
+ */
+InterfaceModule::NetworkOutport *
+InterfaceModule::getNetworkOutportForVnet(int vnet)
+{
+    for (auto &ni_outport : ni_outports) { //for each NI outport
+        //if that outport supports vnet
+        if (ni_outport->isVnetSupported(vnet)) {
+            return ni_outport; //that is our outport
+        }
+    }
+    //if no outport in the NI has that vnet number
+    return nullptr;
+}
+//==========================================================
 
 //schedule a flit to be sent from an NI output port
 void
