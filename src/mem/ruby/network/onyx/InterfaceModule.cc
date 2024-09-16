@@ -329,11 +329,50 @@ InterfaceModule::incrementStats(chunk *t_flit)
         //increment packet queuing latency for the vnet
         m_net_ptr->increment_packet_queueing_latency(queueing_delay, vnet);
     }
-
     // Hops that the flit traversed
     m_net_ptr->increment_total_hops(t_flit->get_route().hops_traversed);
 }
 
+//=========================================================================
+//=========================================================================
+//incremet the stats for the NI and the flit
+//when came from bus and not going to be ejected
+void
+InterfaceModule::incrementStatsSpecial(chunk *t_flit)
+{
+    //get the vnet of the flit
+    int vnet = t_flit->get_vnet();
+    //===============================================================
+    // std::cout<<"One flit received.\n";
+    // if (t_flit->is_broadcast()) {std::cout<<"Received flit from bus!\n";}
+    //===============================================================
+    //network delay for the flit
+    Tick network_delay =
+        t_flit->get_dequeue_time() -
+        t_flit->get_enqueue_time() - cyclesToTicks(Cycles(1));
+    //queuing delay at src node
+    Tick src_queueing_delay = t_flit->get_src_delay();
+    //queuing delay at dest node = current_tick - time the flit was dequeued
+    Tick dest_queueing_delay = (curTick() - t_flit->get_dequeue_time());
+    //queueing_delay for the flit
+    Tick queueing_delay = src_queueing_delay + dest_queueing_delay;
+
+    //increment the flit network and queuing latency for the vnet in OnyxNetwork
+    m_net_ptr->increment_flit_network_latency(network_delay, vnet);
+    m_net_ptr->increment_flit_queueing_latency(queueing_delay, vnet);
+
+    //if the flit is of type TAIL_ or HEAD_TAIL_ (a packet received)
+    if (t_flit->get_type() == TAIL_ || t_flit->get_type() == HEAD_TAIL_) {
+        //increment packet network latency for the vnet
+        m_net_ptr->increment_packet_network_latency(network_delay, vnet);
+        //increment packet queuing latency for the vnet
+        m_net_ptr->increment_packet_queueing_latency(queueing_delay, vnet);
+    }
+    // Hops that the flit traversed
+    m_net_ptr->increment_total_hops(t_flit->get_route().hops_traversed);
+}
+//=========================================================================
+//=========================================================================
 /*
  * The NI wakeup checks whether there are any ready messages in the protocol
  * buffer. If yes, it picks that up, flitisizes it into a number of flits and
