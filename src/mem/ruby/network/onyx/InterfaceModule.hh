@@ -662,7 +662,7 @@ class InterfaceModule : public ClockedObject, public Consumer
     //get a bus-specific inport for the given vnet
     NetworkInport *getNetworkInportForVnet(int vnet);
     //get a bus-specific outport for the given vnet
-    OutputPort *getNetworkOutportForVnet(int vnet);
+    NetworkOutport *getNetworkOutportForVnet(int vnet);
     //==========================================
 };
 
