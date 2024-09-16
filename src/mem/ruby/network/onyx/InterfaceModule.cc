@@ -537,8 +537,6 @@ InterfaceModule::wakeup()
             //(dequeue the flit)
             t_flit->set_dequeue_time(curTick());
 
-
-
             //The flit that comes in from a NetworkInport is either for this
             //NetworkInterface or for another NI in this layer. In first case,
             //when the flit belongs to this NI, we need to eject just as we do 
@@ -716,6 +714,74 @@ InterfaceModule::checkStallQueue()
             }
         }
     }
+
+    //=======================================================================
+    //=======================================================================
+    // Check all stall queues. This is for bus-specific inports and we are 
+    // basically checking if some flits that wanted to be ejected from these
+    // ports were stalled (just like we do so with NI regular inports).
+    // There is one stall queue for each input link
+    for (auto &ni_inport: ni_inports) { //for every inport
+        //the inport message was not enqueued this cycle
+        ni_inport->messageEnqueuedThisCycle = false;
+        //get the tick where the current cycle begins
+        Tick curTime = clockEdge();
+
+        //if the stall queue for the inport is not empty
+        if (!ni_inport->m_stall_queue.empty()) {
+            //go through all the elements in the inport stall queue
+            for (auto stallIter = ni_inport->m_stall_queue.begin();
+                 stallIter != ni_inport->m_stall_queue.end(); ) {
+                //get the stalled flit and save it to stallFlit variable
+                chunk *stallFlit = *stallIter;
+                //get the vnet of that stalled flit
+                int vnet = stallFlit->get_vnet();
+
+                // If we can now eject to the protocol buffer,
+                // send back credits
+                //if there is 1 slot available in the vnet of the stalled flit
+                //(the vnet the flit wants to go to)
+                if (outNode_ptr[vnet]->areNSlotsAvailable(1,
+                    curTime)) {
+                    //eject to the protocol buffer (enqueue the flit into
+                    //the outNode_ptr[vnet] after one cycle delay)
+                    outNode_ptr[vnet]->enqueue(stallFlit->get_msg_ptr(),
+                        curTime, cyclesToTicks(Cycles(1)));
+
+                    // Send back a credit with free signal now that the
+                    // VC is no longer stalled.
+                    Ack *cFlit = new Ack(stallFlit->get_vc(), true,
+                                                   curTick());
+                    //send the credit flit to the upstream router
+                    ni_inport->sendCredit(cFlit);
+
+                    // Update Stats
+                    incrementStats(stallFlit);
+
+                    // Flit can now safely be deleted and removed from stall
+                    // queue
+                    delete stallFlit; //delete stallFlit variable
+                    //erase the ejected flit from m_stall_queue
+                    ni_inport->m_stall_queue.erase(stallIter);
+                    //decrement the number of stalled messages for this vnet
+                    m_stall_count[vnet]--;
+
+                    // If there are no more stalled messages for this vnet, the
+                    // callback on it's MessageBuffer is not needed.
+                    if (m_stall_count[vnet] == 0)
+                        outNode_ptr[vnet]->unregisterDequeueCallback();
+
+                    //the inport message was enqueued this cycle
+                    ni_inport->messageEnqueuedThisCycle = true;
+                    break;
+                } else { //no empty slot is available in outNode_ptr[vnet]
+                    ++stallIter; //go to the next flit in iPort->m_stall_queue
+                }
+            }
+        }
+    }
+    //=======================================================================
+    //=======================================================================
 }
 
 // Embed the protocol message into flits
@@ -959,7 +1025,6 @@ InterfaceModule::getInportForVnet(int vnet)
             return iPort; //that is our inport
         }
     }
-
     //if no inport in the NI has that vnet number
     return nullptr;
 }
@@ -979,18 +1044,27 @@ InterfaceModule::getOutportForVnet(int vnet)
             return oPort; //that is our outport
         }
     }
-
     //if no outport in the NI has that vnet number
     return nullptr;
 }
 
-//==========================================================
-/*
- * This function returns the outport which supports the given vnet.
- * Currently, HeteroOnyx does not support multiple outports to
- * support same vnet. Thus, this function returns the first-and
- * only outport which supports the vnet.
- */
+//=================================================================
+//=================================================================
+//get the bus inport for the given vnet
+InterfaceModule::NetworkInport *
+InterfaceModule::getNetworkInportForVnet(int vnet)
+{
+    for (auto &ni_inport : ni_inports) { //for each NI inport
+        //if that inport supports vnet
+        if (ni_inport->isVnetSupported(vnet)) {
+            return ni_inport; //that is our inport
+        }
+    }
+    //if no inport in the NI has that vnet number
+    return nullptr;
+}
+
+//get the bus outport for the given vnet
 InterfaceModule::NetworkOutport *
 InterfaceModule::getNetworkOutportForVnet(int vnet)
 {
@@ -1003,7 +1077,8 @@ InterfaceModule::getNetworkOutportForVnet(int vnet)
     //if no outport in the NI has that vnet number
     return nullptr;
 }
-//==========================================================
+//=================================================================
+//=================================================================
 
 //schedule a flit to be sent from an NI output port
 void
@@ -1098,6 +1173,30 @@ InterfaceModule::checkReschedule()
             return;
         }
     }
+
+    //===================================================================
+    //===================================================================  
+    for (auto &ni_inport : ni_inports) { //for every bus inport in NI
+        //get the network link coming into that inport
+        NetLink *inNetLink = ni_inport->inNetLink();
+        //if the network link has a ready flit
+        if (inNetLink->isReady(curTick())) {
+            scheduleEvent(Cycles(1)); //wake up the NI in the next cycle
+            return;
+        }
+    }
+
+    for (auto &ni_outport : ni_outports) { //for every bus outport in NI
+        //get the credit link coming into that outport
+        AckLink *inCreditLink = ni_outport->inCreditLink();
+        //if the credit link has a ready flit
+        if (inCreditLink->isReady(curTick())) {
+            scheduleEvent(Cycles(1)); //wake up the NI in the next cycle
+            return;
+        }
+    }
+    //===================================================================
+    //===================================================================
 }
 
 //for printing the NI
@@ -1120,7 +1219,15 @@ InterfaceModule::functionalRead(Packet *pkt, WriteMask &mask)
         if (oPort->outFlitQueue()->functionalRead(pkt, mask))
             read = true;
     }
-
+  
+    //==========================================================
+    //==========================================================
+    for (auto &ni_outport: ni_outports) {
+        if (ni_outport->outFlitQueue()->functionalRead(pkt, mask))
+            read = true;
+    } 
+    //==========================================================
+    //==========================================================
     return read;
 }
 
@@ -1139,6 +1246,14 @@ InterfaceModule::functionalWrite(Packet *pkt)
     for (auto &oPort: outPorts) { //for every outport in NI
         num_functional_writes += oPort->outFlitQueue()->functionalWrite(pkt);
     }
+  
+    //======================================================================
+    //======================================================================
+    for (auto &ni_outport: ni_outports) { //for every bus outport in NI
+        num_functional_writes += ni_outport->outFlitQueue()->functionalWrite(pkt);
+    }
+    //======================================================================
+    //======================================================================
     return num_functional_writes;
 }
 
