@@ -618,7 +618,10 @@ class InterfaceModule : public ClockedObject, public Consumer
     // "out" means coming out of the network (the flits in niOutVcs will 
     // convert to messages and these messages will be consumed by the protocol)
     std::vector<chunkBuffer>  niOutVcs;
+    //holds the enqueue time for vcs in the niOutVcs
     std::vector<Tick> m_ni_out_vcs_enqueue_time;
+    //all the packets that come from NetworkInport and can't proceed stay here
+    std::vector<chunkBuffer> congested_packets;
 
     // The Message buffers that takes messages from the protocol
     //from the coherence protocol controller
