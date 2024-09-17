@@ -385,6 +385,12 @@ InterfaceModule::incrementStatsSpecial(chunk *t_flit)
 void
 InterfaceModule::wakeup()
 { 
+    //=========================================================
+    //=========================================================  
+    //to send the body flits only if the head flit was sent
+    static bool head_flit_successful = false;
+    //=========================================================
+    //=========================================================
     //define an std::ostringstream
     std::ostringstream oss;
     //get the router_id and vnets for all the outports of the NI
@@ -555,6 +561,39 @@ InterfaceModule::wakeup()
 
   //========================================================================
   //========================================================================
+    /********** Check congested_packets for retransmission ***********/
+    if (!congested_packets.empty()) {
+      //number of suspended packets
+      int num_packets = congested_packets.size();
+      //traverse over all elements in congested_packets and
+      //try to resend them 
+      for (int k=0; k<num_packets; k++) {
+        chunk* suspended_flit = congested_packets[k].peekTopFlit();
+        //find a free vc in destination vnet in niOutVcs
+        int vc = calculateVC(suspended_flit->get_vnet()); 
+        if (vc != -1) {
+          //remove the flit from the vc
+          suspended_flit = congested_packets[k].getTopFlit();
+          //insert the flit into niOutVcs[vc]
+          niOutVcs[vc].insert(suspended_flit);
+          //after inserting the flit, the state of the vc becomes active
+          outVcState[vc].setState(ACTIVE_, curTick());
+        }
+      }
+      //remove flitBuffers with no flit inside from congested_packets vector
+      for (auto it = congested_packets.begin(); it != congested_packets.end();) {
+          if ((*it).isEmpty()) {
+              it = congested_packets.erase(it);
+          } else {
+              ++it;
+          }
+      }
+//      for (int k = num_packets - 1; k >= 0; k--) {
+//          if (congested_packets[k].isEmpty()) {
+//              congested_packets.erase(congested_packets.begin() + k);
+//          }
+//      }
+    }
     /**************** Check the incoming flit link ****************/
     DPRINTF(RubyNetwork, "Number of bus inports: %d\n", ni_inports.size());
     for (auto &ni_inport: ni_inports) { //for every NI inport (from bus)
@@ -572,15 +611,15 @@ InterfaceModule::wakeup()
 
             //get the vnet of t_flit
             int vnet = t_flit->get_vnet();
-            //set the flit dequeue time from FIFO to current_tick
-            //(dequeue the flit)
-            t_flit->set_dequeue_time(curTick());
 
             //The flit that comes in from a NetworkInport is either for this
             //NetworkInterface or for another NI in this layer. In first case,
             //when the flit belongs to this NI, we need to eject just as we do 
             //when the flit comes in from an InputPort.
             if (t_flit->get_route().dest_ni == m_id) { 
+              //set the flit dequeue time from FIFO to current_tick
+              //(dequeue the flit)
+              t_flit->set_dequeue_time(curTick());
               // If a tail flit is received, enqueue into the protocol buffers
               // if space is available. Otherwise, exchange non-tail flits for
               // credits.
@@ -633,8 +672,56 @@ InterfaceModule::wakeup()
               //to this NI, then it belongs to some other NI in the current layer
               //and we need to pass it to the router (just like when we do that
               //when the flit was produced in this NI).   
-              // Schedule the flit to go to the network again
-              scheduleFlit(t_flit);
+              if (t_flit->get_type() == HEAD_) { 
+                //find a free vc in destination vnet in niOutVcs
+                int vc = calculateVC(vnet); 
+                //if no free vc could be found, we need to store it
+                if (vc != -1) {
+                  //insert the flit into niOutVcs[vc]
+                  niOutVcs[vc].insert(t_flit);
+                  //after inserting the flit, the state of the vc becomes active
+                  outVcState[vc].setState(ACTIVE_, curTick());
+                  //head flit was sent
+                  head_flit_successful = true;
+                } else {
+                  //delete the flit
+                  delete t_flit;
+                  //could not send the head flit
+                  head_flit_successful = false;
+                }
+
+              } else if (t_flit->get_type() == BODY_ || 
+                         t_flit->get_type() == TAIL_) {
+                if (head_flit_successful) {
+                  //insert the flit into niOutVcs[vc] 
+                  //No need to refresh vc 
+                  niOutVcs[vc].insert(t_flit);
+                } else {
+                  //delete the flit as body and tail flits are 
+                  //meaningless without the head flit 
+                  delete t_flit;
+                }
+
+              } else {
+                //This means that the type of flit is HEAD_TAIL
+                //CREDIT flit does not traverse on the betwork link
+                //find a free vc in destination vnet in niOutVcs
+                int vc = calculateVC(vnet); 
+                //if no free vc could be found, we need to store it
+                if (vc == -1) {
+                  //insert the flit into the congested_packets
+                  //We can resend these packets if a free vc in 
+                  //niOutVcs becomes available.
+                  chunkBuffer buff = new chunkBuffer();
+                  buff.insert(t_flit);
+                  congested_packets.push_back(buff);
+                } else {
+                  //insert the flit into niOutVcs[vc]
+                  niOutVcs[vc].insert(t_flit);  
+                  //after inserting the flit, the state of the vc becomes active
+                  outVcState[vc].setState(ACTIVE_, curTick());
+                }
+              }
             }
         }
     }
