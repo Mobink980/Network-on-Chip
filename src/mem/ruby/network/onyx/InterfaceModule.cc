@@ -61,13 +61,23 @@ InterfaceModule::InterfaceModule(const Params &p)
   : ClockedObject(p), Consumer(this), m_id(p.id),
     m_virtual_networks(p.virt_nets), m_vc_per_vnet(0),
     m_vc_allocator(m_virtual_networks, 0),
+    m_bus_vc_allocator(m_virtual_networks, 0),
     m_deadlock_threshold(p.onyx_deadlock_threshold),
-    vc_busy_counter(m_virtual_networks, 0)
+    vc_busy_counter(m_virtual_networks, 0),
+    bus_vc_busy_counter(m_virtual_networks, 0)
 {
     //counting stall numbers for each vnet
     m_stall_count.resize(m_virtual_networks);
     //NI outvcs have no element in the beginning
     niOutVcs.resize(0);
+    //=============================================
+    //=============================================
+    //counting stall numbers for each vnet for bus
+    m_stall_count_bus.resize(m_virtual_networks);
+    //ToBus outvcs have no element in the beginning
+    toBusVcs.resize(0);
+    //=============================================
+    //=============================================
 }
 
 //add an input port to the NetworkInterface
@@ -210,27 +220,27 @@ InterfaceModule::addNetworkOutport(NetLink *out_link,
     // If it is required that the Network Interface support different VCs
     // for every physical link connected to it, then they need to change
     // the logic within outport and inport.
-    if (niOutVcs.size() == 0) { //if the size of outvcs for NI is zero
+    if (toBusVcs.size() == 0) { //if the size of outvcs for NI is zero
         //number of VCs per vnet becomes number of consumer VCs
         m_vc_per_vnet = consumerVcs;
         //number of vcs = num_vc_per_vnet * num_vnets
         int m_num_vcs = consumerVcs * m_virtual_networks;
-        //the size of niOutVcs becomes the number of vcs
-        niOutVcs.resize(m_num_vcs);
+        //the size of toBusVcs becomes the number of vcs
+        toBusVcs.resize(m_num_vcs);
         //we need to hold the state of each outvc in NI
-        outVcState.reserve(m_num_vcs);
-        //we need to hold the enqueue time for each vc in niOutVcs
-        m_ni_out_vcs_enqueue_time.resize(m_num_vcs);
+        toBusVcState.reserve(m_num_vcs);
+        //we need to hold the enqueue time for each vc in toBusVcs
+        m_to_bus_vcs_enqueue_time.resize(m_num_vcs);
         // instantiating the NI flit buffers
         for (int i = 0; i < m_num_vcs; i++) {
-            m_ni_out_vcs_enqueue_time[i] = Tick(INFINITE_);
-            outVcState.emplace_back(i, m_net_ptr, consumerVcs);
+            m_to_bus_vcs_enqueue_time[i] = Tick(INFINITE_);
+            toBusVcState.emplace_back(i, m_net_ptr, consumerVcs);
         }
 
         // Reset VC Per VNET for input links already instantiated
-        for (auto &iPort: ni_inports) {
+        for (auto &ni_inport: ni_inports) {
             //network link of the inport
-            NetLink *inNetLink = iPort->inNetLink();
+            NetLink *inNetLink = ni_inport->inNetLink();
             inNetLink->setVcsPerVnet(m_vc_per_vnet);
             credit_link->setVcsPerVnet(m_vc_per_vnet);
         }
@@ -421,7 +431,6 @@ InterfaceModule::wakeup()
         if (b == nullptr) { //no message from that protocol buffer
             continue;
         }
-
         if (b->isReady(curTime)) { // Is there a message waiting
             //get a pointer to the message at the head of b
             msg_ptr = b->peekMsgPtr();
@@ -432,10 +441,14 @@ InterfaceModule::wakeup()
             }
         }
     }
-
     //schedule the outport link wakeup to consume the flits
     scheduleOutputLink();
-
+    //=============================================
+    //=============================================
+    //schedule the bus outport link wakeup to consume the flits
+    scheduleBusOutputLink();
+    //=============================================
+    //=============================================
     // Check if there are flits stalling a virtual channel. Track if a
     // message is enqueued to restrict ejection to one message per cycle.
     checkStallQueue();
@@ -647,8 +660,8 @@ InterfaceModule::wakeup()
                       // unstall.
                       ////push the flit into stall queue
                       ni_inport->m_stall_queue.push_back(t_flit);
-                      //increment the number of stalls for the vnet
-                      m_stall_count[vnet]++;
+                      //increment the number of stalls for the vnet in bus
+                      m_stall_count_bus[vnet]++;
   
                       //set up a callback for when protocol buffer is dequeued
                       outNode_ptr[vnet]->registerDequeueCallback([this]() {
@@ -677,6 +690,8 @@ InterfaceModule::wakeup()
                 int vc = calculateVC(vnet); 
                 //if no free vc could be found, we need to store it
                 if (vc != -1) {
+                  //update flit stats before sending to network
+                  incrementStatsSpecial(t_flit);
                   //insert the flit into niOutVcs[vc]
                   niOutVcs[vc].insert(t_flit);
                   //after inserting the flit, the state of the vc becomes active
@@ -693,6 +708,8 @@ InterfaceModule::wakeup()
               } else if (t_flit->get_type() == BODY_ || 
                          t_flit->get_type() == TAIL_) {
                 if (head_flit_successful) {
+                  //update flit stats before sending to network
+                  incrementStatsSpecial(t_flit);
                   //insert the flit into niOutVcs[vc] 
                   //No need to refresh vc 
                   niOutVcs[vc].insert(t_flit);
@@ -716,6 +733,8 @@ InterfaceModule::wakeup()
                   buff.insert(t_flit);
                   congested_packets.push_back(buff);
                 } else {
+                  //update flit stats before sending to network
+                  incrementStatsSpecial(t_flit);
                   //insert the flit into niOutVcs[vc]
                   niOutVcs[vc].insert(t_flit);  
                   //after inserting the flit, the state of the vc becomes active
@@ -738,12 +757,12 @@ InterfaceModule::wakeup()
             //outVcState vector (It means that the downstream router got
             //and consumed the flit that we sent and now that vc has another
             //free slot or credit for us to send more)
-            outVcState[t_credit->get_vc()].increment_credit();
+            toBusVcState[t_credit->get_vc()].increment_credit();
             //if is_free_signal is true (meaning vc got totally free)
             if (t_credit->is_free_signal()) {
                 //change the state for that vc from active to idle
                 //at current_tick
-                outVcState[t_credit->get_vc()].setState(IDLE_,
+                toBusVcState[t_credit->get_vc()].setState(IDLE_,
                     curTick());
             }
             //delete t_credit variable
@@ -828,7 +847,7 @@ InterfaceModule::checkStallQueue()
 
                     // If there are no more stalled messages for this vnet, the
                     // callback on it's MessageBuffer is not needed.
-                    if (m_stall_count[vnet] == 0)
+                    if (m_stall_count[vnet] == 0 && m_stall_count_bus[vnet] == 0)
                         outNode_ptr[vnet]->unregisterDequeueCallback();
 
                     //the inport message was enqueued this cycle
@@ -890,11 +909,11 @@ InterfaceModule::checkStallQueue()
                     //erase the ejected flit from m_stall_queue
                     ni_inport->m_stall_queue.erase(stallIter);
                     //decrement the number of stalled messages for this vnet
-                    m_stall_count[vnet]--;
+                    m_stall_count_bus[vnet]--;
 
                     // If there are no more stalled messages for this vnet, the
                     // callback on it's MessageBuffer is not needed.
-                    if (m_stall_count[vnet] == 0)
+                    if (m_stall_count[vnet] == 0 && m_stall_count_bus[vnet] == 0)
                         outNode_ptr[vnet]->unregisterDequeueCallback();
 
                     //the inport message was enqueued this cycle
@@ -1021,7 +1040,7 @@ InterfaceModule::flitisizeMessage(MsgPtr msg_ptr, int vnet)
     return true ;
 }
 
-// Looking for a free output vc
+// Looking for a free output vc in OutputPort for vnet
 int
 InterfaceModule::calculateVC(int vnet)
 {
@@ -1045,6 +1064,34 @@ InterfaceModule::calculateVC(int vnet)
 
     return -1;
 }
+//=================================================================
+//=================================================================
+// Looking for a free output vc in NetworkOutport for vnet
+int
+InterfaceModule::calculateBusVC(int vnet)
+{
+    for (int i = 0; i < m_vc_per_vnet; i++) {
+        int delta = m_bus_vc_allocator[vnet];
+        m_bus_vc_allocator[vnet]++;
+        if (m_bus_vc_allocator[vnet] == m_vc_per_vnet)
+            m_bus_vc_allocator[vnet] = 0;
+
+        if (toBusVcState[(vnet*m_vc_per_vnet) + delta].isInState(
+                    IDLE_, curTick())) {
+            bus_vc_busy_counter[vnet] = 0;
+            return ((vnet*m_vc_per_vnet) + delta);
+        }
+    }
+
+    bus_vc_busy_counter[vnet] += 1;
+    panic_if(bus_vc_busy_counter[vnet] > m_deadlock_threshold,
+        "%s: Possible network deadlock in vnet: %d in Bus at time: %llu \n",
+        name(), vnet, curTick());
+
+    return -1;
+}
+//=================================================================
+//=================================================================
 
 //choose a vc from the outport in a round-robin manner
 void
@@ -1116,7 +1163,6 @@ InterfaceModule::scheduleOutputPort(OutputPort *oPort)
                     //then enqueue time for vc is infinite
                     m_ni_out_vcs_enqueue_time[vc] = Tick(INFINITE_);
                 }
-
                 // Done with this port, continue to schedule
                 // other ports
                 return;
@@ -1124,8 +1170,87 @@ InterfaceModule::scheduleOutputPort(OutputPort *oPort)
         }
     }
 }
+//=================================================================
+//=================================================================
+//choose a vc from NetworkOutport in a round-robin manner
+void
+InterfaceModule::scheduleBusOutport(NetworkOutport *oPort)
+{
+    //choose a vc from the given outport using round-robin
+    int vc = oPort->vcRoundRobin();
 
+    //go through all out VCs of the NI
+    for (int i = 0; i < toBusVcs.size(); i++) { //for the size of toBusVcs
+        vc++; //go to the next vc
+        //if you reach the end, start again from the beginning (round-robin)
+        if (vc == toBusVcs.size())
+            vc = 0;
 
+        //get the vnet for the vc
+        int t_vnet = get_vnet(vc);
+        //if the given outport supports this vnet
+        if (oPort->isVnetSupported(t_vnet)) {
+            // model buffer backpressure
+            //if vc is ready and has credit
+            if (toBusVcs[vc].isReady(curTick()) &&
+                toBusVcs[vc].has_credit()) {
+                //then this vc is a candidate
+                bool is_candidate_vc = true;
+                //the first vc in the vnet
+                int vc_base = t_vnet * m_vc_per_vnet;
+
+                //if t_vnet is ordered
+                if (m_net_ptr->isVNetOrdered(t_vnet)) {
+                    //go through all vcs in t_vnet
+                    //trying to find the vc in the vnet with least enqueue_time
+                    for (int vc_offset = 0; vc_offset < m_vc_per_vnet;
+                         vc_offset++) {
+                        int t_vc = vc_base + vc_offset;
+                        //if t_vnet is ready at the current tick
+                        if (toBusVcs[t_vc].isReady(curTick())) {
+                            //if the enqueue time for t_vc is less than vc
+                            if (m_to_bus_vcs_enqueue_time[t_vc] <
+                                m_to_bus_vcs_enqueue_time[vc]) {
+                                //then vc is not a candidate
+                                is_candidate_vc = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+                //if vc is not a candidate, move on
+                if (!is_candidate_vc)
+                    continue;
+
+                // Update the round robin arbiter
+                oPort->vcRoundRobin(vc);
+
+                //one less free slot in vc
+                toBusVcs[vc].decrement_credit();
+
+                // Just removing the top flit
+                chunk *t_flit = toBusVcs[vc].getTopFlit();
+                //the flit will traverse the link in the next cycle
+                t_flit->set_time(clockEdge(Cycles(1)));
+
+                // Scheduling the flit to be sent to bus
+                scheduleBusFlit(t_flit);
+
+                //if the type of t_flit is TAIL_ or HEAD_TAIL_
+                if (t_flit->get_type() == TAIL_ ||
+                   t_flit->get_type() == HEAD_TAIL_) {
+                    //then enqueue time for vc is infinite
+                    m_to_bus_vcs_enqueue_time[vc] = Tick(INFINITE_);
+                }
+                // Done with this port, continue to schedule
+                // other ports
+                return;
+            }
+        }
+    }
+}
+//=================================================================
+//=================================================================
 
 /** This function looks at the NI buffers
  *  if some buffer has flits which are ready to traverse the link in the next
@@ -1140,6 +1265,18 @@ InterfaceModule::scheduleOutputLink()
         scheduleOutputPort(oPort); //schedule that outport
     }
 }
+//=====================================================
+//=====================================================
+void
+InterfaceModule::scheduleBusOutputLink()
+{
+    // Schedule each bus output link
+    for (auto &ni_outport: ni_outports) { //for each NI bus outport
+        scheduleBusOutport(ni_outport); //schedule that outport
+    }
+}
+//=====================================================
+//=====================================================
 
 //get the inport for the given vnet
 InterfaceModule::InputPort *
@@ -1154,6 +1291,23 @@ InterfaceModule::getInportForVnet(int vnet)
     //if no inport in the NI has that vnet number
     return nullptr;
 }
+//=================================================================
+//=================================================================
+//get the bus inport for the given vnet
+InterfaceModule::NetworkInport *
+InterfaceModule::getNetworkInportForVnet(int vnet)
+{
+    for (auto &ni_inport : ni_inports) { //for each NI inport
+        //if that inport supports vnet
+        if (ni_inport->isVnetSupported(vnet)) {
+            return ni_inport; //that is our inport
+        }
+    }
+    //if no inport in the NI has that vnet number
+    return nullptr;
+}
+//=================================================================
+//=================================================================
 
 /*
  * This function returns the outport which supports the given vnet.
@@ -1173,23 +1327,8 @@ InterfaceModule::getOutportForVnet(int vnet)
     //if no outport in the NI has that vnet number
     return nullptr;
 }
-
 //=================================================================
 //=================================================================
-//get the bus inport for the given vnet
-InterfaceModule::NetworkInport *
-InterfaceModule::getNetworkInportForVnet(int vnet)
-{
-    for (auto &ni_inport : ni_inports) { //for each NI inport
-        //if that inport supports vnet
-        if (ni_inport->isVnetSupported(vnet)) {
-            return ni_inport; //that is our inport
-        }
-    }
-    //if no inport in the NI has that vnet number
-    return nullptr;
-}
-
 //get the bus outport for the given vnet
 InterfaceModule::NetworkOutport *
 InterfaceModule::getNetworkOutportForVnet(int vnet)
@@ -1225,11 +1364,37 @@ InterfaceModule::scheduleFlit(chunk *t_flit)
         oPort->outNetLink()->scheduleEventAbsolute(clockEdge(Cycles(1)));
         return;
     }
-
     //panic if oPort is not valid
     panic("No output port found for vnet:%d\n", t_flit->get_vnet());
     return;
 }
+//======================================================================
+//======================================================================
+//schedule a flit to be sent from an NI Bus outport
+void
+InterfaceModule::scheduleBusFlit(chunk *t_flit)
+{
+    //get the outport associated with the vnet of t_flit
+    NetworkOutport *oPort = getNetworkOutportForVnet(t_flit->get_vnet());
+
+    if (oPort) { //if oPort is valid
+        //t_flit will be sent through oPort network link after one cycle
+        DPRINTF(RubyNetwork, "Scheduling at %s time:%ld flit:%s Message:%s\n",
+        oPort->outNetLink()->name(), clockEdge(Cycles(1)),
+        *t_flit, *(t_flit->get_msg_ptr()));
+        //insert t_flit in the outFlitQueue of oPort
+        oPort->outFlitQueue()->insert(t_flit);
+        //oPort network link will consume t_flit as soon as it comes from
+        //oPort (in one cycle)
+        oPort->outNetLink()->scheduleEventAbsolute(clockEdge(Cycles(1)));
+        return;
+    }
+    //panic if oPort is not valid
+    panic("No output port found for vnet:%d\n", t_flit->get_vnet());
+    return;
+}
+//======================================================================
+//======================================================================
 
 //get the vnet for a vc
 int
@@ -1237,8 +1402,8 @@ InterfaceModule::get_vnet(int vc)
 {
     //for the size of the vnets
     for (int i = 0; i < m_virtual_networks; i++) {
-        //if vc number is equal or greater than base_vc for vnet i,
-        //and less than base_vc for vnet (i+1), then vc belongs to vnet i
+        //if (base_vc for vnet i) =< vc < (base_vc for vnet (i+1)), 
+        //then vc belongs to vnet i
         if (vc >= (i*m_vc_per_vnet) && vc < ((i+1)*m_vc_per_vnet)) {
             return i;
         }
@@ -1261,7 +1426,6 @@ InterfaceModule::checkReschedule()
         if (it == nullptr) { //move on, if the MessageBuffer is null
             continue;
         }
-
         //check the MessageBuffer in the current clock edge for messages
         while (it->isReady(clockEdge())) { // Is there a message waiting
             scheduleEvent(Cycles(1)); //wake up the NI in the next cycle
@@ -1301,7 +1465,15 @@ InterfaceModule::checkReschedule()
     }
 
     //===================================================================
-    //===================================================================  
+    //===================================================================
+    for (auto& to_bus_vc : toBusVcs) { //for every NI to bus vc
+        //if that outvc is ready (has a message)
+        if (to_bus_vc.isReady(clockEdge(Cycles(1)))) {
+            scheduleEvent(Cycles(1)); //wake up the NI in the next cycle
+            return;
+        }
+    }
+  
     for (auto &ni_inport : ni_inports) { //for every bus inport in NI
         //get the network link coming into that inport
         NetLink *inNetLink = ni_inport->inNetLink();
@@ -1348,6 +1520,11 @@ InterfaceModule::functionalRead(Packet *pkt, WriteMask &mask)
   
     //==========================================================
     //==========================================================
+    for (auto& to_bus_vc : toBusVcs) {
+        if (to_bus_vc.functionalRead(pkt, mask))
+            read = true;
+    }
+  
     for (auto &ni_outport: ni_outports) {
         if (ni_outport->outFlitQueue()->functionalRead(pkt, mask))
             read = true;
@@ -1375,6 +1552,10 @@ InterfaceModule::functionalWrite(Packet *pkt)
   
     //======================================================================
     //======================================================================
+    for (auto& to_bus_vc : toBusVcs) { //for every bus vc in NI
+        num_functional_writes += to_bus_vc.functionalWrite(pkt);
+    }
+  
     for (auto &ni_outport: ni_outports) { //for every bus outport in NI
         num_functional_writes += ni_outport->outFlitQueue()->functionalWrite(pkt);
     }
