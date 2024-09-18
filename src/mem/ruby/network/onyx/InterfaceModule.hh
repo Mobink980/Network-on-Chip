@@ -76,12 +76,14 @@ class InterfaceModule : public ClockedObject, public Consumer
         SwitchID router_id, uint32_t consumerVcs);
 
     //====================================================
+    //====================================================
     //add a bus-specific inport to the NI
     void addNetworkInport(NetLink *in_link, AckLink *credit_link);
     //add a bus-specific outport to the NI
     void addNetworkOutport(NetLink *out_link, AckLink *credit_link,
         SwitchID bus_id, uint32_t consumerVcs);
     //=====================================================
+    //====================================================
 
     //for enqueuing a stalled message into the MessageBuffer
     //in the next cycle, after a message was dequeued this cycle
@@ -108,7 +110,12 @@ class InterfaceModule : public ClockedObject, public Consumer
 
     //schedule a flit to be sent from an NI output port
     void scheduleFlit(chunk *t_flit);
-
+    //===================================================
+    //===================================================
+    //schedule a flit to be sent from an NI output port
+    void scheduleBusFlit(chunk *t_flit);
+    //===================================================
+    //===================================================
     //get the id of the router connected to the NI with an outport
     //each port has a specific vnet number
     int get_router_id(int vnet)
@@ -121,7 +128,8 @@ class InterfaceModule : public ClockedObject, public Consumer
         return oPort->routerID();
     }
 
-    //=========================================================
+    //=================================================================
+    //=================================================================
     //get the id of the bus connected to the NI with a network outport
     //each port has a specific vnet number
     int get_bus_id(int vnet)
@@ -133,7 +141,8 @@ class InterfaceModule : public ClockedObject, public Consumer
         //return the bus id of that outport
         return ni_outport->busID();
     }
-    //=========================================================
+    //=================================================================
+    //=================================================================
 
     //class OutputPort is a member of the NetworkInterface class
     class OutputPort
@@ -357,7 +366,7 @@ class InterfaceModule : public ClockedObject, public Consumer
           //bitWidth of the inport links
           uint32_t _bitWidth;
     };
-
+//=============================================================================
 //=============================================================================
     //class NetworkOutport is a member of the NetworkInterface class
     class NetworkOutport
@@ -582,6 +591,7 @@ class InterfaceModule : public ClockedObject, public Consumer
           uint32_t _bitWidth;
     };
 //=============================================================================
+//=============================================================================
 
 
   private:
@@ -595,33 +605,57 @@ class InterfaceModule : public ClockedObject, public Consumer
     int m_vc_per_vnet;
     //vc allocators
     std::vector<int> m_vc_allocator;
+    //================================================
+    //================================================
+    //bus vc allocators
+    std::vector<int> m_bus_vc_allocator;
+    //================================================
+    //================================================
     //NetworkInterface outports
     std::vector<OutputPort *> outPorts;
     //NetworkInterface inports
     std::vector<InputPort *> inPorts;
+    //===============================================
     //===============================================
     //NetworkInterface outports
     std::vector<NetworkOutport *> ni_outports;
     //NetworkInterface inports
     std::vector<NetworkInport *> ni_inports;
     //===============================================
+    //===============================================
     //to check for possible network deadlock in a vnet
     int m_deadlock_threshold;
-    //for knowing the states of the VCs
-    std::vector<VcState> outVcState;
 
     //number of stalls for every vnet
     std::vector<int> m_stall_count;
+    //==============================================
+    //==============================================
+    //number of stalls for every vnet for bus
+    std::vector<int> m_stall_count_bus;
+    //==============================================
+    //==============================================
 
     // Input Flit Buffers
     // The flit buffers which will serve the Consumer
-    // "out" means coming out of the network (the flits in niOutVcs will 
-    // convert to messages and these messages will be consumed by the protocol)
+    // The flits in niOutVcs (flitisized message) will be sent to the network.
     std::vector<chunkBuffer>  niOutVcs;
     //holds the enqueue time for vcs in the niOutVcs
     std::vector<Tick> m_ni_out_vcs_enqueue_time;
+    //for knowing the states of the VCs
+    std::vector<VcState> outVcState;
+    //====================================================================
+    //====================================================================
+    //just like niOutVcs but the flits will go to NetworkOutport (Bus) 
+    //instead of the OutputPort (router)
+    std::vector<chunkBuffer>  toBusVcs;
+    //holds the enqueue time for vcs in the toBusVcs
+    std::vector<Tick> m_to_bus_vcs_enqueue_time;
+    //for knowing the states of the VCs going to Bus
+    std::vector<VcState> toBusVcState;
     //all the packets that come from NetworkInport and can't proceed stay here
     std::vector<chunkBuffer> congested_packets;
+    //====================================================================
+    //====================================================================
 
     // The Message buffers that takes messages from the protocol
     //from the coherence protocol controller
@@ -631,6 +665,12 @@ class InterfaceModule : public ClockedObject, public Consumer
     std::vector<MessageBuffer *> outNode_ptr;
     // When a vc stays busy for a long time, it indicates a deadlock
     std::vector<int> vc_busy_counter;
+    //================================================================
+    //================================================================
+    // When a bus vc stays busy for a long time, it indicates a deadlock
+    std::vector<int> bus_vc_busy_counter;
+    //================================================================
+    //================================================================
 
     //checking the stall queue to reschedule stalled flits
     void checkStallQueue();
@@ -640,11 +680,29 @@ class InterfaceModule : public ClockedObject, public Consumer
     bool flitisizeMessage(MsgPtr msg_ptr, int vnet);
     //Looking for a free output vc
     int calculateVC(int vnet);
+    //=========================================
+    //=========================================
+    //Looking for a free output vc
+    int calculateBusVC(int vnet);
+    //=========================================
+    //=========================================
 
     //choose a vc from the outport in a round-robin manner
     void scheduleOutputPort(OutputPort *oPort);
+    //=========================================
+    //=========================================
+    //choose a vc from NetworkOutport in a round-robin manner
+    void scheduleBusOutport(NetworkOutport *oPort);
+    //=========================================
+    //=========================================
     //schedule the outport link wakeup
     void scheduleOutputLink();
+    //=========================================
+    //=========================================
+    //schedule the bus outport link wakeup
+    void scheduleBusOutputLink();
+    //=========================================
+    //=========================================
     //Wakeup the NI in the next cycle to consume msgs or flits,
     //or when there's a clock period difference (to consume link flits)
     void checkReschedule();
@@ -660,13 +718,14 @@ class InterfaceModule : public ClockedObject, public Consumer
     InputPort *getInportForVnet(int vnet);
     //get the outport for the given vnet
     OutputPort *getOutportForVnet(int vnet);
-
-    //==========================================
+    //===================================================
+    //===================================================
     //get a bus-specific inport for the given vnet
     NetworkInport *getNetworkInportForVnet(int vnet);
     //get a bus-specific outport for the given vnet
     NetworkOutport *getNetworkOutportForVnet(int vnet);
-    //==========================================
+    //===================================================
+    //===================================================
 };
 
 } // namespace onyx
