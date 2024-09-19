@@ -35,6 +35,7 @@
 
 #include "mem/ruby/network/BasicRouter.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
+#include "params/BasicNIBusLink.hh"
 #include "params/BasicExtLink.hh"
 #include "params/BasicIntLink.hh"
 #include "params/BasicLink.hh"
@@ -81,6 +82,19 @@ class BasicExtLink : public BasicLink
     friend class Topology;
 };
 
+//============================================
+//============================================
+class BasicNIBusLink : public BasicLink
+{
+  public:
+    PARAMS(BasicNIBusLink);
+    BasicNIBusLink(const Params &p);
+
+    friend class Topology;
+};
+//============================================
+//============================================
+
 class BasicIntLink : public BasicLink
 {
   public:
@@ -89,9 +103,6 @@ class BasicIntLink : public BasicLink
 
     friend class Topology;
 };
-
-
-
 
 } // namespace ruby
 } // namespace gem5
