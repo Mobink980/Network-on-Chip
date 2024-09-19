@@ -28,6 +28,7 @@
 from m5.objects.BasicLink import (
     BasicExtLink,
     BasicIntLink,
+    BasicNIBusLink 
 )
 from m5.objects.ClockedObject import ClockedObject
 from m5.params import *
@@ -182,3 +183,69 @@ class OnyxExtLink(BasicExtLink):
     width = Param.UInt32(
         Parent.ni_flit_size, "bit width supported by the router"
     )
+
+#=========================================================================
+#=========================================================================
+# Exterior fixed pipeline links between a bus and a controller
+# OnyxNIBusLink is inherited from the BasicNIBusLink
+class OnyxNIBusLink(BasicNIBusLink):
+    type = "OnyxNIBusLink"
+    cxx_header = "mem/ruby/network/onyx/OnyxLink.hh"
+    cxx_class = "gem5::ruby::onyx::OnyxNIBusLink"
+
+    # The external link is bi-directional.
+    # It includes two forward links (for flits)
+    # and two backward flow-control links (for credits),
+    # one per direction
+    _nls = []
+    # In uni-directional link
+    _nls.append(NetLink())
+    # Out uni-directional link
+    _nls.append(NetLink())
+    network_links = VectorParam.NetLink(_nls, "forward links")
+
+    _cls = []
+    # In uni-directional link
+    _cls.append(AckLink())
+    # Out uni-directional link
+    _cls.append(AckLink())
+    credit_links = VectorParam.AckLink(_cls, "backward flow-control links")
+
+    # The ext_cdc and intt_cdc flags are used to enable the
+    # clock domain crossing(CDC) at the external and internal
+    # end of the link respectively. This is required when the
+    # link and the objected connected to the link are operating
+    # at different clock domains. These flags should be set
+    # in the network topology files.
+    ext_cdc = Param.Bool(False, "Enable Clock Domain Crossing")
+    int_cdc = Param.Bool(False, "Enable Clock Domain Crossing")
+
+    # The ext_serdes and int_serdes flags are used to enable
+    # the Serializer-Deserializer units at the external and
+    # internal end of the link respectively. Enabling
+    # these flags is necessary when the connecting object
+    # supports a different flit width.
+    ext_serdes = Param.Bool(False, "Enable Serializer-Deserializer")
+    int_serdes = Param.Bool(False, "Enable Serializer-Deserializer")
+
+    # The network bridge encapsulates both the CDC and Ser-Des
+    # units in HeteroOnyx. This is automatically enabled when
+    # either CDC or Ser-Des is enabled.
+    ext_net_bridge = VectorParam.NetBridge(
+        [], "Network Bridge at external end"
+    )
+    ext_cred_bridge = VectorParam.NetBridge(
+        [], "Credit Bridge at external end"
+    )
+    int_net_bridge = VectorParam.NetBridge(
+        [], "Network Bridge at internal end"
+    )
+    int_cred_bridge = VectorParam.NetBridge(
+        [], "Credit Bridge at internal end"
+    )
+
+    width = Param.UInt32(
+        Parent.ni_flit_size, "bit width supported by the bus"
+    )
+#=========================================================================
+#=========================================================================
