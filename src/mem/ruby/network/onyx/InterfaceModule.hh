@@ -701,6 +701,8 @@ class InterfaceModule : public ClockedObject, public Consumer
     //=========================================
     //schedule the bus outport link wakeup
     void scheduleBusOutputLink();
+    //Find the layer of a router based on its id
+    int get_destination_layer(int router_id);
     //=========================================
     //=========================================
     //Wakeup the NI in the next cycle to consume msgs or flits,
