@@ -41,6 +41,7 @@
 #include "mem/ruby/network/onyx/NetLink.hh"
 #include "params/OnyxExtLink.hh"
 #include "params/OnyxIntLink.hh"
+#include "params/OnyxNIBusLink.hh"
 
 namespace gem5
 {
@@ -156,6 +157,65 @@ operator<<(std::ostream& out, const OnyxExtLink& obj)
     out << std::flush;
     return out;
 }
+
+//=================================================================
+//=================================================================
+//OnyxNIBusLink is inherited from BasicNIBusLink
+class OnyxNIBusLink : public BasicNIBusLink
+{
+  public:
+    typedef OnyxNIBusLinkParams Params;
+    OnyxNIBusLink(const Params &p); //constructor
+
+    void init(); //initializing bridge for NI-Bus links
+
+    void print(std::ostream& out) const;
+
+    //Make the OnyxNetwork class a friend of OnyxNIBusLink.
+    //This gives OnyxNetwork access to all private members
+    //of OnyxNIBusLink class.
+    friend class OnyxNetwork;
+
+  protected:
+    //automatically enabled when either SerDes or
+    //CDC is enabled.
+    bool extBridgeEn;
+    bool intBridgeEn;
+
+    //enabling Serializer-Deserializer units
+    bool extSerdesEn;
+    bool intSerdesEn;
+
+    //enabling Clock Domain Crossing units
+    bool extCdcEn;
+    bool intCdcEn;
+
+    //external links are bi-directional.
+    //we have two network_links and two
+    //credit_links.
+    NetLink* m_network_links[2];
+    AckLink* m_credit_links[2];
+
+    //ext and int nodes of bridge for network link
+    NetBridge* extNetBridge[2];
+    NetBridge* intNetBridge[2];
+
+    //ext and int nodes of bridge for credit link
+    NetBridge* extCredBridge[2];
+    NetBridge* intCredBridge[2];
+
+};
+
+//printing properties of a Onyx NIBus link
+inline std::ostream&
+operator<<(std::ostream& out, const OnyxNIBusLink& obj)
+{
+    obj.print(out);
+    out << std::flush;
+    return out;
+}
+//=================================================================
+//=================================================================
 
 
 } // namespace onyx
