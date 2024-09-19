@@ -30,14 +30,12 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
 
 BasicLink::BasicLink(const Params &p)
     : SimObject(p)
 {
-    //std::cout<<"BasicLink constructor called."<<std::endl;
     m_latency = p.latency;
     m_bandwidth_factor = p.bandwidth_factor;
     m_weight = p.weight;
@@ -45,20 +43,21 @@ BasicLink::BasicLink(const Params &p)
 }
 
 void
-BasicLink::init()
-{
-}
+BasicLink::init() {}
 
 void
 BasicLink::print(std::ostream& out) const
-{
-    out << name();
-}
-
+{ out << name(); }
+    
 //BasicExtLink constructor calling BasicLink constructor
 BasicExtLink::BasicExtLink(const Params &p)
     : BasicLink(p) {}
 
+//============================================================
+//BasicNIBusLink constructor calling BasicLink constructor
+BasicNIBusLink::BasicNIBusLink(const Params &p)
+    : BasicLink(p) {}
+//============================================================
 
 //BasicIntLink constructor calling BasicLink constructor
 BasicIntLink::BasicIntLink(const Params &p)
