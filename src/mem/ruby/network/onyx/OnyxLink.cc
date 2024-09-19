@@ -194,6 +194,93 @@ OnyxExtLink::print(std::ostream& out) const
     out << name();
 }
 
+//=====================================================================
+//=====================================================================
+//OnyxNIBusLink constructor
+OnyxNIBusLink::OnyxNIBusLink(const Params &p)
+    : BasicNIBusLink(p)
+{
+    // Bi-directional
+
+    // In [to the network from NI]
+    //initialize network and credit links
+    m_network_links[0] = p.network_links[0];
+    m_credit_links[0] = p.credit_links[0];
+
+    // Out [from the network to NI]
+    //initialize network and credit links
+    m_network_links[1] = p.network_links[1];
+    m_credit_links[1] = p.credit_links[1];
+
+    //initialize cdc enable
+    extCdcEn = p.ext_cdc;
+    intCdcEn = p.int_cdc;
+
+    //initialize SerDes enable
+    extSerdesEn = p.ext_serdes;
+    intSerdesEn = p.int_serdes;
+
+    //bridge units for ext links (disabled by default)
+    extBridgeEn = false;
+    intBridgeEn = false;
+
+    //if either cdc or SerDes is enabled at the
+    //ext node, enable the extBridge
+    if (extCdcEn || extSerdesEn) {
+        extBridgeEn = true;
+        //initialize the net & cred bridge at ext(bi-directional)
+        extNetBridge[0] = p.ext_net_bridge[0];
+        extCredBridge[0] = p.ext_cred_bridge[0];
+        extNetBridge[1] = p.ext_net_bridge[1];
+        extCredBridge[1] = p.ext_cred_bridge[1];
+    }
+
+    //if either cdc or SerDes is enabled at the
+    //int node, enable the intBridge
+    if (intCdcEn || intSerdesEn) {
+        intBridgeEn = true;
+        //initialize the net & cred bridge at int(bi-directional)
+        intNetBridge[0] = p.int_net_bridge[0];
+        intNetBridge[1] = p.int_net_bridge[1];
+        intCredBridge[0] = p.int_cred_bridge[0];
+        intCredBridge[1] = p.int_cred_bridge[1];
+    }
+}
+
+void
+OnyxNIBusLink::init()
+{
+    if (extBridgeEn) {
+        //make sure extNetBridges and extCredBridges is set
+        assert(extNetBridge[0] && extCredBridge[0] &&
+           extNetBridge[1] && extCredBridge[1]);
+        //call the initBridge function for extNetBridges & extCredBridges
+        extNetBridge[0]->initBridge(extCredBridge[0], extCdcEn, extSerdesEn);
+        extCredBridge[0]->initBridge(extNetBridge[0], extCdcEn, extSerdesEn);
+        extNetBridge[1]->initBridge(extCredBridge[1], extCdcEn, extSerdesEn);
+        extCredBridge[1]->initBridge(extNetBridge[1], extCdcEn, extSerdesEn);
+    }
+
+    if (intBridgeEn) {
+        //make sure intNetBridges and intCredBridges is set
+        assert(intNetBridge[0] && intCredBridge[0] &&
+           intNetBridge[1] && intCredBridge[1]);
+        //call the initBridge function for intNetBridges & intCredBridges
+        intNetBridge[0]->initBridge(intCredBridge[0], intCdcEn, intSerdesEn);
+        intCredBridge[0]->initBridge(intNetBridge[0], intCdcEn, intSerdesEn);
+        intNetBridge[1]->initBridge(intCredBridge[1], intCdcEn, intSerdesEn);
+        intCredBridge[1]->initBridge(intNetBridge[1], intCdcEn, intSerdesEn);
+    }
+}
+
+//print the OnyxNIBusLink
+void
+OnyxNIBusLink::print(std::ostream& out) const
+{
+    out << name();
+}
+//=====================================================================
+//=====================================================================
 
 } // namespace onyx
 } // namespace ruby
