@@ -33,7 +33,7 @@ if not env['CONF']['RUBY']:
 
 #=================================================================
 SimObject('BasicLink.py', sim_objects=[
-    'BasicLink', 'BasicExtLink', 'BasicIntLink'])
+    'BasicLink', 'BasicExtLink', 'BasicNIBusLink', 'BasicIntLink'])
 #=================================================================
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 SimObject('BasicRouter.py', sim_objects=['BasicRouter', 'BasicBus'])
