@@ -34,7 +34,7 @@ if not env['CONF']['RUBY']:
 #=====================================================================
 SimObject('OnyxLink.py', enums=['ONYXCDCType'], sim_objects=[
     'NetLink', 'AckLink', 'NetBridge', 'OnyxIntLink',
-    'OnyxExtLink'])
+    'OnyxExtLink', 'OnyxNIBusLink'])
 #=====================================================================
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 SimObject('OnyxNetwork.py', sim_objects=[
