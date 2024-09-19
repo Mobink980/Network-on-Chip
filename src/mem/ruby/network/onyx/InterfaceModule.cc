@@ -929,6 +929,25 @@ InterfaceModule::checkStallQueue()
     //=======================================================================
 }
 
+//=======================================================================
+//=======================================================================
+//Find the layer of a router based on its id
+int
+RoutingTable::get_destination_layer(int router_id)
+{
+    int num_rows = m_net_ptr->getNumRows();
+    int num_cols = m_net_ptr->getNumCols();
+    int num_layers = m_net_ptr->getNumLayers();
+    assert(num_rows > 0 && num_cols > 0 && num_layers > 0);
+    //number of routers or RLIs per layer
+    int num_routers_layer = num_rows * num_cols;
+    if (num_layers > 1) { return floor(router_id/num_routers_layer); }
+    //return 0 if we only have one layer
+    return 0;
+}
+//=======================================================================
+//=======================================================================
+
 // Embed the protocol message into flits
 bool
 InterfaceModule::flitisizeMessage(MsgPtr msg_ptr, int vnet)
@@ -941,10 +960,18 @@ InterfaceModule::flitisizeMessage(MsgPtr msg_ptr, int vnet)
     // gets all the destinations associated with this message.
     std::vector<NodeID> dest_nodes = net_msg_dest.getAllDest();
 
-    // Number of flits is dependent on the link bandwidth available.
-    // This is expressed in terms of bytes/cycle or the flit size
+    //get the correct OutputPort
     OutputPort *oPort = getOutportForVnet(vnet);
     assert(oPort); //make sure the outport for the vnet exists
+    //================================================================
+    //================================================================
+    //get the correct bus outport
+    NetworkOutport *ni_outport = getNetworkOutportForVnet(vnet);
+    assert(ni_outport); //make sure the outport for the vnet exists
+    //================================================================
+    //================================================================
+    // Number of flits is dependent on the link bandwidth available.
+    // This is expressed in terms of bytes/cycle or the flit size
     //calculate how many flits is needed (messageSize/link_bitWidth)
     int num_flits = (int)divCeil((float) m_net_ptr->MessageSizeType_to_int(
         net_msg_ptr->getMessageSize()), (float)oPort->bitWidth());
@@ -959,16 +986,33 @@ InterfaceModule::flitisizeMessage(MsgPtr msg_ptr, int vnet)
 
         // this will return a free output virtual channel
         int vc = calculateVC(vnet); //find a free vc in dest vnet
-
-        //no free vc was found, so we can't flitisize the message
-        if (vc == -1) {
-            return false ;
-        }
+      
         //copy the msg_ptr into new_msg_ptr variable
         MsgPtr new_msg_ptr = msg_ptr->clone();
         //get the destination node id
         NodeID destID = dest_nodes[ctr];
-
+        //==============================================================
+        //==============================================================
+        //find a free vc in dest vnet for bus
+        int bus_vc = calculateBusVC(vnet); 
+        //get the current router_id
+        int current_router = oPort->routerID();
+        //get the dest router_id 
+        int destination_router = m_net_ptr->get_router_id(destID, vnet);
+        //get the layer of the current router
+        int current_layer = get_destination_layer(current_router);
+        //get the layer of the destination router
+        int destination_layer = get_destination_layer(destination_router);
+        //whether the message destination is this layer
+        bool this_layer = (current_layer == destination_layer);
+        //==============================================================
+        //==============================================================
+        //If the destination is this layer and we don't have vc in OutputPort,
+        //or the destination is not this layer and don't have vc in NetworkOutport,
+        //then we can't flitisize the message
+        if ((vc == -1 && this_layer) || (bus_vc == -1 && !this_layer)) {
+            return false ;
+        }
         //get a pointer to new_msg_ptr
         Message *new_net_msg_ptr = new_msg_ptr.get();
         //if we have more than one destination for this message
@@ -997,7 +1041,6 @@ InterfaceModule::flitisizeMessage(MsgPtr msg_ptr, int vnet)
         // Embed Route into the flits
         // NetDest format is used by the routing table
         // Custom routing algorithms just need destID
-
         RouteInfo route; //for embedding route info into the flits
         route.vnet = vnet; //set the vnet
         route.net_dest = new_net_msg_ptr->getDestination(); //set the NetDest
@@ -1010,32 +1053,57 @@ InterfaceModule::flitisizeMessage(MsgPtr msg_ptr, int vnet)
         // initialize hops_traversed to -1
         // so that the first router increments it to 0
         route.hops_traversed = -1;
-
         //a packet was injected into the vnet in the OnyxNetwork
         m_net_ptr->increment_injected_packets(vnet);
         //Keep track of the data traffic and control traffic
         m_net_ptr->update_traffic_distribution(route);
         int packet_id = m_net_ptr->getNextPacketID();
-        for (int i = 0; i < num_flits; i++) {
-            //a flit was injected into the vnet in the OnyxNetwork
-            m_net_ptr->increment_injected_flits(vnet);
-            //create a new flit and fill its fields with appropriate data
-            chunk *fl = new chunk(packet_id,
-                i, vc, vnet, route, num_flits, new_msg_ptr,
-                m_net_ptr->MessageSizeType_to_int(
-                net_msg_ptr->getMessageSize()),
-                oPort->bitWidth(), curTick());
-
-            //the src delay for the flit is the current_tick - msg_ptr_time
-            fl->set_src_delay(curTick() - msg_ptr->getTime());
-            //insert the created flit into the right vc in NI
-            niOutVcs[vc].insert(fl);
+        //if the destination layer of the message is the current layer
+        if (this_layer) {
+          for (int i = 0; i < num_flits; i++) {
+              //a flit was injected into the vnet in the OnyxNetwork
+              m_net_ptr->increment_injected_flits(vnet);
+              //create a new flit and fill its fields with appropriate data
+              chunk *fl = new chunk(packet_id,
+                  i, vc, vnet, route, num_flits, new_msg_ptr,
+                  m_net_ptr->MessageSizeType_to_int(
+                  net_msg_ptr->getMessageSize()),
+                  oPort->bitWidth(), curTick());
+  
+              //the src delay for the flit is the current_tick - msg_ptr_time
+              fl->set_src_delay(curTick() - msg_ptr->getTime());
+              //insert the created flit into the right vc in NI
+              niOutVcs[vc].insert(fl);
+          }
+  
+          //the enqueue time in the vc is the current tick
+          m_ni_out_vcs_enqueue_time[vc] = curTick();
+          //after inserting the flit, the state of the vc becomes active
+          outVcState[vc].setState(ACTIVE_, curTick());          
+        
+        } else { //the destination of the message is another layer
+          for (int i = 0; i < num_flits; i++) {
+              //a flit was injected into the vnet in the OnyxNetwork
+              m_net_ptr->increment_injected_flits(vnet);
+              //create a new flit and fill its fields with appropriate data
+              chunk *fl = new chunk(packet_id,
+                  i, bus_vc, vnet, route, num_flits, new_msg_ptr,
+                  m_net_ptr->MessageSizeType_to_int(
+                  net_msg_ptr->getMessageSize()),
+                  ni_outport->bitWidth(), curTick());
+  
+              //the src delay for the flit is the current_tick - msg_ptr_time
+              fl->set_src_delay(curTick() - msg_ptr->getTime());
+              //insert the created flit into the right vc in NI
+              toBusVcs[vc].insert(fl);
+          }
+  
+          //the enqueue time in the vc is the current tick
+          m_to_bus_vcs_enqueue_time[vc] = curTick();
+          //after inserting the flit, the state of the vc becomes active
+          toBusVcs[vc].setState(ACTIVE_, curTick());            
         }
 
-        //the enqueue time in the vc is the current tick
-        m_ni_out_vcs_enqueue_time[vc] = curTick();
-        //after inserting the flit, the state of the vc becomes active
-        outVcState[vc].setState(ACTIVE_, curTick());
     }
     return true ;
 }
