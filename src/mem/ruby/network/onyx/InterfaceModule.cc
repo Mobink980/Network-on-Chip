@@ -684,10 +684,10 @@ InterfaceModule::wakeup()
               //But when a flit comes in from a NetworkInport and does not belong
               //to this NI, then it belongs to some other NI in the current layer
               //and we need to pass it to the router (just like when we do that
-              //when the flit was produced in this NI).   
+              //when the flit was produced in this NI).  
+              //find a free vc in destination vnet in niOutVcs
+              int vc = calculateVC(vnet);  
               if (t_flit->get_type() == HEAD_) { 
-                //find a free vc in destination vnet in niOutVcs
-                int vc = calculateVC(vnet); 
                 //if no free vc could be found, we need to store it
                 if (vc != -1) {
                   //update flit stats before sending to network
@@ -721,7 +721,7 @@ InterfaceModule::wakeup()
 
               } else {
                 //This means that the type of flit is HEAD_TAIL
-                //CREDIT flit does not traverse on the betwork link
+                //CREDIT flit does not traverse on the network link
                 //find a free vc in destination vnet in niOutVcs
                 int vc = calculateVC(vnet); 
                 //if no free vc could be found, we need to store it
@@ -729,9 +729,9 @@ InterfaceModule::wakeup()
                   //insert the flit into the congested_packets
                   //We can resend these packets if a free vc in 
                   //niOutVcs becomes available.
-                  chunkBuffer buff = new chunkBuffer();
-                  buff.insert(t_flit);
-                  congested_packets.push_back(buff);
+                  chunkBuffer *buff = new chunkBuffer();
+                  buff->insert(t_flit);
+                  congested_packets.push_back(*buff);
                 } else {
                   //update flit stats before sending to network
                   incrementStatsSpecial(t_flit);
@@ -933,7 +933,7 @@ InterfaceModule::checkStallQueue()
 //=======================================================================
 //Find the layer of a router based on its id
 int
-RoutingTable::get_destination_layer(int router_id)
+InterfaceModule::get_destination_layer(int router_id)
 {
     int num_rows = m_net_ptr->getNumRows();
     int num_cols = m_net_ptr->getNumCols();
@@ -1101,7 +1101,7 @@ InterfaceModule::flitisizeMessage(MsgPtr msg_ptr, int vnet)
           //the enqueue time in the vc is the current tick
           m_to_bus_vcs_enqueue_time[vc] = curTick();
           //after inserting the flit, the state of the vc becomes active
-          toBusVcs[vc].setState(ACTIVE_, curTick());            
+          toBusVcState[vc].setState(ACTIVE_, curTick());            
         }
 
     }
@@ -1261,7 +1261,7 @@ InterfaceModule::scheduleBusOutport(NetworkOutport *oPort)
             // model buffer backpressure
             //if vc is ready and has credit
             if (toBusVcs[vc].isReady(curTick()) &&
-                toBusVcs[vc].has_credit()) {
+                toBusVcState[vc].has_credit()) {
                 //then this vc is a candidate
                 bool is_candidate_vc = true;
                 //the first vc in the vnet
@@ -1294,7 +1294,7 @@ InterfaceModule::scheduleBusOutport(NetworkOutport *oPort)
                 oPort->vcRoundRobin(vc);
 
                 //one less free slot in vc
-                toBusVcs[vc].decrement_credit();
+                toBusVcState[vc].decrement_credit();
 
                 // Just removing the top flit
                 chunk *t_flit = toBusVcs[vc].getTopFlit();
