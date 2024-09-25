@@ -52,10 +52,10 @@ class BasicExtLink(BasicLink):
 
 #==============================================================
 #==============================================================
-class BasicNIBusLink(BasicLink):
-    type = "BasicNIBusLink"
+class BasicBusLink(BasicLink):
+    type = "BasicBusLink"
     cxx_header = "mem/ruby/network/BasicLink.hh"
-    cxx_class = "gem5::ruby::BasicNIBusLink"
+    cxx_class = "gem5::ruby::BasicBusLink"
 
     ext_node = Param.RubyController("External node")
     int_node = Param.BasicBus("ID of internal node")
