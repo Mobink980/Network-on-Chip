@@ -187,11 +187,11 @@ class OnyxExtLink(BasicExtLink):
 #=========================================================================
 #=========================================================================
 # Exterior fixed pipeline links between a bus and a controller
-# OnyxNIBusLink is inherited from the BasicNIBusLink
-class OnyxNIBusLink(BasicNIBusLink):
-    type = "OnyxNIBusLink"
+# OnyxBusLink is inherited from the BasicNIBusLink
+class OnyxBusLink(BasicNIBusLink):
+    type = "OnyxBusLink"
     cxx_header = "mem/ruby/network/onyx/OnyxLink.hh"
-    cxx_class = "gem5::ruby::onyx::OnyxNIBusLink"
+    cxx_class = "gem5::ruby::onyx::OnyxBusLink"
 
     # The external link is bi-directional.
     # It includes two forward links (for flits)
