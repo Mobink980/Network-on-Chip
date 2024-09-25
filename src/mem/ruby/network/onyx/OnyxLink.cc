@@ -196,8 +196,8 @@ OnyxExtLink::print(std::ostream& out) const
 
 //=====================================================================
 //=====================================================================
-//OnyxNIBusLink constructor
-OnyxNIBusLink::OnyxNIBusLink(const Params &p)
+//OnyxBusLink constructor
+OnyxBusLink::OnyxBusLink(const Params &p)
     : BasicNIBusLink(p)
 {
     // Bi-directional
@@ -248,7 +248,7 @@ OnyxNIBusLink::OnyxNIBusLink(const Params &p)
 }
 
 void
-OnyxNIBusLink::init()
+OnyxBusLink::init()
 {
     if (extBridgeEn) {
         //make sure extNetBridges and extCredBridges is set
@@ -273,9 +273,9 @@ OnyxNIBusLink::init()
     }
 }
 
-//print the OnyxNIBusLink
+//print the OnyxBusLink
 void
-OnyxNIBusLink::print(std::ostream& out) const
+OnyxBusLink::print(std::ostream& out) const
 {
     out << name();
 }
