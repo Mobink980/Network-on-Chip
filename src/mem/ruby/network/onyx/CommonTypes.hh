@@ -56,7 +56,6 @@ enum flit_stage {I_, VA_, SA_, ST_, LT_, NUM_FLIT_STAGE_};
 //EXT_IN_: from NI to the network
 //EXT_OUT_: from network to NI (going out of the network)
 //INT_: internal links between routers
-// enum link_type { EXT_IN_, EXT_OUT_, INT_, NUM_LINK_TYPES_ };
 //=============================================================
 enum link_type { EXT_IN_, EXT_OUT_, BUS_IN_, BUS_OUT_, INT_, NUM_LINK_TYPES_ };
 //=============================================================
