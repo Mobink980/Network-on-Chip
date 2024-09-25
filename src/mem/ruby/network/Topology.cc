@@ -73,7 +73,7 @@ Topology::Topology(uint32_t num_nodes,
                    uint32_t num_busses,
                    uint32_t num_vnets,
                    const std::vector<BasicExtLink *> &ext_links,
-                   const std::vector<BasicNIBusLink *> &bus_links,
+                   const std::vector<BasicBusLink *> &bus_links,
                    const std::vector<BasicIntLink *> &int_links)
     : m_nodes(MachineType_base_number(MachineType_NUM)),
       m_number_of_switches(num_routers),
@@ -125,10 +125,10 @@ Topology::Topology(uint32_t num_nodes,
     //==========================================================================
     //==========================================================================
     // Bus Links
-    for (std::vector<BasicNIBusLink*>::const_iterator i = bus_links.begin();
+    for (std::vector<BasicBusLink*>::const_iterator i = bus_links.begin();
          i != bus_links.end(); ++i) { //for each bus_link
         //get that bus_link
-        BasicNIBusLink *bus_link = (*i);
+        BasicBusLink *bus_link = (*i);
         //get the external node for that ext_link (abs_cntrl)
         AbstractController *abs_cntrl = bus_link->params().ext_node;
         //get the internal node for that bus_link (bus)
