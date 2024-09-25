@@ -127,6 +127,16 @@ class OnyxNetwork : public Network
     //create an external link from NI to router
     void makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
                     std::vector<NetDest>& routing_table_entry);
+    //===================================================================
+    //===================================================================
+    //create a bus link from bus to NI
+    void makeBusOutLink(SwitchID src, NodeID dest, BasicLink* link,
+                     std::vector<NetDest>& routing_table_entry);
+    //create a bus link from NI to bus
+    void makeBusInLink(NodeID src, SwitchID dest, BasicLink* link,
+                    std::vector<NetDest>& routing_table_entry);
+    //===================================================================
+    //===================================================================
     //create an internal link between two routers (from src_outport
     //to dst_inport)
     void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
@@ -251,6 +261,14 @@ class OnyxNetwork : public Network
     statistics::Scalar m_total_ext_in_link_utilization;
     //total utilization of ext_out (from router to NI) links
     statistics::Scalar m_total_ext_out_link_utilization;
+    //============================================================
+    //============================================================
+    //total utilization of bus_in (from NI to bus) links
+    statistics::Scalar m_total_bus_in_link_utilization;
+    //total utilization of bus_out (from bus to NI) links
+    statistics::Scalar m_total_bus_out_link_utilization;
+    //============================================================
+    //============================================================
     //total utilization of internal (from router to router) links
     statistics::Scalar m_total_int_link_utilization;
     //average link utilization
@@ -261,7 +279,12 @@ class OnyxNetwork : public Network
     statistics::Scalar m_average_ext_link_utilization;
     //average internal link utilization
     statistics::Scalar m_average_int_link_utilization;
-
+    //=====================================================
+    //=====================================================
+    //average bus link utilization
+    statistics::Scalar m_average_bus_link_utilization;
+    //=====================================================
+    //=====================================================
     //total number of hops
     statistics::Scalar  m_total_hops;
     //average number of hops
