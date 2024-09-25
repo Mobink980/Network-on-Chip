@@ -52,7 +52,7 @@ class Bus;
 class RoutingTable
 {
   public:
-    RoutingTable(Bus *router); //constructor
+    RoutingTable(Bus *bus); //constructor
     //gets the route_info, inport, and port_direction (e.g., north),
     //and computes the outport for the flit to go
     int outportCompute(RouteInfo route,
@@ -91,8 +91,8 @@ class RoutingTable
 
 
   private:
-    //the router this RoutingUnit is a part of
-    Bus *m_router;
+    //the bus this RoutingUnit is a part of
+    Bus *m_bus;
 
     // Routing Table (a std::vector of type NetDest)
     std::vector<std::vector<NetDest>> m_routing_table;
