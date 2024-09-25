@@ -52,9 +52,9 @@ namespace onyx
 {
 
 //RoutingTable constructor
-RoutingTable::RoutingTable(Bus *router)
+RoutingTable::RoutingTable(Bus *bus)
 {
-    m_router = router; //set the router for this RoutingTable
+    m_bus = bus; //set the bus for this RoutingTable
     m_routing_table.clear(); //clear m_routing_table vector
     m_weight_table.clear(); //clear m_weight_table vector
 }
@@ -154,14 +154,14 @@ RoutingTable::lookupRoutingTable(int vnet, NetDest msg_destination)
     //if no link has an intersection with the message destination
     //(no candidate link was found)
     if (output_link_candidates.size() == 0) {
-        fatal("Fatal Error:: No Route exists from Router %d.", m_router->get_id());
+        fatal("Fatal Error:: No Route exists from bus %d.", m_bus->get_id());
         exit(0);
     }
 
     // Randomly select any candidate output link
     int candidate = 0; //for ordered vnet, we choose the first
     //for unordered vnet we choose a random link from our list of candidates
-    if (!(m_router->get_net_ptr())->isVNetOrdered(vnet))
+    if (!(m_bus->get_net_ptr())->isVNetOrdered(vnet))
         candidate = rand() % num_candidates;
 
     //the output_link we choose to send the flit
@@ -194,48 +194,18 @@ int
 RoutingTable::outportCompute(RouteInfo route, int inport,
                             PortDirection inport_dirn)
 {
+    //When a packet comes to the bus, it only needs to travel to
+    //another layer. Thus, it has alrady reached the destination.
+    
     //the outport we want to send the flit to
     int outport = -1;
 
-    //if the flit has reached to the destination router
-    //(it needs to be ejected from the network)
-    if (route.dest_router == m_router->get_id()) {
-
-        //======================================================
-        // std::cout << "=================================================\n";
-        // std::cout << "This flit has reached its destination (in RoutingTable.cc).\n";
-        // std::cout << "Source router of the flit: R" << route.src_router <<"\n";
-        // std::cout << "Destination router of the flit: R" << route.dest_router <<"\n";
-        // std::cout << "Current router: R" << m_router->get_id() <<"\n";
-        // std::cout << "Did the flit came from a bus? " << route.broadcast <<"\n";
-        // std::cout << "=================================================\n";
-        //======================================================
-
-        // Multiple NIs may be connected to this router,
-        // all with output port direction = "Local"
-        // Get exact outport id from table
-        //sending from the right router output_link to be received
-        //by the right NI
-        outport = lookupRoutingTable(route.vnet, route.net_dest);
-        return outport;
-    }
-
-    // Routing Algorithm set in OnyxNetwork.py
-    // Can be over-ridden from command line using --routing-algorithm = 1
-    RoutingAlgorithm routing_algorithm =
-        (RoutingAlgorithm) m_router->get_net_ptr()->getRoutingAlgorithm();
-
-    switch (routing_algorithm) {
-        case TABLE_:  outport =
-            lookupRoutingTable(route.vnet, route.net_dest); break;
-        case XY_:     outport =
-            outportComputeXY(route, inport, inport_dirn); break;
-        // any custom algorithm
-        case CUSTOM_: outport =
-            outportComputeCustom(route, inport, inport_dirn); break;
-        default: outport =
-            lookupRoutingTable(route.vnet, route.net_dest); break;
-    }
+    // Multiple NIs may be connected to this bus,
+    // all with output port direction = "Local"
+    // Get exact outport id from table
+    //sending from the right router output_link to be received
+    //by the right NI
+    outport = lookupRoutingTable(route.vnet, route.net_dest);
 
     //make sure we chose an output_link (outport is computed)
     assert(outport != -1);
@@ -246,9 +216,9 @@ RoutingTable::outportCompute(RouteInfo route, int inport,
 int
 RoutingTable::get_layer(int router_id)
 {
-    int num_rows = m_router->get_net_ptr()->getNumRows();
-    int num_cols = m_router->get_net_ptr()->getNumCols();
-    int num_layers = m_router->get_net_ptr()->getNumLayers();
+    int num_rows = m_bus->get_net_ptr()->getNumRows();
+    int num_cols = m_bus->get_net_ptr()->getNumCols();
+    int num_layers = m_bus->get_net_ptr()->getNumLayers();
     assert(num_rows > 0 && num_cols > 0 && num_layers > 0);
     //number of routers or RLIs per layer
     int num_routers_layer = num_rows * num_cols;
@@ -257,136 +227,33 @@ RoutingTable::get_layer(int router_id)
     return 0;
 }
 
-// Generating sequence number 0 to bus_port repeatedly
-int getNextNumber(int bus_port) {
-    static int count = 0; // Initialize count only once
 
-    int result = count % bus_port;
-    count = (count + 1) % bus_port; // Increment count and wrap around
-
-    return result;
-}
-
-// XYZ routing implemented using port directions.
-// Only for reference purpose in a Mesh.
-// By default Onyx uses the routing table.
+// A specific routing for bus which uses static routing (a table)
 int
 RoutingTable::outportComputeXY(RouteInfo route,
                               int inport,
                               PortDirection inport_dirn)
 {
+    //ensure the flit is coming from the NI 
+    assert(inport_dirn == "Local");
     //the outport we want to send the flit to
     //PortDirection is basically a string (ex: north, west, etc.)
     PortDirection outport_dirn = "Unknown";
-
     //number of rows in the mesh topology
-    [[maybe_unused]] int num_rows = m_router->get_net_ptr()->getNumRows();
+    [[maybe_unused]] int num_rows = m_bus->get_net_ptr()->getNumRows();
     //number of collumns in the mesh topology
-    int num_cols = m_router->get_net_ptr()->getNumCols();
+    int num_cols = m_bus->get_net_ptr()->getNumCols();
     //number of layers in the mesh topology (default is 1)
-    int num_layers = m_router->get_net_ptr()->getNumLayers();
-    assert(num_rows > 0 && num_cols > 0);
-
-    //number of routers in one layer
-    int num_routers_layer = num_rows * num_cols;
-
-    //router_id of the current router
-    int my_id = m_router->get_id();
-    int my_x = my_id % num_cols; //x_position of the current router
-    //===============================================================
-    int my_z = get_layer(my_id); //z_position of the current router
-    //===============================================================
-    int my_y = -1;
-    if(num_layers == 1) { //in case of 2D NoCs
-        my_y = my_id / num_cols; //y_position of the current router
-    } else { //for 3D NoCs
-        //y_position of the current router
-        my_y = (my_id - (num_routers_layer * my_z)) / num_cols;
-    }
-    //make sure my_y is valid
-    assert(my_y >= 0 && my_y < num_cols);
-
-
-    //router_id of the destination router
+    int num_layers = m_bus->get_net_ptr()->getNumLayers();
+    //bus is only used in 3D architectures
+    assert(num_rows > 0 && num_cols > 0 && num_layers > 0);
+    
+    //id of the destination router
     int dest_id = route.dest_router;
-    int dest_x = dest_id % num_cols; //x_position of the dest router
-    //===============================================================
-    int dest_z = get_layer(dest_id); //z_position of the dest router
-    //===============================================================
-    int dest_y = -1;
-    if(num_layers == 1) { //in case of 2D NoCs
-        dest_y = dest_id / num_cols; //y_position of the dest router
-    } else { //for 3D NoCs
-        //y_position of the dest router
-        dest_y = (dest_id - (num_routers_layer * dest_z)) / num_cols;
-    }
-    //make sure dest_y is valid
-    assert(dest_y >= 0 && dest_y < num_cols);
-
-    int x_hops = abs(dest_x - my_x); //how many hops in the x direction
-    int y_hops = abs(dest_y - my_y); //how many hops in the y direction
-    //===============================================================
-    int z_hops = abs(dest_z - my_z); //how many hops in the z direction
-    //===============================================================
-
-    bool x_dirn = (dest_x >= my_x); //if true, we need to go to the right
-    bool y_dirn = (dest_y >= my_y); //if true, we need to go upward
-
-    // already checked that in outportCompute() function
-    //ensure we're not already in the destination router
-    assert(!(x_hops == 0 && y_hops == 0 && z_hops == 0));
-
-    if (x_hops > 0) { //we have horizontal hops
-        if (x_dirn) { //if we need to go rightward
-            //ensure the flit is either coming from the NI or the west inport
-            assert(inport_dirn == "Local" || inport_dirn == "West");
-            //======================================================
-            //we either can reach to the next router directly, or we have
-            //a bus to reach it indirectly. Both cannot coexist.
-            //======================================================
-            outport_dirn = "East"; //the outport to go is east
-        } else { //if we need to go leftward
-            //ensure the flit is either coming from the NI or the east inport
-            assert(inport_dirn == "Local" || inport_dirn == "East");
-            outport_dirn = "West"; //the outport to go is west
-        }
-    } else if (y_hops > 0) { //we have vertical hops
-        if (y_dirn) { //if we need to go upward
-            // "Local" or "South" or "West" or "East"
-            assert(inport_dirn != "North");
-            outport_dirn = "North"; //the outport to go is north
-        } else { //if we need to go downward
-            // "Local" or "North" or "West" or "East"
-            assert(inport_dirn != "South");
-            outport_dirn = "South"; //the outport to go is south
-        }
-    } else if (z_hops > 0) { //we need to use the bus
-        //===============================================================
-        outport_dirn = "Up" + std::to_string(getNextNumber(4));
-
-        // std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n";
-        // std::cout << "The selected bus port is: " <<outport_dirn<< "\n";
-        // std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n";
-
-        // std::cout << "************************************************\n";
-        // std::cout << "Now the router should pass the packet to the bus!\n";
-        if (m_outports_dirn2idx.find(outport_dirn) != m_outports_dirn2idx.end()) {
-            // Key exists, you can access the value using m_outports_dirn2idx[outport_dirn]
-            // std::cout << "The outport number for Up is: " << m_outports_dirn2idx[outport_dirn] <<"\n";
-        } else {
-            // Key does not exist
-            // std::cout << "Router port Up is not properly created and thus the segmentation fault!\n";
-        }
-        // std::cout << "************************************************\n";
-        // outport_dirn = "Down" + std::to_string(my_z);
-        //===============================================================
-    } else { //we have neither horizontal nor vertical hops
-        // x_hops == 0 and y_hops == 0
-        // this is not possible
-        // already checked that in outportCompute() function
-        panic("x_hops == y_hops == 0");
-    }
-
+    //get the layer where the destination router sits
+    int dest_layer = get_layer(dest_id);
+    //determine the outport direction
+    outport_dirn = "Bus" + std::to_string(dest_layer);
     //return the outport we computed but in a dirn2idx format
     return m_outports_dirn2idx[outport_dirn];
 }
