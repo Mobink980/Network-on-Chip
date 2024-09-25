@@ -54,8 +54,8 @@ BasicExtLink::BasicExtLink(const Params &p)
     : BasicLink(p) {}
 
 //============================================================
-//BasicNIBusLink constructor calling BasicLink constructor
-BasicNIBusLink::BasicNIBusLink(const Params &p)
+//BasicBusLink constructor calling BasicLink constructor
+BasicBusLink::BasicBusLink(const Params &p)
     : BasicLink(p) {}
 //============================================================
 
