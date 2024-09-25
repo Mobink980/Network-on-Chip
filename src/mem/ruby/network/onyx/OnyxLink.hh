@@ -41,7 +41,7 @@
 #include "mem/ruby/network/onyx/NetLink.hh"
 #include "params/OnyxExtLink.hh"
 #include "params/OnyxIntLink.hh"
-#include "params/OnyxNIBusLink.hh"
+#include "params/OnyxBusLink.hh"
 
 namespace gem5
 {
@@ -160,20 +160,20 @@ operator<<(std::ostream& out, const OnyxExtLink& obj)
 
 //=================================================================
 //=================================================================
-//OnyxNIBusLink is inherited from BasicNIBusLink
-class OnyxNIBusLink : public BasicNIBusLink
+//OnyxBusLink is inherited from BasicNIBusLink
+class OnyxBusLink : public BasicNIBusLink
 {
   public:
-    typedef OnyxNIBusLinkParams Params;
-    OnyxNIBusLink(const Params &p); //constructor
+    typedef OnyxBusLinkParams Params;
+    OnyxBusLink(const Params &p); //constructor
 
     void init(); //initializing bridge for NI-Bus links
 
     void print(std::ostream& out) const;
 
-    //Make the OnyxNetwork class a friend of OnyxNIBusLink.
+    //Make the OnyxNetwork class a friend of OnyxBusLink.
     //This gives OnyxNetwork access to all private members
-    //of OnyxNIBusLink class.
+    //of OnyxBusLink class.
     friend class OnyxNetwork;
 
   protected:
@@ -208,7 +208,7 @@ class OnyxNIBusLink : public BasicNIBusLink
 
 //printing properties of a Onyx NIBus link
 inline std::ostream&
-operator<<(std::ostream& out, const OnyxNIBusLink& obj)
+operator<<(std::ostream& out, const OnyxBusLink& obj)
 {
     obj.print(out);
     out << std::flush;
