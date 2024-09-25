@@ -44,9 +44,9 @@
 #include "mem/ruby/network/onyx/InterfaceModule.hh"
 #include "mem/ruby/network/onyx/NetLink.hh"
 #include "mem/ruby/network/onyx/Switcher.hh"
-//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 #include "mem/ruby/network/onyx/Bus.hh"
-//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 #include "mem/ruby/system/RubySystem.hh"
 //=====================================
 #include <iostream>
@@ -104,7 +104,6 @@ OnyxNetwork::OnyxNetwork(const Params &p)
         Switcher* router = safe_cast<Switcher*>(*i);
         // push the router in m_routers vector
         m_routers.push_back(router);
-
         // initialize the router's network pointers
         router->init_net_ptr(this);
     }
@@ -117,7 +116,6 @@ OnyxNetwork::OnyxNetwork(const Params &p)
         Bus* bus = safe_cast<Bus*>(*i);
         // push the bus in m_busses vector
         m_busses.push_back(bus);
-
         // initialize the bus's network pointers
         bus->init_net_ptr(this);
     }
@@ -174,7 +172,7 @@ OnyxNetwork::init()
         else
         { // we have a 3D NoC
             m_num_cols = getNumCols();
-            //we check this in the config file
+            //we check this in the config file (commented to use additional routers)
             // assert(m_num_rows * m_num_cols * m_num_layers == m_routers.size());
         }
     }
@@ -215,7 +213,6 @@ OnyxNetwork::init()
  * It creates a Network Link from the NI to a Router and a Credit Link from
  * the Router to the NI
 */
-
 void
 OnyxNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
                              std::vector<NetDest>& routing_table_entry)
@@ -227,12 +224,12 @@ OnyxNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
     assert(local_src < m_nodes);
 
     // create an onyx external link
-    OnyxExtLink* garnet_link = safe_cast<OnyxExtLink*>(link);
+    OnyxExtLink* onyx_link = safe_cast<OnyxExtLink*>(link);
 
     // OnyxExtLink is bi-directional (EXT_IN_ means from NI to Router)
-    NetLink* net_link = garnet_link->m_network_links[LinkDirection_In];
+    NetLink* net_link = onyx_link->m_network_links[LinkDirection_In];
     net_link->setType(EXT_IN_); // set the type of the network link to EXT_IN_
-    AckLink* credit_link = garnet_link->m_credit_links[LinkDirection_In];
+    AckLink* credit_link = onyx_link->m_credit_links[LinkDirection_In];
 
     m_networklinks.push_back(net_link); // add net_link to network links
     m_creditlinks.push_back(credit_link); // add credit_link to credit links
@@ -259,13 +256,13 @@ OnyxNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
      */
 
     // add an outport at the side of the NI (for the OnyxExtLink)
-    if (garnet_link->extBridgeEn) {
+    if (onyx_link->extBridgeEn) {
         DPRINTF(RubyNetwork, "Enable external bridge for %s\n",
-            garnet_link->name());
-        NetBridge *n_bridge = garnet_link->extNetBridge[LinkDirection_In];
+            onyx_link->name());
+        NetBridge *n_bridge = onyx_link->extNetBridge[LinkDirection_In];
         m_nis[local_src]->
         addOutPort(n_bridge,
-                   garnet_link->extCredBridge[LinkDirection_In],
+                   onyx_link->extCredBridge[LinkDirection_In],
                    dest, m_routers[dest]->get_vc_per_vnet());
         m_networkbridges.push_back(n_bridge);
     } else {
@@ -275,14 +272,14 @@ OnyxNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
     }
 
     // add an inport at the side of the router (for the OnyxExtLink)
-    if (garnet_link->intBridgeEn) {
+    if (onyx_link->intBridgeEn) {
         DPRINTF(RubyNetwork, "Enable internal bridge for %s\n",
-            garnet_link->name());
-        NetBridge *n_bridge = garnet_link->intNetBridge[LinkDirection_In];
+            onyx_link->name());
+        NetBridge *n_bridge = onyx_link->intNetBridge[LinkDirection_In];
         m_routers[dest]->
             addInPort(dst_inport_dirn,
                       n_bridge,
-                      garnet_link->intCredBridge[LinkDirection_In]);
+                      onyx_link->intCredBridge[LinkDirection_In]);
         m_networkbridges.push_back(n_bridge);
     } else {
         // without NetworkBridge
@@ -311,12 +308,12 @@ OnyxNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
     assert(m_routers[src] != NULL);
 
     // create an onyx external link
-    OnyxExtLink* garnet_link = safe_cast<OnyxExtLink*>(link);
+    OnyxExtLink* onyx_link = safe_cast<OnyxExtLink*>(link);
 
     // OnyxExtLink is bi-directional (EXT_OUT_ means from Router to NI)
-    NetLink* net_link = garnet_link->m_network_links[LinkDirection_Out];
+    NetLink* net_link = onyx_link->m_network_links[LinkDirection_Out];
     net_link->setType(EXT_OUT_); // set the type of the network link to EXT_OUT_
-    AckLink* credit_link = garnet_link->m_credit_links[LinkDirection_Out];
+    AckLink* credit_link = onyx_link->m_credit_links[LinkDirection_Out];
 
     m_networklinks.push_back(net_link); // add net_link to network links
     m_creditlinks.push_back(credit_link); // add credit_link to credit links
@@ -343,12 +340,12 @@ OnyxNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
      */
 
     // add an inport at the side of the NI (for the OnyxExtLink)
-    if (garnet_link->extBridgeEn) {
+    if (onyx_link->extBridgeEn) {
         DPRINTF(RubyNetwork, "Enable external bridge for %s\n",
-            garnet_link->name());
-        NetBridge *n_bridge = garnet_link->extNetBridge[LinkDirection_Out];
+            onyx_link->name());
+        NetBridge *n_bridge = onyx_link->extNetBridge[LinkDirection_Out];
         m_nis[local_dest]->
-            addInPort(n_bridge, garnet_link->extCredBridge[LinkDirection_Out]);
+            addInPort(n_bridge, onyx_link->extCredBridge[LinkDirection_Out]);
         m_networkbridges.push_back(n_bridge);
     } else {
         // without NetworkBridge
@@ -356,15 +353,15 @@ OnyxNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
     }
 
     // add an outport at the side of the router (for the OnyxExtLink)
-    if (garnet_link->intBridgeEn) {
+    if (onyx_link->intBridgeEn) {
         DPRINTF(RubyNetwork, "Enable internal bridge for %s\n",
-            garnet_link->name());
-        NetBridge *n_bridge = garnet_link->intNetBridge[LinkDirection_Out];
+            onyx_link->name());
+        NetBridge *n_bridge = onyx_link->intNetBridge[LinkDirection_Out];
         m_routers[src]->
             addOutPort(src_outport_dirn,
                        n_bridge,
                        routing_table_entry, link->m_weight,
-                       garnet_link->intCredBridge[LinkDirection_Out],
+                       onyx_link->intCredBridge[LinkDirection_Out],
                        m_routers[src]->get_vc_per_vnet());
         m_networkbridges.push_back(n_bridge);
     } else {
@@ -377,6 +374,175 @@ OnyxNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
     }
 }
 
+//=====================================================================
+//=====================================================================
+/*
+ * This function creates a link from the Network Interface (NI)
+ * to Bus.
+ * It creates a Network Link from the NI to a Bus and a Credit Link from
+ * the Bus to the NI
+*/
+void
+OnyxNetwork::makeBusInLink(NodeID global_src, SwitchID dest, BasicLink* link,
+                             std::vector<NetDest>& routing_table_entry)
+{
+    // get the local_id of the Node (or NI)
+    // local_id may be equal with global_id if we only have one network
+    NodeID local_src = getLocalNodeID(global_src);
+    // make sure the local_id is less than the total number of nodes
+    assert(local_src < m_nodes);
+
+    // create an onyx bus link
+    OnyxBusLink* onyx_link = safe_cast<OnyxBusLink*>(link);
+
+    // OnyxBusLink is bi-directional (BUS_IN_ means from NI to Bus)
+    NetLink* net_link = onyx_link->m_network_links[LinkDirection_In];
+    net_link->setType(BUS_IN_); // set the type of the network link to BUS_IN_
+    AckLink* credit_link = onyx_link->m_credit_links[LinkDirection_In];
+
+    m_networklinks.push_back(net_link); // add net_link to network links
+    m_creditlinks.push_back(credit_link); // add credit_link to credit links
+
+    // destination inport direction: means the dest of the link is bus
+    PortDirection dst_inport_dirn = "Local";
+
+    // set the maximum number of VCs per Vnet
+    m_max_vcs_per_vnet = std::max(m_max_vcs_per_vnet,
+                             m_busses[dest]->get_vc_per_vnet());
+
+    /*
+     * We check if a bridge was enabled at any end of the link.
+     * The bridge is enabled if either of clock domain
+     * crossing (CDC) or Serializer-Deserializer(SerDes) unit is
+     * enabled for the link at each end. The bridge encapsulates
+     * the functionality for both CDC and SerDes and is a Consumer
+     * object similiar to a NetworkLink.
+     *
+     * If a bridge was enabled we connect the NI and Routers to
+     * bridge before connecting the link. Example, if an external
+     * bridge is enabled, we would connect:
+     * NI--->NetworkBridge--->OnyxExtLink---->Router
+     */
+
+    // add an outport at the side of the NI (for the OnyxBusLink)
+    if (onyx_link->extBridgeEn) {
+        DPRINTF(RubyNetwork, "Enable external bridge for %s\n",
+            onyx_link->name());
+        NetBridge *n_bridge = onyx_link->extNetBridge[LinkDirection_In];
+        m_nis[local_src]->
+        addNetworkOutport(n_bridge,
+                          onyx_link->extCredBridge[LinkDirection_In],
+                          dest, m_busses[dest]->get_vc_per_vnet());
+        m_networkbridges.push_back(n_bridge);
+    } else {
+        // without NetworkBridge
+        m_nis[local_src]->addNetworkOutport(net_link, credit_link, dest,
+                        m_busses[dest]->get_vc_per_vnet());
+    }
+
+    // add an inport at the side of the bus (for the OnyxBusLink)
+    if (onyx_link->intBridgeEn) {
+        DPRINTF(RubyNetwork, "Enable internal bridge for %s\n",
+            onyx_link->name());
+        NetBridge *n_bridge = onyx_link->intNetBridge[LinkDirection_In];
+        m_busses[dest]->addInPort(dst_inport_dirn, n_bridge,   
+                             onyx_link->intCredBridge[LinkDirection_In]);
+        m_networkbridges.push_back(n_bridge);
+    } else {
+        // without NetworkBridge
+        m_busses[dest]->addInPort(dst_inport_dirn, net_link, credit_link);
+    }
+
+}
+
+/*
+ * This function creates a link from Bus to NI.
+ * It creates a Network Link from a Bus to the NI and
+ * a Credit Link from NI to Bus
+*/
+void
+OnyxNetwork::makeBusOutLink(SwitchID src, NodeID global_dest,
+                              BasicLink* link,
+                              std::vector<NetDest>& routing_table_entry)
+{
+    // get the local_id of the node (or NI)
+    NodeID local_dest = getLocalNodeID(global_dest);
+    // make sure the local_id is less than the total number of nodes
+    assert(local_dest < m_nodes);
+    // id of the bus must be less than total number of busses
+    assert(src < m_busses.size());
+    // make sure we have a router object for the id, and not a NULL
+    assert(m_busses[src] != NULL);
+
+    // create an onyx bus link
+    OnyxBusLink* onyx_link = safe_cast<OnyxBusLink*>(link);
+
+    // OnyxBusLink is bi-directional (BUS_OUT_ means from Bus to NI)
+    NetLink* net_link = onyx_link->m_network_links[LinkDirection_Out];
+    net_link->setType(BUS_OUT_); // set the type of the network link to BUS_OUT_
+    AckLink* credit_link = onyx_link->m_credit_links[LinkDirection_Out];
+
+    m_networklinks.push_back(net_link); // add net_link to network links
+    m_creditlinks.push_back(credit_link); // add credit_link to credit links
+
+    // source outport direction: means the src of the link is router
+    PortDirection src_outport_dirn = "Local";
+
+    // set the maximum number of VCs per Vnet
+    m_max_vcs_per_vnet = std::max(m_max_vcs_per_vnet,
+                             m_busses[src]->get_vc_per_vnet());
+
+    /*
+     * We check if a bridge was enabled at any end of the link.
+     * The bridge is enabled if either of clock domain
+     * crossing (CDC) or Serializer-Deserializer(SerDes) unit is
+     * enabled for the link at each end. The bridge encapsulates
+     * the functionality for both CDC and SerDes and is a Consumer
+     * object similiar to a NetworkLink.
+     *
+     * If a bridge was enabled we connect the NI and Routers to
+     * bridge before connecting the link. Example, if an external
+     * bridge is enabled, we would connect:
+     * NI<---NetworkBridge<---OnyxExtLink<----Router
+     */
+
+    // add an inport at the side of the NI (for the OnyxBusLink)
+    if (onyx_link->extBridgeEn) {
+        DPRINTF(RubyNetwork, "Enable external bridge for %s\n",
+            onyx_link->name());
+        NetBridge *n_bridge = onyx_link->extNetBridge[LinkDirection_Out];
+        m_nis[local_dest]->
+            addNetworkInport(n_bridge, onyx_link->extCredBridge[LinkDirection_Out]);
+        m_networkbridges.push_back(n_bridge);
+    } else {
+        // without NetworkBridge
+        m_nis[local_dest]->addNetworkInport(net_link, credit_link);
+    }
+
+    // add an outport at the side of the bus (for the OnyxBusLink)
+    if (onyx_link->intBridgeEn) {
+        DPRINTF(RubyNetwork, "Enable internal bridge for %s\n",
+            onyx_link->name());
+        NetBridge *n_bridge = onyx_link->intNetBridge[LinkDirection_Out];
+        m_busses[src]->
+            addOutPort(src_outport_dirn,
+                       n_bridge,
+                       routing_table_entry, link->m_weight,
+                       onyx_link->intCredBridge[LinkDirection_Out],
+                       m_busses[src]->get_vc_per_vnet());
+        m_networkbridges.push_back(n_bridge);
+    } else {
+        // without NetworkBridge
+        m_busses[src]->
+            addOutPort(src_outport_dirn, net_link,
+                       routing_table_entry,
+                       link->m_weight, credit_link,
+                       m_busses[src]->get_vc_per_vnet());
+    }
+}
+//=====================================================================
+//=====================================================================
+
 /*
  * This function creates an internal network link between two routers.
  * It adds both the network link and an opposite credit link.
@@ -388,12 +554,12 @@ OnyxNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
                                 PortDirection dst_inport_dirn)
 {
     // create an onyx internal link
-    OnyxIntLink* garnet_link = safe_cast<OnyxIntLink*>(link);
+    OnyxIntLink* onyx_link = safe_cast<OnyxIntLink*>(link);
 
     // OnyxIntLink is unidirectional (INT_ means from router to router)
-    NetLink* net_link = garnet_link->m_network_link;
+    NetLink* net_link = onyx_link->m_network_link;
     net_link->setType(INT_);
-    AckLink* credit_link = garnet_link->m_credit_link;
+    AckLink* credit_link = onyx_link->m_credit_link;
 
     m_networklinks.push_back(net_link); // add net_link to network links
     m_creditlinks.push_back(credit_link); // add credit_link to credit links
@@ -418,12 +584,12 @@ OnyxNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
      */
 
     // add an inport to the destination router (for the OnyxIntLink)
-    if (garnet_link->dstBridgeEn) {
+    if (onyx_link->dstBridgeEn) {
         DPRINTF(RubyNetwork, "Enable destination bridge for %s\n",
-            garnet_link->name());
-        NetBridge *n_bridge = garnet_link->dstNetBridge;
+            onyx_link->name());
+        NetBridge *n_bridge = onyx_link->dstNetBridge;
         m_routers[dest]->addInPort(dst_inport_dirn, n_bridge,
-                                   garnet_link->dstCredBridge);
+                                   onyx_link->dstCredBridge);
         m_networkbridges.push_back(n_bridge);
     } else {
         // without NetworkBridge
@@ -431,14 +597,14 @@ OnyxNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
     }
 
     // add an outport to the source router (for the OnyxIntLink)
-    if (garnet_link->srcBridgeEn) {
+    if (onyx_link->srcBridgeEn) {
         DPRINTF(RubyNetwork, "Enable source bridge for %s\n",
-            garnet_link->name());
-        NetBridge *n_bridge = garnet_link->srcNetBridge;
+            onyx_link->name());
+        NetBridge *n_bridge = onyx_link->srcNetBridge;
         m_routers[src]->
             addOutPort(src_outport_dirn, n_bridge,
                        routing_table_entry,
-                       link->m_weight, garnet_link->srcCredBridge,
+                       link->m_weight, onyx_link->srcCredBridge,
                        m_routers[dest]->get_vc_per_vnet());
         m_networkbridges.push_back(n_bridge);
     } else {
@@ -469,14 +635,26 @@ OnyxNetwork::get_router_id(int global_ni, int vnet)
     return m_nis[local_ni]->get_router_id(vnet);
 }
 
-//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+//===========================================================
+//===========================================================
+// Get ID of bus connected to a NI.
+int
+OnyxNetwork::get_bus_id(int global_ni, int vnet)
+{
+    // get the local_id of the NI that has global_ni global_id
+    NodeID local_ni = getLocalNodeID(global_ni);
+    // return the router_id of the router connected to this NI
+    // for the given vnet
+    return m_nis[local_ni]->get_bus_id(vnet);
+}
 // Total busses in the network
 int
 OnyxNetwork::getNumBusses()
 {
     return m_busses.size();
 }
-//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+//===========================================================
+//===========================================================
 
 // for registering the OnyxNetwork stats
 void
@@ -616,6 +794,12 @@ OnyxNetwork::regStats()
         .name(name() + ".ext_in_link_utilization");
     m_total_ext_out_link_utilization
         .name(name() + ".ext_out_link_utilization");
+    //==================================================
+    m_total_bus_in_link_utilization
+        .name(name() + ".bus_in_link_utilization");
+    m_total_bus_out_link_utilization
+        .name(name() + ".bus_out_link_utilization");
+    //==================================================
     m_total_int_link_utilization
         .name(name() + ".int_link_utilization");
     m_average_link_utilization
@@ -665,6 +849,10 @@ OnyxNetwork::collateStats()
     int ext_links_count = 0;
     int int_links_count = 0;
     int total_extlink_activity = 0;
+    //============================================
+    int bus_links_count = 0;
+    int total_buslink_activity = 0;
+    //============================================
     int total_intlink_activity = 0;
     // for every network link
     for (int i = 0; i < m_networklinks.size(); i++) {
@@ -681,6 +869,16 @@ OnyxNetwork::collateStats()
             m_total_ext_out_link_utilization += activity;
             total_extlink_activity += activity;
             ext_links_count++;
+        }
+        else if (type == BUS_IN_) {
+            m_total_bus_in_link_utilization += activity;
+            total_buslink_activity += activity;
+            bus_links_count++;
+        }
+        else if (type == BUS_OUT_) {
+            m_total_bus_out_link_utilization += activity;
+            total_buslink_activity += activity;
+            bus_links_count++;
         }
         else if (type == INT_) {
             m_total_int_link_utilization += activity;
@@ -704,11 +902,21 @@ OnyxNetwork::collateStats()
     m_average_ext_link_utilization = total_extlink_activity/ext_links_count;
     //Average utilization of an internal link
     m_average_int_link_utilization = total_intlink_activity/int_links_count;
+    //====================================================================
+    //Average utilization of an internal link
+    m_average_bus_link_utilization = total_buslink_activity/bus_links_count;
+    //====================================================================
 
     // Ask the routers to collate their statistics
     for (int i = 0; i < m_routers.size(); i++) {
         m_routers[i]->collateStats();
     }
+    //===================================================
+    // Ask the busses to collate their statistics
+    for (int i = 0; i < m_busses.size(); i++) {
+        m_busses[i]->collateStats();
+    }
+    //===================================================
 }
 
 // Reset statistics for routers, network links, and credit links
@@ -719,6 +927,11 @@ OnyxNetwork::resetStats()
     for (int i = 0; i < m_routers.size(); i++) {
         m_routers[i]->resetStats();
     }
+    //==============================================
+    for (int i = 0; i < m_busses.size(); i++) {
+        m_busses[i]->resetStats();
+    }
+    //==============================================
     for (int i = 0; i < m_networklinks.size(); i++) {
         m_networklinks[i]->resetStats();
     }
