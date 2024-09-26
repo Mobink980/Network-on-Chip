@@ -36,7 +36,6 @@ from m5.params import *
 # XYZ routing is enforced (using link weights)
 # to guarantee deadlock freedom.
 
-
 class Mesh_Stacked(SimpleTopology):
     description = "Mesh_Stacked"
 
@@ -45,21 +44,7 @@ class Mesh_Stacked(SimpleTopology):
 
     # Makes a generic mesh
     # assuming an equal number of cache and directory cntrls
-
-    # def makeTopology(self, options, network, IntLink, ExtLink, Router):
-    # ========================================================================
-    def makeTopology(
-        self,
-        options,
-        network,
-        IntLink,
-        BusToRouterLink,
-        RouterToBusLink,
-        ExtLink,
-        Router,
-        Bus,
-    ):
-        # ========================================================================
+    def makeTopology(self, options, network, IntLink, ExtLink, BusLink, Router, Bus):
 
         nodes = self.nodes
         num_rows = options.mesh_rows  # number of rows in 3D mesh
