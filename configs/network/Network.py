@@ -154,30 +154,33 @@ def create_network(options, ruby):
         NetworkClass = GarnetNetwork
         IntLinkClass = GarnetIntLink
         ExtLinkClass = GarnetExtLink
+        #========================================================
+        BusLinkClass = None
+        #========================================================
         RouterClass = GarnetRouter
-        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         BusClass = GarnetBroadcastLink
-        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         InterfaceClass = GarnetNetworkInterface
 
     elif options.network == "onyx":
         NetworkClass = OnyxNetwork
         IntLinkClass = OnyxIntLink
         ExtLinkClass = OnyxExtLink
+        #========================================================
+        BusLinkClass = OnyxBusLink
+        #========================================================
         RouterClass = OnyxSwitcher
-        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         BusClass = OnyxBus
-        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         InterfaceClass = OnyxNetworkInterface
 
     else:
         NetworkClass = SimpleNetwork
         IntLinkClass = SimpleIntLink
         ExtLinkClass = SimpleExtLink
+        #========================================================
+        BusLinkClass = None
+        #========================================================
         RouterClass = Switch
-        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         BusClass = None
-        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         InterfaceClass = None
 
     # Instantiate the network object
@@ -186,23 +189,24 @@ def create_network(options, ruby):
         ruby_system=ruby,
         topology=options.topology,
         routers=[],
-        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         busses=[],
-        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         ext_links=[],
+        #=================================
+        bus_links=[],
+        #=================================
         int_links=[],
         netifs=[],
     )
 
-    # return (network, IntLinkClass, ExtLinkClass, RouterClass, InterfaceClass)
     return (
         network,
         IntLinkClass,
         ExtLinkClass,
+        #=================================
+        BusLinkClass,
+        #=================================
         RouterClass,
-        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         BusClass,
-        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         InterfaceClass,
     )
 
@@ -309,7 +313,8 @@ def init_network(options, network, InterfaceClass):
             )
             extLink.int_cred_bridge = int_cred_bridges
 
-    # =================================================================
+    #=================================================================
+    #=================================================================
     if options.network == "onyx":
         network.num_rows = options.mesh_rows
         network.num_columns = options.mesh_columns
@@ -410,7 +415,8 @@ def init_network(options, network, InterfaceClass):
                 )
             )
             extLink.int_cred_bridge = int_cred_bridges
-    # =================================================================
+    #=================================================================
+    #=================================================================
 
     if options.network == "simple":
         if options.simple_physical_channels:
