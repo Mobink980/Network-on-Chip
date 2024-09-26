@@ -36,8 +36,9 @@ class BaseTopology:
         makeTopology (below) here. The minimum is usually
         all of the controllers created in the above file.
         """
-
-    def makeTopology(self, options, network, IntLink, ExtLink, Router, Bus):
+    #=============================================================================
+    #=============================================================================
+    def makeTopology(self, options, network, IntLink, ExtLink, BusLink, Router, Bus):
         """Called from configs/ruby/Ruby.py
         The return value is ( list(Router), list(IntLink), list(ExtLink))
         The API of this function cannot change when subclassing!!
@@ -46,6 +47,8 @@ class BaseTopology:
         configs/ruby/<protocol>.py
         """
         m5.util.fatal("BaseTopology should have been overridden!!")
+    #=============================================================================
+    #=============================================================================
 
     def registerTopology(self, options):
         """Called from configs/ruby/Ruby.py
