@@ -238,10 +238,11 @@ def create_system(
         network,
         IntLinkClass,
         ExtLinkClass,
+        #==================================
+        BusLinkClass,
+        #==================================
         RouterClass,
-        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         BusClass,
-        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         InterfaceClass,
     ) = Network.create_network(options, ruby)
     ruby.network = network
@@ -261,12 +262,13 @@ def create_system(
         print(f"Error: could not create sytem for ruby protocol {protocol}")
         raise
 
-    # =====================================================
+    #=====================================================================
     # Create the network topology
     topology.makeTopology(
-        options, network, IntLinkClass, ExtLinkClass, RouterClass, BusClass
+        options, network, IntLinkClass, ExtLinkClass, BusLinkClass,
+        RouterClass, BusClass
     )
-    # =====================================================
+    #=====================================================================
 
     # Register the topology elements with faux filesystem (SE mode only)
     if not full_system:
