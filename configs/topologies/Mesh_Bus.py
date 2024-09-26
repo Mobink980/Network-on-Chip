@@ -45,16 +45,7 @@ class Mesh_Bus(SimpleTopology):
 
     # Makes a generic mesh
     # assuming an equal number of cache and directory cntrls
-
-    # def makeTopology(self, options, network, IntLink, ExtLink, Router):
-    #========================================================================
-    def makeTopology(
-        self, options, network, IntLink, 
-        BusToRouterLink, RouterToBusLink, ExtLink, 
-        Router, Bus
-    ):
-    #========================================================================
-
+    def makeTopology(self, options, network, IntLink, ExtLink, BusLink, Router, Bus):
         nodes = self.nodes  # controllers
         # getting num_cpus from the commandline (some options have default values)
         num_routers = options.num_cpus  # number of routers and cpus are equal
