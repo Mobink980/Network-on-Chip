@@ -43,9 +43,9 @@ class NoC_Crossbar_3D(SimpleTopology):
     def __init__(self, controllers):
         self.nodes = controllers
 
-    # Makes a generic mesh
+    # Makes a special 3D Mesh
     # assuming an equal number of cache and directory cntrls
-    def makeTopology(self, options, network, IntLink, ExtLink, Router, Bus):
+    def makeTopology(self, options, network, IntLink, ExtLink, BusLink, Router, Bus):
         nodes = self.nodes
         num_rows = options.mesh_rows  # number of rows in 3D mesh
         num_columns = options.mesh_columns  # number of columns in 3D mesh
