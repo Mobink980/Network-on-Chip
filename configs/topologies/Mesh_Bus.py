@@ -92,9 +92,6 @@ class Mesh_Bus(SimpleTopology):
 
         # link counter to set unique link ids
         link_count = 0
-        #========================================
-        bus_link_count = 0
-        #========================================
 
         # Add all but the remainder nodes to the list of nodes to be uniformly
         # distributed across the network.
@@ -140,7 +137,6 @@ class Mesh_Bus(SimpleTopology):
 
         network.ext_links = ext_links  # Add the external links to the network
 
-
         #====================================================================
         #====================================================================
         # Connect each node to the appropriate bus
@@ -149,13 +145,13 @@ class Mesh_Bus(SimpleTopology):
             for j in range(num_layers):
                 bus_links.append(
                     BusLink(
-                        link_id=bus_link_count,
+                        link_id=link_count,
                         ext_node=network_nodes[i + (j * num_routers_layer)],
                         int_node=busses[i],
                         latency=bus_link_latency
                     )
                 )
-                bus_link_count += 1
+                link_count += 1
 
         network.bus_links = bus_links  # Add the bus links to the network
         #====================================================================
