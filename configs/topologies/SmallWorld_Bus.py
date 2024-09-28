@@ -36,8 +36,8 @@ from m5.params import *
 # XYZ routing is enforced (using link weights)
 # to guarantee deadlock freedom.
 
-class NoC_Bus_Hybrid(SimpleTopology):
-    description = "NoC_Bus_Hybrid"
+class SmallWorld_Bus(SimpleTopology):
+    description = "SmallWorld_Bus"
 
     def __init__(self, controllers):
         self.nodes = controllers
