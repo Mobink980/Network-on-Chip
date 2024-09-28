@@ -50,6 +50,7 @@ class Mesh_Bus(SimpleTopology):
         num_rows = options.mesh_rows  # number of rows in 3D mesh
         num_columns = options.mesh_columns  # number of columns in 3D mesh
         num_layers = options.mesh_layers  # number of layers in 3D mesh
+        num_routers_layer = num_rows * num_columns
         #********************************************************************
         # For every 4 routers, we have a bus connecting them across layers
         num_routers = options.num_cpus
@@ -144,59 +145,24 @@ class Mesh_Bus(SimpleTopology):
         #====================================================================
         # Connect each node to the appropriate bus
         bus_links = []
-        for i, n in enumerate(network_nodes):
-            # For each cache find its level, and id
-            # of the router to connect to.
-            cntrl_level, router_id = divmod(i, num_routers)
-            assert cntrl_level < cntrls_per_router  # ex: 0,1,2<3
-            ext_links.append(
-                ExtLink(
-                    link_id=link_count,
-                    ext_node=n,
-                    int_node=routers[router_id],
-                    latency=link_latency,
+        for i in range(num_routers_layer):
+            for j in range(num_layers):
+                bus_links.append(
+                    BusLink(
+                        link_id=bus_link_count,
+                        ext_node=network_nodes[i + (j * num_routers_layer)],
+                        int_node=busses[i],
+                        latency=bus_link_latency
+                    )
                 )
-            )
-            link_count += 1
+                bus_link_count += 1
 
-        # Connect the remainding nodes to router 0.  These should only be
-        # DMA nodes.
-        for i, node in enumerate(remainder_nodes):
-            assert node.type == "DMA_Controller"
-            assert i < remainder
-            ext_links.append(
-                ExtLink(
-                    link_id=link_count,
-                    ext_node=node,
-                    int_node=routers[0],
-                    latency=link_latency,
-                )
-            )
-            link_count += 1
-
-        network.ext_links = ext_links  # Add the external links to the network
+        network.bus_links = bus_links  # Add the bus links to the network
         #====================================================================
         #====================================================================
 
-
-
-
-
-
-
-
-
-
-
-        
-
-        # Create the 3D mesh links.
+        # Create the 2D mesh links for each layer
         int_links = []
-        # ====================================
-        bus_to_router_links = []
-        router_to_bus_links = []
-        # ====================================
-
         # connect routers in each layer with internal links and
         # also update link_count to its latest value
         for layer in range(num_layers):
@@ -211,28 +177,8 @@ class Mesh_Bus(SimpleTopology):
                 routers,
             )
 
-        # connect routers in different layers via Bus
-        self.connectInterLayerLinks(
-            num_layers,
-            num_rows,
-            num_columns,
-            BusToRouterLink,
-            RouterToBusLink,
-            bus_to_router_links,
-            router_to_bus_links,
-            bus_to_router_count,
-            router_to_bus_count,
-            routers,
-            busses,
-        )
-
         network.int_links = int_links  # Add the internal links to the network
-        # ================================================================
-        # Add the bus to router links to the network
-        network.bus_to_router_links = bus_to_router_links
-        # Add the router to bus links to the network
-        network.router_to_bus_links = router_to_bus_links
-        # ================================================================
+
 
     # For connecting the routers via internal links
     # in each layer.
@@ -249,10 +195,8 @@ class Mesh_Bus(SimpleTopology):
     ):
         # number of routers in one layer
         num_routers_layer = num_rows * num_columns
-
         # East outport to West inport links (weight = 1)
-        # It means link from east output port of the left router
-        # to the west input port of the right router.
+        # From east outport of left router to west inport of right router
         for row in range(num_rows):
             for col in range(num_columns):
                 if col + 1 < num_columns:
@@ -278,8 +222,7 @@ class Mesh_Bus(SimpleTopology):
                     link_count += 1
 
         # West outport to East inport links (weight = 1)
-        # It means link from west output port of the right router
-        # to the east input port of the left router.
+        # From west outport of right router to east inport of left router
         for row in range(num_rows):
             for col in range(num_columns):
                 if col + 1 < num_columns:
@@ -305,8 +248,7 @@ class Mesh_Bus(SimpleTopology):
                     link_count += 1
 
         # North outport to South inport links (weight = 2)
-        # It means link from north output port of the down router
-        # to the south input port of the up router.
+        # From north outport of down router to south inport of top router
         for col in range(num_columns):
             for row in range(num_rows):
                 if row + 1 < num_rows:
@@ -332,8 +274,7 @@ class Mesh_Bus(SimpleTopology):
                     link_count += 1
 
         # South outport to North inport links (weight = 2)
-        # It means link from south output port of the up router
-        # to the north input port of the down router.
+        # From south outport of top router to north inport of down router
         for col in range(num_columns):
             for row in range(num_rows):
                 if row + 1 < num_rows:
@@ -360,352 +301,6 @@ class Mesh_Bus(SimpleTopology):
 
         return link_count
 
-    # For connecting two routers via an IntLink
-    def connect_routers(
-        self,
-        bus_to_router_links,
-        router_to_bus_links,
-        BusToRouterLink,
-        RouterToBusLink,
-        bus_port_number,
-        bus_to_router_count,
-        router_to_bus_count,
-        layer_number,
-        router,
-        bus,
-    ):
-        # Add the bus to router link from bus to router
-        bus_to_router_links.append(
-            BusToRouterLink(
-                link_id=bus_to_router_count,
-                src_node=bus,
-                dst_node=router,
-                src_outport="Down"
-                + str(layer_number)
-                + "_"
-                + str(bus_port_number),
-                dst_inport="Up" + str(bus_port_number),
-                latency=0,
-                weight=3,
-            )
-        )
-
-        # Add the router to bus link from router to bus
-        router_to_bus_links.append(
-            RouterToBusLink(
-                link_id=router_to_bus_count,
-                src_node=router,
-                dst_node=bus,
-                src_outport="Up" + str(bus_port_number),
-                dst_inport="Down"
-                + str(layer_number)
-                + "_"
-                + str(bus_port_number),
-                latency=0,
-                weight=3,
-            )
-        )
-
-    # For connecting routers in different layers via Bus.
-    def connectInterLayerLinks(
-        self,
-        num_layers,
-        num_rows,
-        num_columns,
-        BusToRouterLink,
-        RouterToBusLink,
-        bus_to_router_links,
-        router_to_bus_links,
-        bus_to_router_count,
-        router_to_bus_count,
-        routers,
-        busses,
-    ):
-        # number of routers in one layer
-        num_routers_layer = num_rows * num_columns
-
-        for bus_port_number in range(4):
-            for i in range(num_routers_layer):
-                for j in range(num_layers):
-                    self.connect_routers(
-                        bus_to_router_links,
-                        router_to_bus_links,
-                        BusToRouterLink,
-                        RouterToBusLink,
-                        bus_port_number,
-                        bus_to_router_count,
-                        router_to_bus_count,
-                        j,
-                        routers[i + (j * num_routers_layer)],
-                        busses[i + (bus_port_number * num_routers_layer)],
-                    )
-                    bus_to_router_count += 1
-                    router_to_bus_count += 1
-
-    # Register nodes with filesystem
-    def registerTopology(self, options):
-        for i in range(options.num_cpus):
-            FileSystemConfig.register_node(
-                [i], MemorySize(options.mem_size) // options.num_cpus, i
-            )
-
-# to guarantee deadlock freedom.
-
-
-class Mesh_Bus(SimpleTopology):
-    description = "Mesh_Bus"
-
-    def __init__(self, controllers):
-        self.nodes = controllers
-
-    # Makes a generic mesh
-    # assuming an equal number of cache and directory cntrls
-    def makeTopology(self, options, network, IntLink, ExtLink, BusLink, Router, Bus):
-        nodes = self.nodes  # controllers
-        # getting num_cpus from the commandline (some options have default values)
-        num_routers = options.num_cpus  # number of routers and cpus are equal
-        num_rows = (
-            options.mesh_rows
-        )  # getting the mesh rows from the commandline
-
-        # default values for link latency and router latency.
-        # Can be over-ridden on a per link/router basis
-        link_latency = options.link_latency  # used by simple and garnet
-        router_latency = options.router_latency  # only used by garnet
-
-        #==============================================================
-        bus_latency = 1
-        #==============================================================
-
-        # There must be an evenly divisible number of cntrls to routers
-        # Also, obviously the number or rows must be <= the number of routers
-        # The following divides the number of controllers by number of routers
-        # to see if any controller remains (not evenly divisible)
-        cntrls_per_router, remainder = divmod(len(nodes), num_routers)
-        assert num_rows > 0 and num_rows <= num_routers
-        # This is why we don't have mesh_cols parameter for mesh.
-        # Number of columns is calculated automatically.
-        num_columns = int(num_routers / num_rows)  # Ex: 16/4=4
-        assert num_columns * num_rows == num_routers
-
-        # Create the routers in the mesh (here all routers have the same latency)
-        routers = [
-            Router(router_id=i, latency=router_latency)
-            for i in range(num_routers)
-        ]
-        network.routers = routers  # Add the created routers to the network
-
-        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-        # Create the busses
-        num_busses = 1
-        busses = [
-            Bus(bus_id=i, latency=bus_latency)
-            for i in range(num_busses)
-        ]
-        network.busses = busses  # Add the created busses to the network
-        #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-
-
-        # link counter to set unique link ids
-        link_count = 0
-        # ========================================
-        bus_to_router_count = 0
-        router_to_bus_count = 0
-        # ========================================
-
-        # Add all but the remainder nodes to the list of nodes to be uniformly
-        # distributed across the network. We're not adding the remaining cntrls
-        # to the network now. We add them as DMA controllers to router 0 later.
-        network_nodes = []
-        remainder_nodes = []
-        for node_index in range(len(nodes)):
-            if node_index < (len(nodes) - remainder):
-                network_nodes.append(nodes[node_index])
-            else:
-                remainder_nodes.append(nodes[node_index])
-
-        # Connect each node to the appropriate router (ExternalLinks)
-        # We have several level of cntrls (if number of cntrls > num_routers)
-        ext_links = []
-        for i, n in enumerate(network_nodes):
-            # For each controller find its level, and id
-            # of the router to connect to.
-            cntrl_level, router_id = divmod(i, num_routers)
-            assert cntrl_level < cntrls_per_router  # ex: 0,1,2<3
-            ext_links.append(
-                ExtLink(
-                    link_id=link_count,
-                    ext_node=n,
-                    int_node=routers[router_id],
-                    latency=link_latency,
-                )
-            )
-            link_count += 1
-
-        # Connect the remainding nodes to router 0.  These should only be
-        # DMA nodes.
-        for i, node in enumerate(remainder_nodes):
-            assert node.type == "DMA_Controller"
-            assert i < remainder
-            ext_links.append(
-                ExtLink(
-                    link_id=link_count,
-                    ext_node=node,
-                    int_node=routers[0],
-                    latency=link_latency,
-                )
-            )
-            link_count += 1
-
-        network.ext_links = ext_links  # Add the external links to the network
-
-        # Create the 2D mesh links.
-        int_links = []
-        #====================================
-        bus_to_router_links = []
-        router_to_bus_links = []
-        #====================================
-
-
-        int_links.append(IntLink(link_id=link_count,
-                                    src_node=routers[0],
-                                    dst_node=routers[1],
-                                    src_outport="East",
-                                    dst_inport="West",
-                                    latency = link_latency,
-                                    weight=2))
-        link_count += 1
-
-        # int_links.append(IntLink(link_id=link_count,
-        #                             src_node=routers[2],
-        #                             dst_node=routers[3],
-        #                             src_outport="East",
-        #                             dst_inport="West",
-        #                             latency = link_latency,
-        #                             weight=2))
-        # link_count += 1
-
-
-        int_links.append(IntLink(link_id=link_count,
-                                    src_node=routers[1],
-                                    dst_node=routers[0],
-                                    src_outport="West",
-                                    dst_inport="East",
-                                    latency = link_latency,
-                                    weight=2))
-        link_count += 1
-
-        # int_links.append(IntLink(link_id=link_count,
-        #                             src_node=routers[3],
-        #                             dst_node=routers[2],
-        #                             src_outport="West",
-        #                             dst_inport="East",
-        #                             latency = link_latency,
-        #                             weight=2))
-        # link_count += 1
-
-
-        int_links.append(IntLink(link_id=link_count,
-                                    src_node=routers[0],
-                                    dst_node=routers[2],
-                                    src_outport="North",
-                                    dst_inport="South",
-                                    latency = link_latency,
-                                    weight=2))
-        link_count += 1
-
-        # int_links.append(IntLink(link_id=link_count,
-        #                             src_node=routers[1],
-        #                             dst_node=routers[3],
-        #                             src_outport="North",
-        #                             dst_inport="South",
-        #                             latency = link_latency,
-        #                             weight=2))
-        # link_count += 1
-
-
-        int_links.append(IntLink(link_id=link_count,
-                                    src_node=routers[2],
-                                    dst_node=routers[0],
-                                    src_outport="South",
-                                    dst_inport="North",
-                                    latency = link_latency,
-                                    weight=2))
-        link_count += 1
-
-        # int_links.append(IntLink(link_id=link_count,
-        #                             src_node=routers[3],
-        #                             dst_node=routers[1],
-        #                             src_outport="South",
-        #                             dst_inport="North",
-        #                             latency = link_latency,
-        #                             weight=2))
-        # link_count += 1
-
-        #=================================================================
-        bus_to_router_links.append(
-            BusToRouterLink(
-                link_id=bus_to_router_count,
-                src_node=busses[0],
-                dst_node=routers[2],
-                src_outport="West", 
-                dst_inport="East",
-                latency=link_latency,
-                weight=1,
-            )
-        )
-        bus_to_router_count += 1
-
-        router_to_bus_links.append(
-            RouterToBusLink(
-                link_id=router_to_bus_count,
-                src_node=routers[2],
-                dst_node=busses[0],
-                src_outport="East",
-                dst_inport="West",
-                latency=link_latency,
-                weight=1,
-            )
-        )
-        router_to_bus_count += 1
-
-
-        bus_to_router_links.append(
-            BusToRouterLink(
-                link_id=bus_to_router_count,
-                src_node=busses[0],
-                dst_node=routers[3],
-                src_outport="East",
-                dst_inport="West",
-                latency=link_latency,
-                weight=1,
-            )
-        )
-        bus_to_router_count += 1
-
-        router_to_bus_links.append(
-            RouterToBusLink(
-                link_id=router_to_bus_count,
-                src_node=routers[3],
-                dst_node=busses[0],
-                src_outport="West",
-                dst_inport="East",
-                latency=link_latency,
-                weight=1,
-            )
-        )
-        router_to_bus_count += 1
-
-        #=================================================================
-
-        network.int_links = int_links  # Add the internal links to the network
-
-        # ================================================================
-        # Add the bus to router links to the network
-        network.bus_to_router_links = bus_to_router_links  
-        # Add the router to bus links to the network
-        network.router_to_bus_links = router_to_bus_links 
-        # ================================================================
 
     # Register nodes with filesystem
     def registerTopology(self, options):
