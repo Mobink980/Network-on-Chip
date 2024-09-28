@@ -36,8 +36,8 @@ from m5.params import *
 # XYZ routing is enforced (using link weights)
 # to guarantee deadlock freedom.
 
-class Mesh_Stacked(SimpleTopology):
-    description = "Mesh_Stacked"
+class FTorus_Bus(SimpleTopology):
+    description = "FTorus_Bus"
 
     def __init__(self, controllers):
         self.nodes = controllers
