@@ -26,8 +26,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import random
-
 import networkx as nx
+
 from common import FileSystemConfig
 from topologies.BaseTopology import SimpleTopology
 
