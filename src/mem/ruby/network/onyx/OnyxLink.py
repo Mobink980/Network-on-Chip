@@ -28,7 +28,7 @@
 from m5.objects.BasicLink import (
     BasicExtLink,
     BasicIntLink,
-    BasicNIBusLink 
+    BasicBusLink 
 )
 from m5.objects.ClockedObject import ClockedObject
 from m5.params import *
@@ -187,8 +187,8 @@ class OnyxExtLink(BasicExtLink):
 #=========================================================================
 #=========================================================================
 # Exterior fixed pipeline links between a bus and a controller
-# OnyxBusLink is inherited from the BasicNIBusLink
-class OnyxBusLink(BasicNIBusLink):
+# OnyxBusLink is inherited from the BasicBusLink
+class OnyxBusLink(BasicBusLink):
     type = "OnyxBusLink"
     cxx_header = "mem/ruby/network/onyx/OnyxLink.hh"
     cxx_class = "gem5::ruby::onyx::OnyxBusLink"

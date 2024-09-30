@@ -198,7 +198,7 @@ OnyxExtLink::print(std::ostream& out) const
 //=====================================================================
 //OnyxBusLink constructor
 OnyxBusLink::OnyxBusLink(const Params &p)
-    : BasicNIBusLink(p)
+    : BasicBusLink(p)
 {
     // Bi-directional
 

@@ -160,8 +160,8 @@ operator<<(std::ostream& out, const OnyxExtLink& obj)
 
 //=================================================================
 //=================================================================
-//OnyxBusLink is inherited from BasicNIBusLink
-class OnyxBusLink : public BasicNIBusLink
+//OnyxBusLink is inherited from BasicBusLink
+class OnyxBusLink : public BasicBusLink
 {
   public:
     typedef OnyxBusLinkParams Params;
