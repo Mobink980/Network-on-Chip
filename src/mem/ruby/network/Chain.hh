@@ -63,7 +63,7 @@
 #include "mem/port.hh"
 #include "mem/ruby/common/MachineID.hh"
 #include "mem/ruby/common/TypeDefines.hh"
-#include "mem/ruby/network/Topology.hh"
+#include "mem/ruby/network/Configuration.hh"
 #include "mem/ruby/network/dummy_port.hh"
 #include "mem/ruby/protocol/LinkDirection.hh"
 #include "mem/ruby/protocol/MessageSizeType.hh"
@@ -190,7 +190,7 @@ class Chain : public ClockedObject
     //names of the vnet types (Control, Data, etc.)
     std::vector<std::string> m_vnet_type_names;
     //pointer to the topology
-    Topology* m_topology_ptr;
+    Configuration* m_topology_ptr;
     //size of the control message
     static uint32_t m_control_msg_size;
     //size of the data message
