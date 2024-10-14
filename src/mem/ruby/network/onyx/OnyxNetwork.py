@@ -36,13 +36,13 @@ from m5.objects.BasicRouter import (
 )
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 from m5.objects.ClockedObject import ClockedObject
-from m5.objects.Network import RubyNetwork
+from m5.objects.Chain import RubyChain
 from m5.params import *
 from m5.proxy import *
 
 
-# OnyxNetwork inherites from RubyNetwork class (in Network.py)
-class OnyxNetwork(RubyNetwork):
+# OnyxNetwork inherites from RubyChain class (in Network.py)
+class OnyxNetwork(RubyChain):
     type = "OnyxNetwork"
     cxx_header = "mem/ruby/network/onyx/OnyxNetwork.hh"
     cxx_class = "gem5::ruby::onyx::OnyxNetwork"
