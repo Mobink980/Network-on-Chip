@@ -55,7 +55,7 @@ namespace onyx
 //Bus constructor
 Bus::Bus(const Params &p)
   : BasicBus(p), Consumer(this), m_latency(p.latency),
-    m_virtual_networks(p.virt_nets), m_vc_per_vnet(p.vcs_per_vnet),
+    m_virtual_s(p.virt_nets), m_vc_per_vnet(p.vcs_per_vnet),
     m_num_vcs(m_virtual_networks * m_vc_per_vnet), m_bit_width(p.width),
     m_network_ptr(nullptr), routingUnit(this), switchAllocator(this),
     crossbarSwitch(this)
