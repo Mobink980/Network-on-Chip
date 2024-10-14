@@ -42,8 +42,16 @@ SimObject('MessageBuffer.py', sim_objects=['MessageBuffer'],
         enums=['MessageRandomization'])
 SimObject('Network.py', sim_objects=['RubyNetwork'])
 
+#=================================================================
+SimObject('Chain.py', sim_objects=['RubyChain'])
+#=================================================================
+
 Source('BasicLink.cc')
 Source('BasicRouter.cc')
 Source('MessageBuffer.cc')
 Source('Network.cc')
 Source('Topology.cc')
+#=================================================================
+Source('Chain.cc')
+Source('Configuration.cc')
+#=================================================================
