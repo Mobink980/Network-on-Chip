@@ -30,7 +30,7 @@
 #include "mem/ruby/network/onyx/Ack.hh"
 
 #include "base/trace.hh"
-#include "debug/RubyChain.hh"
+#include "debug/RubyNetwork.hh"
 
 namespace gem5
 {
@@ -56,7 +56,7 @@ Ack::Ack(int vc, bool is_free_signal, Tick curTime)
 chunk *
 Ack::serialize(int ser_id, int parts, uint32_t bWidth)
 {
-    DPRINTF(RubyChain, "Serializing a credit\n");
+    DPRINTF(RubyNetwork, "Serializing a credit\n");
     bool new_free = false;
     if ((ser_id+1 == parts) && m_is_free_signal) {
         new_free = true;
@@ -68,7 +68,7 @@ Ack::serialize(int ser_id, int parts, uint32_t bWidth)
 chunk *
 Ack::deserialize(int des_id, int num_flits, uint32_t bWidth)
 {
-    DPRINTF(RubyChain, "DeSerializing a credit vc:%d free:%d\n",
+    DPRINTF(RubyNetwork, "DeSerializing a credit vc:%d free:%d\n",
     m_vc, m_is_free_signal);
     if (m_is_free_signal) {
         // We are not going to get anymore credits for this vc
