@@ -35,7 +35,7 @@
 #include <iostream>
 #include <vector>
 
-#include "mem/ruby/network/Network.hh"
+#include "mem/ruby/network/Chain.hh"
 #include "mem/ruby/network/fault_model/FaultModel.hh"
 #include "mem/ruby/network/onyx/CommonTypes.hh"
 #include "params/OnyxNetwork.hh"
@@ -63,7 +63,7 @@ class NetBridge; //Network Bridge for heterogenous architectures
 class AckLink; //Credit Link for flow-control information
 
 //OnyxNetwork inherites from Network (in Network.hh)
-class OnyxNetwork : public Network
+class OnyxNetwork : public Chain
 {
   public:
     typedef OnyxNetworkParams Params;
