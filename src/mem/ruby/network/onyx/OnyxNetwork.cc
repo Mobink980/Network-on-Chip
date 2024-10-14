@@ -69,7 +69,7 @@ namespace onyx
 
 // OnyxNetwork class constructor
 OnyxNetwork::OnyxNetwork(const Params &p)
-    : Network(p)
+    : Chain(p)
 {
     m_num_rows = p.num_rows; // number of rows
     m_num_cols = p.num_columns; // number of columns
@@ -140,7 +140,7 @@ void
 OnyxNetwork::init()
 {
     // call the init function of the Network class
-    Network::init();
+    Chain::init();
 
     // for every node in the network, set the m_toNetQueues and
     // m_fromNetQueues for the NI
@@ -661,7 +661,7 @@ void
 OnyxNetwork::regStats()
 {
     // call the regStats() function from the parent class
-    Network::regStats();
+    Chain::regStats();
 
     // Packets
     m_packets_received
