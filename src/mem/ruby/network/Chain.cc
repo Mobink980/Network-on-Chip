@@ -76,8 +76,10 @@ Chain::Chain(const Params &p)
     //a data message should include control data as well as data
     m_data_msg_size = p.data_msg_size + m_control_msg_size;
 
+    //=============================================================
     //register the network for this Chain object in the ruby system
-    params().ruby_system->registerNetwork(this);
+    params().ruby_system->registerChain(this);
+    //=============================================================
 
     // Populate localNodeVersions with the version of each MachineType in
     // this network. This will be used to compute a global to local ID.
@@ -93,7 +95,7 @@ Chain::Chain(const Params &p)
         localNodeVersions[cntrl->getType()].push_back(cntrl->getVersion());
         //register the MachineID for this controller (to compute a global
         //to local id)
-        params().ruby_system->registerMachineID(cntrl->getMachineID(), this);
+        params().ruby_system->registerMachineIDChain(cntrl->getMachineID(), this);
     }
 
     // Compute a local ID for each MachineType using the same order as SLICC
@@ -154,7 +156,7 @@ Chain::Chain(const Params &p)
         //abs_cntrl is the external node for the ext_link
         AbstractController *abs_cntrl = ext_link->params().ext_node;
         //initialize the network pointer with this Chain object for abs_cntrl
-        abs_cntrl->initNetworkPtr(this);
+        abs_cntrl->initChainPtr(this);
         //get the address ranges from abs_cntrl
         const AddrRangeList &ranges = abs_cntrl->getAddrRanges();
         //if address ranges is not empty

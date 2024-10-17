@@ -25,7 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import math
-
+import argparse
 import m5
 from m5.defines import buildEnv
 from m5.objects import *
@@ -34,7 +34,6 @@ from m5.util import (
     fatal,
     warn,
 )
-
 
 def define_options(parser):
     # By default, ruby uses the simple timing cpu and the X86 ISA
@@ -137,7 +136,6 @@ def define_options(parser):
             channel for each virtual network""",
     )
 
-
 def create_network(options, ruby):
     # Allow legacy users to use garnet through garnet2.0 option
     # until next gem5 release.
@@ -154,9 +152,6 @@ def create_network(options, ruby):
         NetworkClass = GarnetNetwork
         IntLinkClass = GarnetIntLink
         ExtLinkClass = GarnetExtLink
-        #========================================================
-        BusLinkClass = None
-        #========================================================
         RouterClass = GarnetRouter
         BusClass = GarnetBroadcastLink
         InterfaceClass = GarnetNetworkInterface
@@ -176,39 +171,55 @@ def create_network(options, ruby):
         NetworkClass = SimpleNetwork
         IntLinkClass = SimpleIntLink
         ExtLinkClass = SimpleExtLink
-        #========================================================
-        BusLinkClass = None
-        #========================================================
         RouterClass = Switch
         BusClass = None
         InterfaceClass = None
 
     # Instantiate the network object
     # so that the controllers can connect to it.
+    if options.network == "onyx":
+        network = NetworkClass(
+            ruby_system=ruby,
+            topology=options.topology,
+            routers=[],
+            busses=[],
+            ext_links=[],
+            #=================================
+            bus_links=[],
+            #=================================
+            int_links=[],
+            netifs=[],
+        )
+        return (
+            network,
+            IntLinkClass,
+            ExtLinkClass,
+            #=================================
+            BusLinkClass,
+            #=================================
+            RouterClass,
+            BusClass,
+            InterfaceClass,
+        )
+    # for garnet and simple
     network = NetworkClass(
         ruby_system=ruby,
         topology=options.topology,
         routers=[],
         busses=[],
         ext_links=[],
-        #=================================
-        bus_links=[],
-        #=================================
         int_links=[],
         netifs=[],
     )
-
     return (
         network,
         IntLinkClass,
         ExtLinkClass,
-        #=================================
-        BusLinkClass,
-        #=================================
         RouterClass,
         BusClass,
         InterfaceClass,
     )
+
 
 
 def init_network(options, network, InterfaceClass):
@@ -435,3 +446,5 @@ def init_network(options, network, InterfaceClass):
         assert options.network == "garnet" or options.network == "onyx"
         network.enable_fault_model = True
         network.fault_model = FaultModel()
+
+

@@ -233,19 +233,37 @@ def create_system(
     # Generate pseudo filesystem
     FileSystemConfig.config_filesystem(system, options)
 
-    # Create the network object
-    (
-        network,
-        IntLinkClass,
-        ExtLinkClass,
-        #==================================
-        BusLinkClass,
-        #==================================
-        RouterClass,
-        BusClass,
-        InterfaceClass,
-    ) = Network.create_network(options, ruby)
-    ruby.network = network
+    #==============================================================
+    # Making different network based on network type
+    #==============================================================
+    if options.network == "onyx":
+        # Create the network object
+        (
+            network,
+            IntLinkClass,
+            ExtLinkClass,
+            #==================================
+            BusLinkClass,
+            #==================================
+            RouterClass,
+            BusClass,
+            InterfaceClass,
+        ) = Network.create_network(options, ruby)
+        ruby.network = network
+
+    else:
+        # for garnet and simple network
+        # Create the network object
+        (
+            network,
+            IntLinkClass,
+            ExtLinkClass,
+            RouterClass,
+            BusClass,
+            InterfaceClass,
+        ) = Network.create_network(options, ruby)
+        ruby.network = network
+    #==============================================================
 
     if cpus is None:
         cpus = system.cpu
@@ -262,13 +280,21 @@ def create_system(
         print(f"Error: could not create sytem for ruby protocol {protocol}")
         raise
 
-    #=====================================================================
+    #==============================================================
+    # Making different network based on network type
+    #==============================================================
     # Create the network topology
-    topology.makeTopology(
-        options, network, IntLinkClass, ExtLinkClass, BusLinkClass,
-        RouterClass, BusClass
-    )
-    #=====================================================================
+    if options.network == "onyx":
+        topology.makeTopology(
+            options, network, IntLinkClass, ExtLinkClass, BusLinkClass,
+            RouterClass, BusClass
+        )
+    else:
+        topology.makeTopology(
+            options, network, IntLinkClass, ExtLinkClass,
+            RouterClass, BusClass
+        )        
+    #==============================================================
 
     # Register the topology elements with faux filesystem (SE mode only)
     if not full_system:

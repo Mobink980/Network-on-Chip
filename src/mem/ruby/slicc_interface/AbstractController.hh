@@ -70,6 +70,9 @@ namespace ruby
 {
 
 class Network;
+//========================
+class Chain;
+//========================
 class GPUCoalescer;
 class DMASequencer;
 
@@ -91,6 +94,9 @@ class AbstractController : public ClockedObject, public Consumer
     MachineType getType() const { return m_machineID.getType(); }
 
     void initNetworkPtr(Network* net_ptr) { m_net_ptr = net_ptr; }
+    //============================================================
+    void initChainPtr(Chain* chain_ptr) { m_chain_ptr = chain_ptr; }
+    //============================================================
 
     // return instance name
     void blockOnQueue(Addr, MessageBuffer*);
@@ -398,6 +404,9 @@ class AbstractController : public ClockedObject, public Consumer
     const RequestorID m_id;
 
     Network *m_net_ptr;
+    //======================
+    Chain *m_chain_ptr;
+    //======================
     bool m_is_blocking;
     std::map<Addr, MessageBuffer*> m_block_map;
 

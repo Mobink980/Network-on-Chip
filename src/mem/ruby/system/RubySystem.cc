@@ -53,6 +53,7 @@
 #include "debug/RubySystem.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/network/Network.hh"
+#include "mem/ruby/network/Chain.hh"
 #include "mem/ruby/system/DMASequencer.hh"
 #include "mem/ruby/system/Sequencer.hh"
 #include "mem/simple_mem.hh"
@@ -103,6 +104,14 @@ RubySystem::registerNetwork(Network* network_ptr)
     m_networks.emplace_back(network_ptr);
 }
 
+//====================================================
+void
+RubySystem::registerChain(Chain* chain_ptr)
+{
+    m_chains.emplace_back(chain_ptr);
+}
+//====================================================
+
 void
 RubySystem::registerAbstractController(AbstractController* cntrl)
 {
@@ -127,6 +136,24 @@ RubySystem::registerMachineID(const MachineID& mach_id, Network* network)
 
     machineToNetwork.insert(std::make_pair(mach_id, network_id));
 }
+
+//=============================================================
+void
+RubySystem::registerMachineIDChain(const MachineID& mach_id, Chain* chain)
+{
+    int chain_id = -1;
+    for (int idx = 0; idx < m_chains.size(); ++idx) {
+        if (m_chains[idx].get() == chain) {
+            chain_id = idx;
+        }
+    }
+
+    fatal_if(chain_id < 0, "Could not add MachineID %s. Chain not found",
+             MachineIDToString(mach_id).c_str());
+
+    machineToNetwork.insert(std::make_pair(mach_id, chain_id));
+}
+//================================================================
 
 // This registers all requestor IDs in the system for functional reads. This
 // should be called in init() since requestor IDs are obtained in a SimObject's
@@ -496,6 +523,11 @@ RubySystem::resetStats()
     for (auto& network : m_networks) {
         network->resetStats();
     }
+    //====================================
+    for (auto& chain : m_chains) {
+        chain->resetStats();
+    }
+    //====================================
     ClockedObject::resetStats();
 }
 
@@ -611,6 +643,12 @@ RubySystem::functionalRead(PacketPtr pkt)
             if (network->functionalRead(pkt))
                 return true;
         }
+        //=====================================
+        for (auto& chain : m_chains) {
+            if (chain->functionalRead(pkt))
+                return true;
+        }
+        //=====================================
     }
 
     return false;
@@ -699,6 +737,11 @@ RubySystem::functionalRead(PacketPtr pkt)
         for (auto& network : m_networks) {
             network->functionalRead(pkt, bytes);
         }
+        //========================================
+        for (auto& chain : m_chains) {
+            chain->functionalRead(pkt, bytes);
+        }
+        //========================================
         for (auto ctrl : ctrl_others) {
             ctrl->functionalRead(line_address, pkt, bytes);
             ctrl->functionalReadBuffers(pkt, bytes);
@@ -758,6 +801,11 @@ RubySystem::functionalWrite(PacketPtr pkt)
     for (auto& network : m_networks) {
         num_functional_writes += network->functionalWrite(pkt);
     }
+    //=====================================================
+    for (auto& chain : m_chains) {
+        num_functional_writes += chain->functionalWrite(pkt);
+    }
+    //=====================================================
     DPRINTF(RubySystem, "Messages written = %u\n", num_functional_writes);
 
     return true;

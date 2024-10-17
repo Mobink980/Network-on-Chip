@@ -47,6 +47,7 @@
 
 #include "mem/ruby/common/TypeDefines.hh"
 #include "mem/ruby/network/BasicLink.hh"
+#include "mem/ruby/network/Topology.hh"
 #include "mem/ruby/protocol/LinkDirection.hh"
 
 namespace gem5
@@ -73,15 +74,15 @@ typedef int PortNumber;
 //PortDirection is a string
 typedef std::string PortDirection;
 
-struct LinkEntry
-{
-    //network link
-    BasicLink *link;
-    //src_outport direction
-    PortDirection src_outport_dirn;
-    //dst_inport direction
-    PortDirection dst_inport_dirn;
-};
+// struct LinkEntry
+// {
+//     //network link
+//     BasicLink *link;
+//     //src_outport direction
+//     PortDirection src_outport_dirn;
+//     //dst_inport direction
+//     PortDirection dst_inport_dirn;
+// };
 
 //LinkMap combines <SwitchID, SwitchID> pair with LinkEntry
 typedef std::map<std::pair<SwitchID, SwitchID>,

@@ -32,7 +32,7 @@
 #include <cassert>
 
 #include "base/trace.hh"
-#include "debug/RubyChain.hh"
+#include "debug/RubyNetwork.hh"
 
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/BasicLink.hh"
@@ -596,7 +596,7 @@ Configuration::shortest_path_to_node(SwitchID src, SwitchID next,
         }
     }
 
-    DPRINTF(RubyChain, "Returning shortest path\n"
+    DPRINTF(RubyNetwork, "Returning shortest path\n"
             "(src-(2*max_machines)): %d, (next-(2*max_machines)): %d, "
             "src: %d, next: %d, vnet:%d result: %s\n",
             (src-(2*max_machines)), (next-(2*max_machines)),
