@@ -315,14 +315,13 @@ Topology::makeLink(Network *net, SwitchID src, SwitchID dest,
     // Make sure we're not trying to connect two end-point nodes
     // directly together
     assert(src >= 2 * m_nodes || dest >= 2 * m_nodes);
-
     std::pair<int, int> src_dest;
     LinkEntry link_entry;
+    src_dest.first = src;
+    src_dest.second = dest;
+    std::vector<LinkEntry> links = m_link_map[src_dest];
 
     if (src < m_nodes) {
-        src_dest.first = src;
-        src_dest.second = dest;
-        std::vector<LinkEntry> links = m_link_map[src_dest];
         for (int l = 0; l < links.size(); l++) {
             link_entry = links[l];
             std::vector<NetDest> linkRoute;
@@ -343,9 +342,6 @@ Topology::makeLink(Network *net, SwitchID src, SwitchID dest,
     } else if (dest < 2*m_nodes) {
         assert(dest >= m_nodes);
         NodeID node = dest - m_nodes;
-        src_dest.first = src;
-        src_dest.second = dest;
-        std::vector<LinkEntry> links = m_link_map[src_dest];
         for (int l = 0; l < links.size(); l++) {
             link_entry = links[l];
             std::vector<NetDest> linkRoute;
@@ -365,9 +361,6 @@ Topology::makeLink(Network *net, SwitchID src, SwitchID dest,
         }
     } else {
         assert((src >= 2 * m_nodes) && (dest >= 2 * m_nodes));
-        src_dest.first = src;
-        src_dest.second = dest;
-        std::vector<LinkEntry> links = m_link_map[src_dest];
         for (int l = 0; l < links.size(); l++) {
             link_entry = links[l];
             std::vector<NetDest> linkRoute;
