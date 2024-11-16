@@ -293,8 +293,8 @@ Configuration::addLink(SwitchID src, SwitchID dest, BasicLink* link,
                   PortDirection dst_inport_dirn)
 {
     //make sure src and dst SwitchIDs are valid
-    assert(src <= m_number_of_switches+m_nodes+m_nodes);
-    assert(dest <= m_number_of_switches+m_nodes+m_nodes);
+    assert(src <= m_number_of_switches + (3*m_nodes));
+    assert(dest <= m_number_of_switches + (3*m_nodes));
 
     //a pair to save the src and dst SwitchIDs
     std::pair<int, int> src_dest_pair;
@@ -337,116 +337,109 @@ Configuration::makeLink(Chain *net, SwitchID src, SwitchID dest,
     // Make sure we're not trying to connect two end-point nodes
     // directly together
     assert(src >= 2 * m_nodes || dest >= 2 * m_nodes);
-
     std::pair<int, int> src_dest;
     LinkEntry link_entry;
+    src_dest.first = src;
+    src_dest.second = dest;
+    std::vector<LinkEntry> links = m_link_map[src_dest];
 
     //==========================================================
     //==========================================================
-    if (src < m_nodes && dest >= 3 * m_nodes) {
-      //from NI to Bus
-      src_dest.first = src;
-      src_dest.second = dest;
-      std::vector<LinkEntry> links = m_link_map[src_dest];
-      for (int l = 0; l < links.size(); l++) {
-          link_entry = links[l];
-          std::vector<NetDest> linkRoute;
-          linkRoute.resize(m_vnets);
-          BasicLink *link = link_entry.link;
-          if (link->mVnets.size() == 0) {
-              net->makeBusInLink(src, dest - (3 * m_nodes), link,
-                              routing_table_entry);
-          } else {
-              for (int v = 0; v< link->mVnets.size(); v++) {
-                  int vnet = link->mVnets[v];
-                  linkRoute[vnet] = routing_table_entry[vnet];
-              }
-              net->makeBusInLink(src, dest - (3 * m_nodes), link,
-                              linkRoute);
-          }
-      }
+    // We either have MakeExtInLink (from NI to Router) 
+    // or MakeBusInLink (from NI to Bus)
+    if (src < m_nodes) {
+
+      if (dest >= (3*m_nodes) ) { //we have a bus link (from NI to Bus)
+        for (int l = 0; l < links.size(); l++) {
+            link_entry = links[l];
+            std::vector<NetDest> linkRoute;
+            linkRoute.resize(m_vnets);
+            BasicLink *link = link_entry.link;
+            if (link->mVnets.size() == 0) {
+                net->makeBusInLink(src, dest - (3 * m_nodes), link,
+                                routing_table_entry);
+            } else {
+                for (int v = 0; v< link->mVnets.size(); v++) {
+                    int vnet = link->mVnets[v];
+                    linkRoute[vnet] = routing_table_entry[vnet];
+                }
+                net->makeBusInLink(src, dest - (3 * m_nodes), link,
+                                linkRoute);
+            }
+        }
       
-    } else if (dest < 2 * m_nodes && src >= 3 * m_nodes) {
-      //from Bus to NI
+      } else { //we have an ext link (from NI to Router)
+        for (int l = 0; l < links.size(); l++) {
+            assert(dest >= (2 * m_nodes));
+            link_entry = links[l];
+            std::vector<NetDest> linkRoute;
+            linkRoute.resize(m_vnets);
+            BasicLink *link = link_entry.link;
+            if (link->mVnets.size() == 0) {
+                net->makeExtInLink(src, dest - (2 * m_nodes), link,
+                                routing_table_entry);
+            } else {
+                for (int v = 0; v< link->mVnets.size(); v++) {
+                    int vnet = link->mVnets[v];
+                    linkRoute[vnet] = routing_table_entry[vnet];
+                }
+                net->makeExtInLink(src, dest - (2 * m_nodes), link,
+                                linkRoute);
+            }
+        }
+      } 
+      
+    } 
+    
+    // We either have MakeExtOutLink (from Router to NI) 
+    // or MakeBusOutLink (from Bus to NI)    
+    else if (dest < (2*m_nodes)) { 
       assert(dest >= m_nodes);
       NodeID node = dest - m_nodes;
-      src_dest.first = src;
-      src_dest.second = dest;
-      std::vector<LinkEntry> links = m_link_map[src_dest];
-      for (int l = 0; l < links.size(); l++) {
-          link_entry = links[l];
-          std::vector<NetDest> linkRoute;
-          linkRoute.resize(m_vnets);
-          BasicLink *link = link_entry.link;
-          if (link->mVnets.size() == 0) {
-              net->makeBusOutLink(src - (3 * m_nodes), node, link,
-                               routing_table_entry);
-          } else {
-              for (int v = 0; v< link->mVnets.size(); v++) {
-                  int vnet = link->mVnets[v];
-                  linkRoute[vnet] = routing_table_entry[vnet];
-              }
-              net->makeBusOutLink(src - (3 * m_nodes), node, link,
-                              linkRoute);
-          }
-      }
+      if (src >= (3*m_nodes) ) { //we have a bus link (from Bus to NI) 
+        for (int l = 0; l < links.size(); l++) {
+            link_entry = links[l];
+            std::vector<NetDest> linkRoute;
+            linkRoute.resize(m_vnets);
+            BasicLink *link = link_entry.link;
+            if (link->mVnets.size() == 0) {
+                net->makeBusOutLink(src - (3 * m_nodes), node, link,
+                                 routing_table_entry);
+            } else {
+                for (int v = 0; v< link->mVnets.size(); v++) {
+                    int vnet = link->mVnets[v];
+                    linkRoute[vnet] = routing_table_entry[vnet];
+                }
+                net->makeBusOutLink(src - (3 * m_nodes), node, link,
+                                linkRoute);
+            }
+        }
       
-    } else if (src < m_nodes && dest >= 2 * m_nodes) {
-      //from NI to Router
-      src_dest.first = src;
-      src_dest.second = dest;
-      std::vector<LinkEntry> links = m_link_map[src_dest];
-      for (int l = 0; l < links.size(); l++) {
-          link_entry = links[l];
-          std::vector<NetDest> linkRoute;
-          linkRoute.resize(m_vnets);
-          BasicLink *link = link_entry.link;
-          if (link->mVnets.size() == 0) {
-              net->makeExtInLink(src, dest - (2 * m_nodes), link,
-                              routing_table_entry);
-          } else {
-              for (int v = 0; v< link->mVnets.size(); v++) {
-                  int vnet = link->mVnets[v];
-                  linkRoute[vnet] = routing_table_entry[vnet];
-              }
-              net->makeExtInLink(src, dest - (2 * m_nodes), link,
-                              linkRoute);
-          }
-      }
-      
-    } else if (dest < 2 * m_nodes && src >= 2 * m_nodes) {
-      //from Router to NI
-      assert(dest >= m_nodes);
-      NodeID node = dest - m_nodes;
-      src_dest.first = src;
-      src_dest.second = dest;
-      std::vector<LinkEntry> links = m_link_map[src_dest];
-      for (int l = 0; l < links.size(); l++) {
-          link_entry = links[l];
-          std::vector<NetDest> linkRoute;
-          linkRoute.resize(m_vnets);
-          BasicLink *link = link_entry.link;
-          if (link->mVnets.size() == 0) {
-              net->makeExtOutLink(src - (2 * m_nodes), node, link,
-                               routing_table_entry);
-          } else {
-              for (int v = 0; v< link->mVnets.size(); v++) {
-                  int vnet = link->mVnets[v];
-                  linkRoute[vnet] = routing_table_entry[vnet];
-              }
-              net->makeExtOutLink(src - (2 * m_nodes), node, link,
-                              linkRoute);
-          }
-      }
-      
-    } else {
-      //from Router to Router
+      } else { //we have an ext link (from Router to NI)
+        assert(src >= (2 * m_nodes));
+        for (int l = 0; l < links.size(); l++) {
+            link_entry = links[l];
+            std::vector<NetDest> linkRoute;
+            linkRoute.resize(m_vnets);
+            BasicLink *link = link_entry.link;
+            if (link->mVnets.size() == 0) {
+                net->makeExtOutLink(src - (2 * m_nodes), node, link,
+                                 routing_table_entry);
+            } else {
+                for (int v = 0; v< link->mVnets.size(); v++) {
+                    int vnet = link->mVnets[v];
+                    linkRoute[vnet] = routing_table_entry[vnet];
+                }
+                net->makeExtOutLink(src - (2 * m_nodes), node, link,
+                                linkRoute);
+            }
+        }
+      }         
+    }
+
+    else { //we have an internal link to make
       assert(2 * m_nodes <= src && src < 3 * m_nodes);
       assert(2 * m_nodes <= dest && dest < 3 * m_nodes);
-      assert((src >= 2 * m_nodes) && (dest >= 2 * m_nodes));
-      src_dest.first = src;
-      src_dest.second = dest;
-      std::vector<LinkEntry> links = m_link_map[src_dest];
       for (int l = 0; l < links.size(); l++) {
           link_entry = links[l];
           std::vector<NetDest> linkRoute;
