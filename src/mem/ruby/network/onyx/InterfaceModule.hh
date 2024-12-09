@@ -75,7 +75,6 @@ class InterfaceModule : public ClockedObject, public Consumer
     void addOutPort(NetLink *out_link, AckLink *credit_link,
         SwitchID router_id, uint32_t consumerVcs);
 
-
     //for enqueuing a stalled message into the MessageBuffer
     //in the next cycle, after a message was dequeued this cycle
     void dequeueCallback();
@@ -338,6 +337,7 @@ class InterfaceModule : public ClockedObject, public Consumer
           uint32_t _bitWidth;
     };
 
+
   private:
     //pointer to the OnyxNetwork
     OnyxNetwork *m_net_ptr;
@@ -349,17 +349,15 @@ class InterfaceModule : public ClockedObject, public Consumer
     int m_vc_per_vnet;
     //vc allocators
     std::vector<int> m_vc_allocator;
-
     //NetworkInterface outports
     std::vector<OutputPort *> outPorts;
     //NetworkInterface inports
     std::vector<InputPort *> inPorts;
- 
     //to check for possible network deadlock in a vnet
     int m_deadlock_threshold;
-
     //number of stalls for every vnet
     std::vector<int> m_stall_count;
+
 
     // Input Flit Buffers
     // The flit buffers which will serve the Consumer
@@ -390,26 +388,25 @@ class InterfaceModule : public ClockedObject, public Consumer
 
     //choose a vc from the outport in a round-robin manner
     void scheduleOutputPort(OutputPort *oPort);
-
     //schedule the outport link wakeup
     void scheduleOutputLink();
 
+    //=========================================
+    //=========================================
+    //Find the layer of a router based on its id
+    int get_destination_layer(int router_id);
+    //=========================================
+    //=========================================
     //Wakeup the NI in the next cycle to consume msgs or flits,
     //or when there's a clock period difference (to consume link flits)
     void checkReschedule();
-
     //incremet the stats within the flit
     void incrementStats(chunk *t_flit);
-
-    //incremet the stats within the flit 
-    //when came from bus and not going to be ejected
-    void incrementStatsSpecial(chunk *t_flit);
 
     //get the inport for the given vnet
     InputPort *getInportForVnet(int vnet);
     //get the outport for the given vnet
     OutputPort *getOutportForVnet(int vnet);
-
 };
 
 } // namespace onyx
