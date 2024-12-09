@@ -386,72 +386,6 @@ void
 OnyxNetwork::makeBusInLink(NodeID global_src, SwitchID dest, BasicLink* link,
                              std::vector<NetDest>& routing_table_entry)
 {
-    // get the local_id of the Node (or NI)
-    // local_id may be equal with global_id if we only have one network
-    NodeID local_src = getLocalNodeID(global_src);
-    // make sure the local_id is less than the total number of nodes
-    assert(local_src < m_nodes);
-
-    // create an onyx bus link
-    OnyxBusLink* onyx_link = safe_cast<OnyxBusLink*>(link);
-
-    // OnyxBusLink is bi-directional (BUS_IN_ means from NI to Bus)
-    NetLink* net_link = onyx_link->m_network_links[LinkDirection_In];
-    net_link->setType(BUS_IN_); // set the type of the network link to BUS_IN_
-    AckLink* credit_link = onyx_link->m_credit_links[LinkDirection_In];
-
-    m_networklinks.push_back(net_link); // add net_link to network links
-    m_creditlinks.push_back(credit_link); // add credit_link to credit links
-
-    // destination inport direction: means the dest of the link is bus
-    PortDirection dst_inport_dirn = "Local";
-
-    // set the maximum number of VCs per Vnet
-    m_max_vcs_per_vnet = std::max(m_max_vcs_per_vnet,
-                             m_busses[dest]->get_vc_per_vnet());
-
-    /*
-     * We check if a bridge was enabled at any end of the link.
-     * The bridge is enabled if either of clock domain
-     * crossing (CDC) or Serializer-Deserializer(SerDes) unit is
-     * enabled for the link at each end. The bridge encapsulates
-     * the functionality for both CDC and SerDes and is a Consumer
-     * object similiar to a NetworkLink.
-     *
-     * If a bridge was enabled we connect the NI and Routers to
-     * bridge before connecting the link. Example, if an external
-     * bridge is enabled, we would connect:
-     * NI--->NetworkBridge--->OnyxExtLink---->Router
-     */
-
-    // add an outport at the side of the NI (for the OnyxBusLink)
-    if (onyx_link->extBridgeEn) {
-        DPRINTF(RubyNetwork, "Enable external bridge for %s\n",
-            onyx_link->name());
-        NetBridge *n_bridge = onyx_link->extNetBridge[LinkDirection_In];
-        m_nis[local_src]->
-        addNetworkOutport(n_bridge,
-                          onyx_link->extCredBridge[LinkDirection_In],
-                          dest, m_busses[dest]->get_vc_per_vnet());
-        m_networkbridges.push_back(n_bridge);
-    } else {
-        // without NetworkBridge
-        m_nis[local_src]->addNetworkOutport(net_link, credit_link, dest,
-                        m_busses[dest]->get_vc_per_vnet());
-    }
-
-    // add an inport at the side of the bus (for the OnyxBusLink)
-    if (onyx_link->intBridgeEn) {
-        DPRINTF(RubyNetwork, "Enable internal bridge for %s\n",
-            onyx_link->name());
-        NetBridge *n_bridge = onyx_link->intNetBridge[LinkDirection_In];
-        m_busses[dest]->addInPort(dst_inport_dirn, n_bridge,   
-                             onyx_link->intCredBridge[LinkDirection_In]);
-        m_networkbridges.push_back(n_bridge);
-    } else {
-        // without NetworkBridge
-        m_busses[dest]->addInPort(dst_inport_dirn, net_link, credit_link);
-    }
 
 }
 
@@ -465,80 +399,7 @@ OnyxNetwork::makeBusOutLink(SwitchID src, NodeID global_dest,
                               BasicLink* link,
                               std::vector<NetDest>& routing_table_entry)
 {
-    // get the local_id of the node (or NI)
-    NodeID local_dest = getLocalNodeID(global_dest);
-    // make sure the local_id is less than the total number of nodes
-    assert(local_dest < m_nodes);
-    // id of the bus must be less than total number of busses
-    assert(src < m_busses.size());
-    // make sure we have a router object for the id, and not a NULL
-    assert(m_busses[src] != NULL);
 
-    // create an onyx bus link
-    OnyxBusLink* onyx_link = safe_cast<OnyxBusLink*>(link);
-
-    // OnyxBusLink is bi-directional (BUS_OUT_ means from Bus to NI)
-    NetLink* net_link = onyx_link->m_network_links[LinkDirection_Out];
-    net_link->setType(BUS_OUT_); // set the type of the network link to BUS_OUT_
-    AckLink* credit_link = onyx_link->m_credit_links[LinkDirection_Out];
-
-    m_networklinks.push_back(net_link); // add net_link to network links
-    m_creditlinks.push_back(credit_link); // add credit_link to credit links
-
-    // source outport direction: means the src of the link is router
-    PortDirection src_outport_dirn = "Local";
-
-    // set the maximum number of VCs per Vnet
-    m_max_vcs_per_vnet = std::max(m_max_vcs_per_vnet,
-                             m_busses[src]->get_vc_per_vnet());
-
-    /*
-     * We check if a bridge was enabled at any end of the link.
-     * The bridge is enabled if either of clock domain
-     * crossing (CDC) or Serializer-Deserializer(SerDes) unit is
-     * enabled for the link at each end. The bridge encapsulates
-     * the functionality for both CDC and SerDes and is a Consumer
-     * object similiar to a NetworkLink.
-     *
-     * If a bridge was enabled we connect the NI and Routers to
-     * bridge before connecting the link. Example, if an external
-     * bridge is enabled, we would connect:
-     * NI<---NetworkBridge<---OnyxExtLink<----Router
-     */
-
-    // add an inport at the side of the NI (for the OnyxBusLink)
-    if (onyx_link->extBridgeEn) {
-        DPRINTF(RubyNetwork, "Enable external bridge for %s\n",
-            onyx_link->name());
-        NetBridge *n_bridge = onyx_link->extNetBridge[LinkDirection_Out];
-        m_nis[local_dest]->
-            addNetworkInport(n_bridge, onyx_link->extCredBridge[LinkDirection_Out]);
-        m_networkbridges.push_back(n_bridge);
-    } else {
-        // without NetworkBridge
-        m_nis[local_dest]->addNetworkInport(net_link, credit_link);
-    }
-
-    // add an outport at the side of the bus (for the OnyxBusLink)
-    if (onyx_link->intBridgeEn) {
-        DPRINTF(RubyNetwork, "Enable internal bridge for %s\n",
-            onyx_link->name());
-        NetBridge *n_bridge = onyx_link->intNetBridge[LinkDirection_Out];
-        m_busses[src]->
-            addOutPort(src_outport_dirn,
-                       n_bridge,
-                       routing_table_entry, link->m_weight,
-                       onyx_link->intCredBridge[LinkDirection_Out],
-                       m_busses[src]->get_vc_per_vnet());
-        m_networkbridges.push_back(n_bridge);
-    } else {
-        // without NetworkBridge
-        m_busses[src]->
-            addOutPort(src_outport_dirn, net_link,
-                       routing_table_entry,
-                       link->m_weight, credit_link,
-                       m_busses[src]->get_vc_per_vnet());
-    }
 }
 //=====================================================================
 //=====================================================================
@@ -637,16 +498,6 @@ OnyxNetwork::get_router_id(int global_ni, int vnet)
 
 //===========================================================
 //===========================================================
-// Get ID of bus connected to a NI.
-int
-OnyxNetwork::get_bus_id(int global_ni, int vnet)
-{
-    // get the local_id of the NI that has global_ni global_id
-    NodeID local_ni = getLocalNodeID(global_ni);
-    // return the router_id of the router connected to this NI
-    // for the given vnet
-    return m_nis[local_ni]->get_bus_id(vnet);
-}
 // Total busses in the network
 int
 OnyxNetwork::getNumBusses()
