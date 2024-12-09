@@ -1,0 +1,1 @@
+Update InterfaceModule and OnyxNetwork objects properly, so it behaves completely like garnet.
