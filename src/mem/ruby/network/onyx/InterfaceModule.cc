@@ -63,7 +63,7 @@ InterfaceModule::InterfaceModule(const Params &p)
     m_virtual_networks(p.virt_nets), m_vc_per_vnet(0),
     m_vc_allocator(m_virtual_networks, 0),
     m_deadlock_threshold(p.onyx_deadlock_threshold),
-    vc_busy_counter(m_virtual_networks, 0),
+    vc_busy_counter(m_virtual_networks, 0)
 {
     //counting stall numbers for each vnet
     m_stall_count.resize(m_virtual_networks);
@@ -298,11 +298,11 @@ InterfaceModule::wakeup()
     DPRINTF(RubyNetwork, "Number of input ports: %d\n", inPorts.size());
     for (auto &iPort: inPorts) { //for every inport
         //get the network link for that inport
-        NetworkLink *inNetLink = iPort->inNetLink();
+        NetLink *inNetLink = iPort->inNetLink();
         //if the network link buffer has a ready flit at the current tick
         if (inNetLink->isReady(curTick())) {
             //consume that flit on the network link and put it in t_flit
-            flit *t_flit = inNetLink->consumeLink();
+            chunk *t_flit = inNetLink->consumeLink();
             //print the flit that was received by the NI
             DPRINTF(RubyNetwork, "Recieved flit:%s\n", *t_flit);
             //make sure the flit width and the bitWidth of the inport
@@ -333,7 +333,7 @@ InterfaceModule::wakeup()
 
                     // Simply send a credit back since we are not buffering
                     // this flit in the NI
-                    Credit *cFlit = new Credit(t_flit->get_vc(),
+                    Ack *cFlit = new Ack(t_flit->get_vc(),
                                                true, curTick());
                     //send the cFlit credit from NI to the network
                     iPort->sendCredit(cFlit);
@@ -356,7 +356,7 @@ InterfaceModule::wakeup()
                 }
             } else { //HEAD or BODY flit
                 // Non-tail flit. Send back a credit but not VC free signal.
-                Credit *cFlit = new Credit(t_flit->get_vc(), false,
+                Ack *cFlit = new Ack(t_flit->get_vc(), false,
                                                curTick());
                 // Simply send a credit back since we are not buffering
                 // this flit in the NI
@@ -373,11 +373,11 @@ InterfaceModule::wakeup()
 
     for (auto &oPort: outPorts) { //for every outport
         //get the credit link for that outport
-        CreditLink *inCreditLink = oPort->inCreditLink();
+        AckLink *inCreditLink = oPort->inCreditLink();
         //if that credit link has a ready flit at current tick
         if (inCreditLink->isReady(curTick())) {
             //consume that flit on the credit link and put it in t_credit
-            Credit *t_credit = (Credit*) inCreditLink->consumeLink();
+            Ack *t_credit = (Ack*) inCreditLink->consumeLink();
             //increment credit (free space) for the vc of t_credit in
             //outVcState vector (It means that the downstream router got
             //and consumed the flit that we sent and now that vc has another
@@ -437,7 +437,7 @@ InterfaceModule::checkStallQueue()
             for (auto stallIter = iPort->m_stall_queue.begin();
                  stallIter != iPort->m_stall_queue.end(); ) {
                 //get the stalled flit and save it to stallFlit variable
-                flit *stallFlit = *stallIter;
+                chunk *stallFlit = *stallIter;
                 //get the vnet of that stalled flit
                 int vnet = stallFlit->get_vnet();
 
@@ -454,7 +454,7 @@ InterfaceModule::checkStallQueue()
 
                     // Send back a credit with free signal now that the
                     // VC is no longer stalled.
-                    Credit *cFlit = new Credit(stallFlit->get_vc(), true,
+                    Ack *cFlit = new Ack(stallFlit->get_vc(), true,
                                                    curTick());
                     //send the credit flit to the upstream router
                     iPort->sendCredit(cFlit);
@@ -596,7 +596,7 @@ InterfaceModule::flitisizeMessage(MsgPtr msg_ptr, int vnet)
             //a flit was injected into the vnet in the GarnetNetwork
             m_net_ptr->increment_injected_flits(vnet);
             //create a new flit and fill its fields with appropriate data
-            flit *fl = new flit(packet_id,
+            chunk *fl = new chunk(packet_id,
                 i, vc, vnet, route, num_flits, new_msg_ptr,
                 m_net_ptr->MessageSizeType_to_int(
                 net_msg_ptr->getMessageSize()),
@@ -698,7 +698,7 @@ InterfaceModule::scheduleOutputPort(OutputPort *oPort)
                 outVcState[vc].decrement_credit();
 
                 // Just removing the top flit
-                flit *t_flit = niOutVcs[vc].getTopFlit();
+                chunk *t_flit = niOutVcs[vc].getTopFlit();
                 //the flit will traverse the link in the next cycle
                 t_flit->set_time(clockEdge(Cycles(1)));
 
@@ -773,7 +773,7 @@ InterfaceModule::getOutportForVnet(int vnet)
 
 //schedule a flit to be sent from an NI output port
 void
-InterfaceModule::scheduleFlit(flit *t_flit)
+InterfaceModule::scheduleFlit(chunk *t_flit)
 {
     //get the outport associated with the vnet of t_flit
     OutputPort *oPort = getOutportForVnet(t_flit->get_vnet());
@@ -847,7 +847,7 @@ InterfaceModule::checkReschedule()
     // a higher frequency.
     for (auto &iPort : inPorts) { //for every inport in NI
         //get the network link coming into that inport
-        NetworkLink *inNetLink = iPort->inNetLink();
+        NetLink *inNetLink = iPort->inNetLink();
         //if the network link has a ready flit
         if (inNetLink->isReady(curTick())) {
             scheduleEvent(Cycles(1)); //wake up the NI in the next cycle
@@ -857,7 +857,7 @@ InterfaceModule::checkReschedule()
 
     for (auto &oPort : outPorts) { //for every outport in NI
         //get the credit link coming into that outport
-        CreditLink *inCreditLink = oPort->inCreditLink();
+        AckLink *inCreditLink = oPort->inCreditLink();
         //if the credit link has a ready flit
         if (inCreditLink->isReady(curTick())) {
             scheduleEvent(Cycles(1)); //wake up the NI in the next cycle
