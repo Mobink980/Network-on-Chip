@@ -1,5 +1,7 @@
-Changed InterfaceModule and OnyxNetwork back to the original. Build the network until you get a successful build. After that, we test with OnyxTest.py and see whether the segfault is obviated or not.
+After the changes made, the segmentation fault persisted.
 
-If not obviated, we go after Configuration and Chain objects. Because we didn't have a segfault when we ran the onyx alone. Regardless of the situation, we return to the complete version portion by portion to make sure we don't face segfault again.
+1. Completely Make Onyx like Garnet. There is no problem with OnyxTest topology. It runs with garnet and it should run with onyx as well. Specifically, get rid of  the links to unnecessarry objects like Chain and Configuration and run Onyx without the garnet in the network directory. You absolutely need to get a successful test at this point.
 
-Do not give in. Stay persistent and the problem reveals itself.
+2. After You have done that, we have the current state of the onyx in the videos directory. As our assumption that the segfault problem was originating from the modified NI failed, this time, you don't need to worry about having garnet and onyx at the same time. We first revert back step by step to the designed onyx, and try to see where a problem rises (with the same Topology and Network objects). 
+
+3. We can still test both garnet and onyx and compare their results. This time, we make sure both garnet and onyx are operational on their own before trying to have them at the same time for easier testing.
