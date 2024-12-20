@@ -113,8 +113,6 @@ class OnyxBus(BasicBus):
         Parent.number_of_virtual_networks, "number of virtual networks"
     )
     width = Param.UInt32(Parent.ni_flit_size, "bit width supported by the bus")
-
-
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 
