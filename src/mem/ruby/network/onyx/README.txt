@@ -1,12 +1,12 @@
-README for Garnet3.0
-Written By: Tushar Krishna (tushar@ece.gatech.edu)
-Last Updated: Sep 9, 2020
+README for Onyx3.0
+Written By: Ali Karazmoodeh (tushar@ece.gatech.edu)
+Last Updated: Dec 25, 2024
 -------------------------------------------------------
 
-Garnet Network Parameters and Setup:
-- GarnetNetwork.py
+Onyx Network Parameters and Setup:
+- OnyxNetwork.py
     * defaults can be overwritten from command line (see configs/network/Network.py)
-- GarnetNetwork.hh/cc
+- OnyxNetwork.hh/cc
     * sets up the routers and links
     * collects stats
 
@@ -15,7 +15,7 @@ CODE FLOW
 - NetworkInterface.cc::wakeup()
     * Every NI connected to one coherence protocol controller on one end, and one router on the other.
     * receives messages from coherence protocol buffer in appropriate vnet and converts them into network packets and sends them into the network.
-        * garnet adds the ability to capture a network trace at this point.
+        * onyx adds the ability to capture a network trace at this point.
     * receives flits from the network, extracts the protocol message and sends it to the coherence protocol buffer in appropriate vnet.
     * manages flow-control (i.e., credits) with its attached router.
     * The consuming flit/credit output link of the NI is put in the global event queue with a timestamp set to next cycle.
@@ -70,7 +70,7 @@ CODE FLOW
 
 
 If a clock domain crossing(CDC) or Serializer-Deserializer unit is
-instantiated, then the Network Brisge takes over the flit in HeteroGarnet.
+instantiated, then the Network Brisge takes over the flit in HeteroOnyx.
 - NetworkBridge::wakeup()
     * Check if SerDes is enabled and do appropriate calculations for
     serializing or deserializing the flits
