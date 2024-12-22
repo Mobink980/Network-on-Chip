@@ -236,15 +236,13 @@ def create_system(
     #==============================================================
     # Making different network based on network type
     #==============================================================
-    if options.network == "onyx":
+    if options.network == "onyx" or options.network == "emerald":
         # Create the network object
         (
             network,
             IntLinkClass,
             ExtLinkClass,
-            #==================================
             BusLinkClass,
-            #==================================
             RouterClass,
             BusClass,
             InterfaceClass,
@@ -284,7 +282,7 @@ def create_system(
     # Making different network based on network type
     #==============================================================
     # Create the network topology
-    if options.network == "onyx":
+    if options.network == "onyx" or options.network == "emerald":
         topology.makeTopology(
             options, network, IntLinkClass, ExtLinkClass, BusLinkClass,
             RouterClass, BusClass
