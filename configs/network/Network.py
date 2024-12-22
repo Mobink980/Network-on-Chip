@@ -156,16 +156,27 @@ def create_network(options, ruby):
         BusClass = GarnetBroadcastLink
         InterfaceClass = GarnetNetworkInterface
 
+    #===========================================================
+    #===========================================================
     elif options.network == "onyx":
         NetworkClass = OnyxNetwork
         IntLinkClass = OnyxIntLink
         ExtLinkClass = OnyxExtLink
-        #========================================================
         BusLinkClass = OnyxBusLink
-        #========================================================
         RouterClass = OnyxSwitcher
         BusClass = OnyxBus
         InterfaceClass = OnyxNetworkInterface
+
+    elif options.network == "emerald":
+        NetworkClass = EmeraldNetwork
+        IntLinkClass = EmeraldIntLink
+        ExtLinkClass = EmeraldExtLink
+        BusLinkClass = EmeraldBusLink
+        RouterClass = EmeraldRouter
+        BusClass = EmeraldBus
+        InterfaceClass = EmeraldNetworkInterface
+    #===========================================================
+    #===========================================================
 
     else:
         NetworkClass = SimpleNetwork
@@ -175,18 +186,18 @@ def create_network(options, ruby):
         BusClass = None
         InterfaceClass = None
 
+#===============================================================
+#===============================================================
     # Instantiate the network object
     # so that the controllers can connect to it.
-    if options.network == "onyx":
+    if options.network == "onyx" or options.network == "emerald":
         network = NetworkClass(
             ruby_system=ruby,
             topology=options.topology,
             routers=[],
             busses=[],
             ext_links=[],
-            #=================================
             bus_links=[],
-            #=================================
             int_links=[],
             netifs=[],
         )
@@ -194,13 +205,12 @@ def create_network(options, ruby):
             network,
             IntLinkClass,
             ExtLinkClass,
-            #=================================
             BusLinkClass,
-            #=================================
             RouterClass,
             BusClass,
             InterfaceClass,
         )
+        
     # for garnet and simple
     network = NetworkClass(
         ruby_system=ruby,
@@ -219,8 +229,8 @@ def create_network(options, ruby):
         BusClass,
         InterfaceClass,
     )
-
-
+#===============================================================
+#===============================================================
 
 def init_network(options, network, InterfaceClass):
     if options.network == "garnet":
@@ -426,6 +436,108 @@ def init_network(options, network, InterfaceClass):
                 )
             )
             extLink.int_cred_bridge = int_cred_bridges
+
+
+    if options.network == "emerald":
+        network.num_rows = options.mesh_rows
+        network.num_columns = options.mesh_columns
+        network.num_layers = options.mesh_layers
+        network.vcs_per_vnet = options.vcs_per_vnet
+        network.ni_flit_size = options.link_width_bits / 8
+        network.routing_algorithm = options.routing_algorithm
+        network.emerald_deadlock_threshold = options.garnet_deadlock_threshold
+
+        # Create Bridges and connect them to the corresponding links
+        for intLink in network.int_links:
+            intLink.src_net_bridge = GridOverpass(
+                link=intLink.network_link,
+                vtype="OBJECT_LINK",
+                width=intLink.src_node.width,
+            )
+            intLink.src_cred_bridge = GridOverpass(
+                link=intLink.credit_link,
+                vtype="LINK_OBJECT",
+                width=intLink.src_node.width,
+            )
+            intLink.dst_net_bridge = GridOverpass(
+                link=intLink.network_link,
+                vtype="LINK_OBJECT",
+                width=intLink.dst_node.width,
+            )
+            intLink.dst_cred_bridge = GridOverpass(
+                link=intLink.credit_link,
+                vtype="OBJECT_LINK",
+                width=intLink.dst_node.width,
+            )
+
+        for extLink in network.ext_links:
+            ext_net_bridges = []
+            ext_net_bridges.append(
+                GridOverpass(
+                    link=extLink.network_links[0],
+                    vtype="OBJECT_LINK",
+                    width=extLink.width,
+                )
+            )
+            ext_net_bridges.append(
+                GridOverpass(
+                    link=extLink.network_links[1],
+                    vtype="LINK_OBJECT",
+                    width=extLink.width,
+                )
+            )
+            extLink.ext_net_bridge = ext_net_bridges
+
+            ext_credit_bridges = []
+            ext_credit_bridges.append(
+                GridOverpass(
+                    link=extLink.credit_links[0],
+                    vtype="LINK_OBJECT",
+                    width=extLink.width,
+                )
+            )
+            ext_credit_bridges.append(
+                GridOverpass(
+                    link=extLink.credit_links[1],
+                    vtype="OBJECT_LINK",
+                    width=extLink.width,
+                )
+            )
+            extLink.ext_cred_bridge = ext_credit_bridges
+
+            int_net_bridges = []
+            int_net_bridges.append(
+                GridOverpass(
+                    link=extLink.network_links[0],
+                    vtype="LINK_OBJECT",
+                    width=extLink.int_node.width,
+                )
+            )
+            int_net_bridges.append(
+                GridOverpass(
+                    link=extLink.network_links[1],
+                    vtype="OBJECT_LINK",
+                    width=extLink.int_node.width,
+                )
+            )
+            extLink.int_net_bridge = int_net_bridges
+
+            int_cred_bridges = []
+            int_cred_bridges.append(
+                GridOverpass(
+                    link=extLink.credit_links[0],
+                    vtype="OBJECT_LINK",
+                    width=extLink.int_node.width,
+                )
+            )
+            int_cred_bridges.append(
+                GridOverpass(
+                    link=extLink.credit_links[1],
+                    vtype="LINK_OBJECT",
+                    width=extLink.int_node.width,
+                )
+            )
+            extLink.int_cred_bridge = int_cred_bridges
     #=================================================================
     #=================================================================
 
@@ -443,7 +555,7 @@ def init_network(options, network, InterfaceClass):
         network.netifs = netifs
 
     if options.network_fault_model:
-        assert options.network == "garnet" or options.network == "onyx"
+        assert options.network == "garnet" or options.network == "onyx" or options.network == "emerald"
         network.enable_fault_model = True
         network.fault_model = FaultModel()
 
