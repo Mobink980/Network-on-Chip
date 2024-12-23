@@ -45,7 +45,7 @@
 #include "mem/ruby/network/emerald/WayFinder.hh"
 #include "mem/ruby/network/emerald/SwitchHandler.hh"
 #include "mem/ruby/network/emerald/fragment.hh"
-#include "params/EmeraldGateway.hh"
+#include "params/EmeraldRouter.hh"
 
 namespace gem5
 {
@@ -67,7 +67,7 @@ class OutportUnit;
 class Gateway : public BasicRouter, public Consumer
 {
   public:
-    typedef EmeraldGatewayParams Params;
+    typedef EmeraldRouterParams Params;
     Gateway(const Params &p); //Gateway constructor
 
     ~Gateway() = default; //Gateway destructor

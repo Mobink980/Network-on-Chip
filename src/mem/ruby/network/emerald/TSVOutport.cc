@@ -192,7 +192,7 @@ TSVOutport::getOutQueue()
 
 //set the output (network) link for the OutputUnit
 void
-TSVOutport::set_out_link(NetLink *link)
+TSVOutport::set_out_link(GridLink *link)
 {
     m_out_link = link;
 }

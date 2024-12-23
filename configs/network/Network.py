@@ -67,8 +67,8 @@ def define_options(parser):
     parser.add_argument(
         "--network",
         default="simple",
-        choices=["simple", "garnet", "onyx"],
-        help="""'simple'|'garnet' (garnet2.0 will be deprecated.) | 'onyx'""",
+        choices=["simple", "garnet", "onyx", "emerald"],
+        help="""'simple'|'garnet' (garnet2.0 will be deprecated.) | 'onyx' | 'emerald'""",
     )
     parser.add_argument(
         "--router-latency",

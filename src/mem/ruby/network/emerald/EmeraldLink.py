@@ -66,11 +66,11 @@ class AffirmLink(GridLink):
     cxx_class = "gem5::ruby::emerald::AffirmLink"
 
 
-# NetBridge is inherited from AffirmLink
-class NetBridge(AffirmLink):
-    type = "NetBridge"
-    cxx_header = "mem/ruby/network/emerald/NetBridge.hh"
-    cxx_class = "gem5::ruby::emerald::NetBridge"
+# GridOverpass is inherited from AffirmLink
+class GridOverpass(AffirmLink):
+    type = "GridOverpass"
+    cxx_header = "mem/ruby/network/emerald/GridOverpass.hh"
+    cxx_class = "gem5::ruby::emerald::GridOverpass"
 
     link = Param.GridLink("Associated Network Link")
     vtype = Param.EMERALDCDCType(
@@ -112,10 +112,10 @@ class EmeraldIntLink(BasicIntLink):
     # The network bridge encapsulates both the CDC and Ser-Des
     # units in HeteroEmerald. This is automatically enabled when
     # either CDC or Ser-Des is enabled.
-    src_net_bridge = Param.NetBridge(NULL, "Network Bridge at source")
-    dst_net_bridge = Param.NetBridge(NULL, "Network Bridge at dest")
-    src_cred_bridge = Param.NetBridge(NULL, "Credit Bridge at source")
-    dst_cred_bridge = Param.NetBridge(NULL, "Credit Bridge at dest")
+    src_net_bridge = Param.GridOverpass(NULL, "Network Bridge at source")
+    dst_net_bridge = Param.GridOverpass(NULL, "Network Bridge at dest")
+    src_cred_bridge = Param.GridOverpass(NULL, "Credit Bridge at source")
+    dst_cred_bridge = Param.GridOverpass(NULL, "Credit Bridge at dest")
 
     width = Param.UInt32(
         Parent.ni_flit_size, "bit width supported by the router"
@@ -167,16 +167,16 @@ class EmeraldExtLink(BasicExtLink):
     # The network bridge encapsulates both the CDC and Ser-Des
     # units in HeteroEmerald. This is automatically enabled when
     # either CDC or Ser-Des is enabled.
-    ext_net_bridge = VectorParam.NetBridge(
+    ext_net_bridge = VectorParam.GridOverpass(
         [], "Network Bridge at external end"
     )
-    ext_cred_bridge = VectorParam.NetBridge(
+    ext_cred_bridge = VectorParam.GridOverpass(
         [], "Credit Bridge at external end"
     )
-    int_net_bridge = VectorParam.NetBridge(
+    int_net_bridge = VectorParam.GridOverpass(
         [], "Network Bridge at internal end"
     )
-    int_cred_bridge = VectorParam.NetBridge(
+    int_cred_bridge = VectorParam.GridOverpass(
         [], "Credit Bridge at internal end"
     )
 
@@ -231,16 +231,16 @@ class EmeraldBusLink(BasicBusLink):
     # The network bridge encapsulates both the CDC and Ser-Des
     # units in HeteroEmerald. This is automatically enabled when
     # either CDC or Ser-Des is enabled.
-    ext_net_bridge = VectorParam.NetBridge(
+    ext_net_bridge = VectorParam.GridOverpass(
         [], "Network Bridge at external end"
     )
-    ext_cred_bridge = VectorParam.NetBridge(
+    ext_cred_bridge = VectorParam.GridOverpass(
         [], "Credit Bridge at external end"
     )
-    int_net_bridge = VectorParam.NetBridge(
+    int_net_bridge = VectorParam.GridOverpass(
         [], "Network Bridge at internal end"
     )
-    int_cred_bridge = VectorParam.NetBridge(
+    int_cred_bridge = VectorParam.GridOverpass(
         [], "Credit Bridge at internal end"
     )
 

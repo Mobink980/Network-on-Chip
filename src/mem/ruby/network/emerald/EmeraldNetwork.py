@@ -69,8 +69,8 @@ class EmeraldNetwork(RubyNetwork):
 # EmeraldNetworkInterface inherites from ClockedObject
 class EmeraldNetworkInterface(ClockedObject):
     type = "EmeraldNetworkInterface"
-    cxx_class = "gem5::ruby::emerald::NetworkInterface"
-    cxx_header = "mem/ruby/network/emerald/NetworkInterface.hh"
+    cxx_class = "gem5::ruby::emerald::InterfaceUnit"
+    cxx_header = "mem/ruby/network/emerald/InterfaceUnit.hh"
 
     id = Param.UInt32("ID in relation to other network interfaces")
     vcs_per_vnet = Param.UInt32(

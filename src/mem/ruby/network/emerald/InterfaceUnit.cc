@@ -202,7 +202,7 @@ InterfaceUnit::incrementStats(fragment *t_fragment)
 
     // Latency
     //increment the received fragments for the vnet in EmeraldNetwork
-    m_net_ptr->increment_received_fragments(vnet);
+    m_net_ptr->increment_received_flits(vnet);
 
     // std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
     // std::cout<<"One fragment received.\n";
@@ -225,8 +225,8 @@ InterfaceUnit::incrementStats(fragment *t_fragment)
     Tick queueing_delay = src_queueing_delay + dest_queueing_delay;
 
     //increment the fragment network and queuing latency for the EmeraldNetwork
-    m_net_ptr->increment_fragment_network_latency(network_delay, vnet);
-    m_net_ptr->increment_fragment_queueing_latency(queueing_delay, vnet);
+    m_net_ptr->increment_flit_network_latency(network_delay, vnet);
+    m_net_ptr->increment_flit_queueing_latency(queueing_delay, vnet);
 
     //if the fragment is of type TAIL_ or HEAD_TAIL_
     if (t_fragment->get_type() == TAIL_ || t_fragment->get_type() == HEAD_TAIL_) {
@@ -244,7 +244,7 @@ InterfaceUnit::incrementStats(fragment *t_fragment)
 
 /*
  * The NI wakeup checks whether there are any ready messages in the protocol
- * buffer. If yes, it picks that up, fragmentisizes it into a number of fragments and
+ * buffer. If yes, it picks that up, flitisizes it into a number of fragments and
  * puts it into an output buffer and schedules the output link. On a wakeup
  * it also checks whether there are fragments in the input link. If yes, it picks
  * them up and if the fragment is a tail, the NI inserts the corresponding message
@@ -282,8 +282,8 @@ InterfaceUnit::wakeup()
         if (b->isReady(curTime)) { // Is there a message waiting
             //get a pointer to the message at the head of b
             msg_ptr = b->peekMsgPtr();
-            //if the message for that vnet could be fragmentisized
-            if (fragmentisizeMessage(msg_ptr, vnet)) {
+            //if the message for that vnet could be flitisized
+            if (flitisizeMessage(msg_ptr, vnet)) {
                 //dequeue that message from b at current_time
                 b->dequeue(curTime);
             }
@@ -491,9 +491,9 @@ InterfaceUnit::checkStallQueue()
 
 // Embed the protocol message into fragments
 bool
-InterfaceUnit::fragmentisizeMessage(MsgPtr msg_ptr, int vnet)
+InterfaceUnit::flitisizeMessage(MsgPtr msg_ptr, int vnet)
 {
-    //get a pointer to the protocol message we want to fragmentisize
+    //get a pointer to the protocol message we want to flitisize
     Message *net_msg_ptr = msg_ptr.get();
     //get the destination of this message
     NetDest net_msg_dest = net_msg_ptr->getDestination();
@@ -520,7 +520,7 @@ InterfaceUnit::fragmentisizeMessage(MsgPtr msg_ptr, int vnet)
         // this will return a free output virtual channel
         int vc = calculateVC(vnet); //find a free vc in dest vnet
 
-        //no free vc was found, so we can't fragmentisize the message
+        //no free vc was found, so we can't flitisize the message
         if (vc == -1) {
             return false ;
         }
@@ -550,7 +550,7 @@ InterfaceUnit::fragmentisizeMessage(MsgPtr msg_ptr, int vnet)
             net_msg_dest.removeNetDest(personal_dest);
             // removing the destination from the original message to reflect
             // that a message with this particular destination has been
-            // fragmentisized and an output vc is acquired
+            // flitisized and an output vc is acquired
             net_msg_ptr->getDestination().removeNetDest(personal_dest);
         }
 
@@ -578,7 +578,7 @@ InterfaceUnit::fragmentisizeMessage(MsgPtr msg_ptr, int vnet)
         int packet_id = m_net_ptr->getNextPacketID();
         for (int i = 0; i < num_fragments; i++) {
             //a fragment was injected into the vnet in the EmeraldNetwork
-            m_net_ptr->increment_injected_fragments(vnet);
+            m_net_ptr->increment_injected_flits(vnet);
             //create a new fragment and fill its fields with appropriate data
             fragment *fl = new fragment(packet_id,
                 i, vc, vnet, route, num_fragments, new_msg_ptr,

@@ -375,10 +375,10 @@ class InterfaceUnit : public ClockedObject, public Consumer
 
     //checking the stall queue to reschedule stalled fragments
     void checkStallQueue();
-    //NI fragmentisizes the messages it gets from the coherence 
+    //NI flitisizes the messages it gets from the coherence 
     //protocol buffer in appropriate vnet and sends those fragments
     //to the network.
-    bool fragmentisizeMessage(MsgPtr msg_ptr, int vnet);
+    bool flitisizeMessage(MsgPtr msg_ptr, int vnet);
     //Looking for a free output vc
     int calculateVC(int vnet);
 

@@ -31,7 +31,7 @@
 #ifndef __MEM_RUBY_NETWORK_EMERALD_0_AFFIRMLINK_HH__
 #define __MEM_RUBY_NETWORK_EMERALD_0_AFFIRMLINK_HH__
 
-#include "mem/ruby/network/onyx/GridLink.hh"
+#include "mem/ruby/network/emerald/GridLink.hh"
 #include "params/AffirmLink.hh"
 
 namespace gem5
@@ -40,7 +40,7 @@ namespace gem5
 namespace ruby
 {
 
-namespace onyx
+namespace emerald
 {
 
 //AffirmLink is inherited from the GridLink
@@ -53,7 +53,7 @@ class AffirmLink : public GridLink
     AffirmLink(const Params &p) : GridLink(p) {}
 };
 
-} // namespace onyx
+} // namespace emerald
 } // namespace ruby
 } // namespace gem5
 

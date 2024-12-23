@@ -84,7 +84,7 @@ GridLink::setVcsPerVnet(uint32_t consumerVcs)
 
 //set the source queue and source ClockedObject for the link
 void
-GridLink::setSourceQueue(chunkBuffer *src_queue, ClockedObject *srcClockObj)
+GridLink::setSourceQueue(fragmentBuffer *src_queue, ClockedObject *srcClockObj)
 {
     link_srcQueue = src_queue;
     src_object = srcClockObj;
@@ -102,7 +102,7 @@ GridLink::wakeup()
 
     if (link_srcQueue->isReady(curTick())) {
         //get the top flit from link_srcQueue
-        chunk *t_flit = link_srcQueue->getTopFlit();
+        fragment *t_flit = link_srcQueue->getTopFlit();
         //it takes m_latency cycles for flit t_flit to traverse the link
         DPRINTF(RubyNetwork, "Transmission will finish at %ld :%s\n",
                 clockEdge(m_latency), *t_flit);

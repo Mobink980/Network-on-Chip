@@ -45,7 +45,7 @@
 #include "mem/ruby/network/emerald/RouteMap.hh"
 #include "mem/ruby/network/emerald/TSVSwitchHandler.hh"
 #include "mem/ruby/network/emerald/fragment.hh"
-#include "params/EmeraldTSV.hh"
+#include "params/EmeraldBus.hh"
 
 namespace gem5
 {
@@ -64,10 +64,10 @@ class TSVInport;
 class TSVOutport;
 
 //class TSV inherites from both BasicTSV and Consumer
-class TSV : public BasicTSV, public Consumer
+class TSV : public BasicBus, public Consumer
 {
   public:
-    typedef EmeraldTSVParams Params;
+    typedef EmeraldBusParams Params;
     TSV(const Params &p); //TSV constructor
 
     ~TSV() = default; //TSV destructor

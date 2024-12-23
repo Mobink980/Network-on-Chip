@@ -86,7 +86,7 @@ GridOverpass::setVcsPerVnet(uint32_t consumerVcs)
 {
     DPRINTF(RubyNetwork, "VcsPerVnet VC: %d\n", consumerVcs);
     //call the setVcsPerVnet function of the NetworkLink class
-    NetLink::setVcsPerVnet(consumerVcs);
+    GridLink::setVcsPerVnet(consumerVcs);
     //bufffer_length = num_vnets * num_vcs_per_vnet
     lenBuffer.resize(consumerVcs * m_virt_nets);
     sizeSent.resize(consumerVcs * m_virt_nets);

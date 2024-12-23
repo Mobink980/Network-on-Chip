@@ -69,7 +69,7 @@ class RouteMap
     int get_layer(int router_id);
 
     // get output port from routing table
-    int  lookupRouteMap(int vnet, NetDest net_dest);
+    int  lookupRoutingTable(int vnet, NetDest net_dest);
 
     // Topology-specific direction based routing
     void addInDirection(PortDirection inport_dirn, int inport);

@@ -54,7 +54,7 @@ namespace emerald
 
 //TSV constructor
 TSV::TSV(const Params &p)
-  : BasicTSV(p), Consumer(this), m_latency(p.latency),
+  : BasicBus(p), Consumer(this), m_latency(p.latency),
     m_virtual_networks(p.virt_nets), m_vc_per_vnet(p.vcs_per_vnet),
     m_num_vcs(m_virtual_networks * m_vc_per_vnet), m_bit_width(p.width),
     m_network_ptr(nullptr), routingUnit(this), switchAllocator(this),
@@ -69,7 +69,7 @@ TSV::TSV(const Params &p)
 void
 TSV::init()
 {
-    BasicTSV::init();
+    BasicBus::init();
 
     switchAllocator.init();
     crossbarSwitch.init();
@@ -285,7 +285,7 @@ void
 TSV::regStats()
 {
     //call the regStats() function of the parent class
-    BasicTSV::regStats();
+    BasicBus::regStats();
 
     m_buffer_reads
         .name(name() + ".buffer_reads")

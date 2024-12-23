@@ -263,7 +263,7 @@ EmeraldNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
     if (emerald_link->extBridgeEn) {
         DPRINTF(RubyNetwork, "Enable external bridge for %s\n",
             emerald_link->name());
-        NetworkBridge *n_bridge = emerald_link->extNetBridge[LinkDirection_In];
+        GridOverpass *n_bridge = emerald_link->extNetBridge[LinkDirection_In];
         m_nis[local_src]->
         addOutPort(n_bridge,
                    emerald_link->extCredBridge[LinkDirection_In],
@@ -279,7 +279,7 @@ EmeraldNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
     if (emerald_link->intBridgeEn) {
         DPRINTF(RubyNetwork, "Enable internal bridge for %s\n",
             emerald_link->name());
-        NetworkBridge *n_bridge = emerald_link->intNetBridge[LinkDirection_In];
+        GridOverpass *n_bridge = emerald_link->intNetBridge[LinkDirection_In];
         m_routers[dest]->
             addInPort(dst_inport_dirn,
                       n_bridge,
@@ -347,7 +347,7 @@ EmeraldNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
     if (emerald_link->extBridgeEn) {
         DPRINTF(RubyNetwork, "Enable external bridge for %s\n",
             emerald_link->name());
-        NetworkBridge *n_bridge = emerald_link->extNetBridge[LinkDirection_Out];
+        GridOverpass *n_bridge = emerald_link->extNetBridge[LinkDirection_Out];
         m_nis[local_dest]->
             addInPort(n_bridge, emerald_link->extCredBridge[LinkDirection_Out]);
         m_networkbridges.push_back(n_bridge);
@@ -360,7 +360,7 @@ EmeraldNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
     if (emerald_link->intBridgeEn) {
         DPRINTF(RubyNetwork, "Enable internal bridge for %s\n",
             emerald_link->name());
-        NetworkBridge *n_bridge = emerald_link->intNetBridge[LinkDirection_Out];
+        GridOverpass *n_bridge = emerald_link->intNetBridge[LinkDirection_Out];
         m_routers[src]->
             addOutPort(src_outport_dirn,
                        n_bridge,
@@ -387,7 +387,7 @@ EmeraldNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
  * the Bus to the NI
 */
 void
-OnyxNetwork::makeBusInLink(NodeID global_src, SwitchID dest, BasicLink* link,
+EmeraldNetwork::makeBusInLink(NodeID global_src, SwitchID dest, BasicLink* link,
                              std::vector<NetDest>& routing_table_entry)
 {
 
@@ -399,7 +399,7 @@ OnyxNetwork::makeBusInLink(NodeID global_src, SwitchID dest, BasicLink* link,
  * a Credit Link from NI to Bus
 */
 void
-OnyxNetwork::makeBusOutLink(SwitchID src, NodeID global_dest,
+EmeraldNetwork::makeBusOutLink(SwitchID src, NodeID global_dest,
                               BasicLink* link,
                               std::vector<NetDest>& routing_table_entry)
 {
@@ -452,7 +452,7 @@ EmeraldNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
     if (emerald_link->dstBridgeEn) {
         DPRINTF(RubyNetwork, "Enable destination bridge for %s\n",
             emerald_link->name());
-        NetworkBridge *n_bridge = emerald_link->dstNetBridge;
+        GridOverpass *n_bridge = emerald_link->dstNetBridge;
         m_routers[dest]->addInPort(dst_inport_dirn, n_bridge,
                                    emerald_link->dstCredBridge);
         m_networkbridges.push_back(n_bridge);
@@ -465,7 +465,7 @@ EmeraldNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
     if (emerald_link->srcBridgeEn) {
         DPRINTF(RubyNetwork, "Enable source bridge for %s\n",
             emerald_link->name());
-        NetworkBridge *n_bridge = emerald_link->srcNetBridge;
+        GridOverpass *n_bridge = emerald_link->srcNetBridge;
         m_routers[src]->
             addOutPort(src_outport_dirn, n_bridge,
                        routing_table_entry,

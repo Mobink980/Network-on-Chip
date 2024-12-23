@@ -93,7 +93,7 @@ class OutportUnit : public Consumer
     int
     get_credit_count(int vc)
     {
-        return outVcStatus[vc].get_credit_count();
+        return outVcState[vc].get_credit_count();
     }
 
     //get the id of the output (network) link for the OutportUnit
@@ -108,14 +108,14 @@ class OutportUnit : public Consumer
     inline void
     set_vc_state(VC_state_type state, int vc, Tick curTime)
     {
-      outVcStatus[vc].setState(state, curTime);
+      outVcState[vc].setState(state, curTime);
     }
 
     //check to see whether the state of a OutportUnit VC is IDLE_
     inline bool
     is_vc_idle(int vc, Tick curTime)
     {
-        return (outVcStatus[vc].isInState(IDLE_, curTime));
+        return (outVcState[vc].isInState(IDLE_, curTime));
     }
 
     //for inserting a flit into an output VC
@@ -150,7 +150,7 @@ class OutportUnit : public Consumer
     // This is for the network link to consume
     fragmentBuffer outBuffer;
     // vc state of downstream router
-    std::vector<VcStatus> outVcStatus;
+    std::vector<VcStatus> outVcState;
 };
 
 } // namespace emerald
