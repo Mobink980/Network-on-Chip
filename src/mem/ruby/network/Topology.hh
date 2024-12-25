@@ -95,12 +95,10 @@ class Topology
     //          const std::vector<BasicExtLink *> &ext_links,
     //          const std::vector<BasicIntLink *> &int_links);
 
-    //====================================================================
     Topology(uint32_t num_nodes, uint32_t num_routers, uint32_t num_busses,
              uint32_t num_vnets,
              const std::vector<BasicExtLink *> &ext_links,
              const std::vector<BasicIntLink *> &int_links);
-    //====================================================================
 
     //returns the number of switches in the topology
     uint32_t numSwitches() const { return m_number_of_switches; }
