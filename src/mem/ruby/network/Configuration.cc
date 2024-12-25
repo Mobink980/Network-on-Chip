@@ -36,7 +36,9 @@
 
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/BasicLink.hh"
+//=====================================
 #include "mem/ruby/network/Chain.hh"
+//=====================================
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 
 //=====================================
@@ -58,7 +60,7 @@ const int INFINITE_LATENCY = 10000; // Yes, this is a big hack
 // them. The first m_nodes SwitchIDs are the links into the network,
 // the second m_nodes set of SwitchIDs represent the the output queues
 // of the network.
-//=============================================================
+//===================================================================
 Configuration::Configuration(uint32_t num_nodes,
                              uint32_t num_routers,
                              uint32_t num_busses,
@@ -73,7 +75,7 @@ Configuration::Configuration(uint32_t num_nodes,
                 m_ext_link_vector(ext_links),
                 m_bus_link_vector(bus_links),
                 m_int_link_vector(int_links)
-//=============================================================
+//===================================================================
 {
     // Total nodes/controllers in network
     assert(m_nodes > 1);
@@ -112,6 +114,7 @@ Configuration::Configuration(uint32_t num_nodes,
         // int to ext
         addLink(int_idx, ext_idx2, ext_link); //from int_node to ext_node
     }
+  
     //==========================================================================
     //==========================================================================
     // Bus Links
@@ -143,6 +146,7 @@ Configuration::Configuration(uint32_t num_nodes,
     }
     //==========================================================================
     //==========================================================================
+    
     // Internal Links
     for (std::vector<BasicIntLink*>::const_iterator i = int_links.begin();
          i != int_links.end(); ++i) { //for each int_link
@@ -174,8 +178,10 @@ Configuration::Configuration(uint32_t num_nodes,
 }
 
 //create links for the network
+//=============================================
 void
 Configuration::createLinks(Chain *net)
+//=============================================
 {
     // Find maximum switchID
     SwitchID max_switch_id = 0;
@@ -222,7 +228,7 @@ Configuration::createLinks(Chain *net)
         int dst = src_dest.second; //dest router (switch)
 
         // Iterate over all links for this source and destination
-        std::vector<LinkEntry> link_entries = link_group.second;
+        std::vector<LinkInstance> link_entries = link_group.second;
         for (int l = 0; l < link_entries.size(); l++) {
             BasicLink* link = link_entries[l].link;
             if (link->mVnets.size() == 0) {
@@ -302,7 +308,7 @@ Configuration::addLink(SwitchID src, SwitchID dest, BasicLink* link,
     src_dest_pair.second = dest;
     //to hold the link, and the direction of src_outport
     //and dst_inport
-    LinkEntry link_entry;
+    LinkInstance link_entry;
 
     link_entry.link = link;
     link_entry.src_outport_dirn = src_outport_dirn;
@@ -320,8 +326,8 @@ Configuration::addLink(SwitchID src, SwitchID dest, BasicLink* link,
         // add this new link to it.
         lit->second.push_back(link_entry);
     } else { //no previous links for this src_dest_pair
-        //a vector of type LinkEntry
-        std::vector<LinkEntry> links;
+        //a vector of type LinkInstance
+        std::vector<LinkInstance> links;
         //add this link_entry to the created vector
         links.push_back(link_entry);
         //update m_link_map for the src_dest_pair
@@ -330,18 +336,20 @@ Configuration::addLink(SwitchID src, SwitchID dest, BasicLink* link,
 }
 
 //make a link (internal or external) and add it to routing table
+//================================================================
 void
 Configuration::makeLink(Chain *net, SwitchID src, SwitchID dest,
                    std::vector<NetDest>& routing_table_entry)
+//================================================================
 {
     // Make sure we're not trying to connect two end-point nodes
     // directly together
     assert(src >= 2 * m_nodes || dest >= 2 * m_nodes);
     std::pair<int, int> src_dest;
-    LinkEntry link_entry;
+    LinkInstance link_entry;
     src_dest.first = src;
     src_dest.second = dest;
-    std::vector<LinkEntry> links = m_link_map[src_dest];
+    std::vector<LinkInstance> links = m_link_map[src_dest];
 
     //==========================================================
     //==========================================================
