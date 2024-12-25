@@ -47,7 +47,6 @@
 
 #include "mem/ruby/common/TypeDefines.hh"
 #include "mem/ruby/network/BasicLink.hh"
-#include "mem/ruby/network/Topology.hh"
 #include "mem/ruby/protocol/LinkDirection.hh"
 
 namespace gem5
@@ -59,8 +58,9 @@ namespace ruby
 //NetDest specifies the network destination of a Message
 class NetDest;
 //Chain inherites from ClockedObject
+//========================
 class Chain;
-
+//========================
 /*
  * We use a three-dimensional vector matrix for calculating
  * the shortest paths for each pair of source and destination
@@ -74,19 +74,25 @@ typedef int PortNumber;
 //PortDirection is a string
 typedef std::string PortDirection;
 
-// struct LinkEntry
-// {
-//     //network link
-//     BasicLink *link;
-//     //src_outport direction
-//     PortDirection src_outport_dirn;
-//     //dst_inport direction
-//     PortDirection dst_inport_dirn;
-// };
+//================================================
+// I probably included Topology.hh to use LinkInstance struct
+// which is very wierd, because I could just change the struct name 
 
-//LinkMap combines <SwitchID, SwitchID> pair with LinkEntry
+struct LinkInstance
+{
+   //network link
+   BasicLink *link;
+   //src_outport direction
+   PortDirection src_outport_dirn;
+   //dst_inport direction
+   PortDirection dst_inport_dirn;
+};
+//================================================
+
+//LinkMap combines <SwitchID, SwitchID> pair with LinkInstance
 typedef std::map<std::pair<SwitchID, SwitchID>,
-             std::vector<LinkEntry>> LinkMap;
+             std::vector<LinkInstance>> LinkMap;
+
 
 class Configuration
 {
@@ -106,19 +112,25 @@ class Configuration
     //returns the number of busses in the topology
     uint32_t numBusses() const { return m_number_of_busses; }
     //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+    //===================================================
     //create links for the network
     void createLinks(Chain *net);
     //print the name of the topology (ex: Mesh)
     void print(std::ostream& out) const { out << "[Configuration]"; }
+    //===================================================
 
   private:
     //add an internal link to the topology
     void addLink(SwitchID src, SwitchID dest, BasicLink* link,
                  PortDirection src_outport_dirn = "",
                  PortDirection dest_inport_dirn = "");
+
+    //=================================================================
     //make a link (internal or external) and add it to routing table
     void makeLink(Chain *net, SwitchID src, SwitchID dest,
                   std::vector<NetDest>& routing_table_entry);
+    //=================================================================
 
     // Helper functions based on chapter 29 of Cormen et al.
 
