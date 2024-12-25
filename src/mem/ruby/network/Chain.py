@@ -31,10 +31,12 @@ from m5.proxy import *
 
 
 # RubyChain inherites from ClockedObject
+#==================================================
 class RubyChain(ClockedObject):
     type = "RubyChain"
     cxx_class = "gem5::ruby::Chain"
     cxx_header = "mem/ruby/network/Chain.hh"
+#==================================================
     abstract = True
 
     topology = Param.String(
