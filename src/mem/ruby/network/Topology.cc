@@ -271,8 +271,10 @@ Topology::addLink(SwitchID src, SwitchID dest, BasicLink* link,
                   PortDirection dst_inport_dirn)
 {
     //make sure src and dst SwitchIDs are valid
+    //=======================================================
     assert(src <= m_number_of_switches+m_nodes+m_nodes);
     assert(dest <= m_number_of_switches+m_nodes+m_nodes);
+   //=======================================================
 
     //a pair to save the src and dst SwitchIDs
     std::pair<int, int> src_dest_pair;
