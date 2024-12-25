@@ -95,7 +95,9 @@ Chain::Chain(const Params &p)
         localNodeVersions[cntrl->getType()].push_back(cntrl->getVersion());
         //register the MachineID for this controller (to compute a global
         //to local id)
+        //========================================================================
         params().ruby_system->registerMachineIDChain(cntrl->getMachineID(), this);
+        //========================================================================
     }
 
     // Compute a local ID for each MachineType using the same order as SLICC
@@ -123,11 +125,13 @@ Chain::Chain(const Params &p)
     assert(m_virtual_networks != 0);
 
     //================================================================
+    //################################################################
     m_topology_ptr = new Configuration(m_nodes, p.routers.size(),
                                   p.busses.size(),
                                   m_virtual_networks,
                                   p.ext_links, p.bus_links, p.int_links);
     //================================================================
+    //################################################################
 
 
     // Allocate to and from queues
@@ -155,8 +159,10 @@ Chain::Chain(const Params &p)
         BasicExtLink *ext_link = (*i);
         //abs_cntrl is the external node for the ext_link
         AbstractController *abs_cntrl = ext_link->params().ext_node;
+        //===========================================================
         //initialize the network pointer with this Chain object for abs_cntrl
         abs_cntrl->initChainPtr(this);
+        //===========================================================
         //get the address ranges from abs_cntrl
         const AddrRangeList &ranges = abs_cntrl->getAddrRanges();
         //if address ranges is not empty
@@ -179,10 +185,12 @@ Chain::Chain(const Params &p)
     // Register a callback function for combining the statistics
     statistics::registerDumpCallback([this]() { collateStats(); });
 
+    //=================================================================
     //initialize the message buffers for each ext_link external node
     for (auto &it : dynamic_cast<Chain *>(this)->params().ext_links) {
         it->params().ext_node->initNetQueues();
     }
+    //=================================================================
 }
 
 //Chain destructor
