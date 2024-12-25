@@ -29,20 +29,26 @@
 #
 
 from m5.citations import add_citation
-# &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 from m5.objects.BasicRouter import (
     BasicBus,
     BasicRouter,
 )
-# &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 from m5.objects.ClockedObject import ClockedObject
-from m5.objects.Network import RubyNetwork
+#from m5.objects.Network import RubyNetwork
+#============================================
+from m5.objects.Chain import RubyChain
+#============================================
 from m5.params import *
 from m5.proxy import *
 
 
 # EmeraldNetwork inherites from RubyNetwork class (in Network.py)
-class EmeraldNetwork(RubyNetwork):
+#class EmeraldNetwork(RubyNetwork):
+#============================================
+class EmeraldNetwork(RubyChain):
+#============================================
     type = "EmeraldNetwork"
     cxx_header = "mem/ruby/network/emerald/EmeraldNetwork.hh"
     cxx_class = "gem5::ruby::emerald::EmeraldNetwork"
