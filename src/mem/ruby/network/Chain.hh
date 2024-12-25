@@ -63,11 +63,15 @@
 #include "mem/port.hh"
 #include "mem/ruby/common/MachineID.hh"
 #include "mem/ruby/common/TypeDefines.hh"
+//===============================================
 #include "mem/ruby/network/Configuration.hh"
+//===============================================
 #include "mem/ruby/network/dummy_port.hh"
 #include "mem/ruby/protocol/LinkDirection.hh"
 #include "mem/ruby/protocol/MessageSizeType.hh"
+//===============================================
 #include "params/RubyChain.hh"
+//===============================================
 #include "sim/clocked_object.hh"
 
 namespace gem5
@@ -189,8 +193,10 @@ class Chain : public ClockedObject
     static uint32_t m_virtual_networks;
     //names of the vnet types (Control, Data, etc.)
     std::vector<std::string> m_vnet_type_names;
+    //=======================================
     //pointer to the topology
     Configuration* m_topology_ptr;
+    //=======================================
     //size of the control message
     static uint32_t m_control_msg_size;
     //size of the data message
