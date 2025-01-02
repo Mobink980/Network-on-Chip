@@ -58,9 +58,6 @@ namespace ruby
 {
 
 class Network;
-//============================
-class Chain;
-//============================
 class AbstractController;
 
 class RubySystem : public ClockedObject
@@ -107,14 +104,8 @@ class RubySystem : public ClockedObject
     bool functionalWrite(Packet *ptr);
 
     void registerNetwork(Network*);
-    //=====================================
-    void registerChain(Chain*);
-    //=====================================
     void registerAbstractController(AbstractController*);
     void registerMachineID(const MachineID& mach_id, Network* network);
-    //========================================================
-    void registerMachineIDChain(const MachineID& mach_id, Chain* chain);
-    //========================================================
     void registerRequestorIDs();
 
     bool eventQueueEmpty() { return eventq->empty(); }
@@ -155,9 +146,6 @@ class RubySystem : public ClockedObject
     const bool m_access_backing_store;
 
     std::vector<std::unique_ptr<Network>> m_networks;
-    //=====================================================
-    std::vector<std::unique_ptr<Chain>> m_chains;
-    //=====================================================
     std::vector<AbstractController *> m_abs_cntrl_vec;
     Cycles m_start_cycle;
 
