@@ -117,6 +117,16 @@ class Network : public ClockedObject
     //make an external link coming into the network (from NI to router)
     virtual void makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
                             std::vector<NetDest>& routing_table_entry) = 0;
+    //============================================================================
+    //============================================================================
+    //make a bus link going from bus to NI
+    virtual void makeBusOutLink(SwitchID src, NodeID dest, BasicLink* link,
+                             std::vector<NetDest>& routing_table_entry) = 0;
+    //make a bus link going from NI to bus
+    virtual void makeBusInLink(NodeID src, SwitchID dest, BasicLink* link,
+                            std::vector<NetDest>& routing_table_entry) = 0;
+    //============================================================================
+    //============================================================================
     //make an internal link between two routers
     virtual void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
                                   std::vector<NetDest>& routing_table_entry,

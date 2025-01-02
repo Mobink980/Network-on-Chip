@@ -121,11 +121,13 @@ Network::Network(const Params &p)
     assert(m_nodes != 0);
     assert(m_virtual_networks != 0);
 
+    //================================================================
     //################################################################
     m_topology_ptr = new Topology(m_nodes, p.routers.size(),
                                   p.busses.size(),
                                   m_virtual_networks,
-                                  p.ext_links, p.int_links);
+                                  p.ext_links, p.bus_links, p.int_links);
+    //================================================================
     //################################################################
     
 

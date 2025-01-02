@@ -91,14 +91,13 @@ class Topology
 {
   public:
     //Topology constructor (for router-based)
-    // Topology(uint32_t num_nodes, uint32_t num_routers, uint32_t num_vnets,
-    //          const std::vector<BasicExtLink *> &ext_links,
-    //          const std::vector<BasicIntLink *> &int_links);
-
+    //====================================================================
     Topology(uint32_t num_nodes, uint32_t num_routers, uint32_t num_busses,
-             uint32_t num_vnets,
-             const std::vector<BasicExtLink *> &ext_links,
-             const std::vector<BasicIntLink *> &int_links);
+            uint32_t num_vnets,
+            const std::vector<BasicExtLink *> &ext_links,
+            const std::vector<BasicBusLink *> &bus_links,
+            const std::vector<BasicIntLink *> &int_links);
+    //====================================================================
 
     //returns the number of switches in the topology
     uint32_t numSwitches() const { return m_number_of_switches; }
@@ -154,6 +153,10 @@ class Topology
     int m_vnets;
     //vector containing external links of the topology
     std::vector<BasicExtLink*> m_ext_link_vector;
+    //======================================================
+    //vector containing bus links of the topology
+    std::vector<BasicBusLink*> m_bus_link_vector;   
+    //======================================================
     //vector containing internal links of the topology
     std::vector<BasicIntLink*> m_int_link_vector;
 
