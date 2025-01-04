@@ -128,6 +128,8 @@ class TSVInport : public Consumer
     {
         return virtualChannels[invc].is_outvc_allocated();
     }
+    // get the id of the inport of the Bus or TSV
+    inline int get_id() { return m_id; }
     //===========================================================
 
     //get the time of enqueue for this inport VC
