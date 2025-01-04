@@ -75,14 +75,14 @@ class TSVInport : public Consumer
     inline void
     set_vc_idle(int vc, Tick curTime)
     {
-        virtualChannels[vc].set_idle(curTime);
+        busVirtualChannels[vc].set_idle(curTime);
     }
 
     //set the VC state as active at the current_time
     inline void
     set_vc_active(int vc, Tick curTime)
     {
-        virtualChannels[vc].set_active(curTime);
+        busVirtualChannels[vc].set_active(curTime);
     }
 
     //select a free VC from the outport for this inport VC
@@ -90,21 +90,21 @@ class TSVInport : public Consumer
     inline void
     grant_outvc(int vc, int outvc)
     {
-        virtualChannels[vc].set_outvc(outvc);
+        busVirtualChannels[vc].set_outvc(outvc);
     }
 
     //get the outport for this inport VC
     inline int
     get_outport(int invc)
     {
-        return virtualChannels[invc].get_outport();
+        return busVirtualChannels[invc].get_outport();
     }
 
     //get the outport VC for this inport VC (for BODY/TAIL flits)
     inline int
     get_outvc(int invc)
     {
-        return virtualChannels[invc].get_outvc();
+        return busVirtualChannels[invc].get_outvc();
     }
 
     //===========================================================
@@ -113,20 +113,20 @@ class TSVInport : public Consumer
     inline int
     get_broadcast_outvc(int invc, int outport)
     {
-        return virtualChannels[invc].get_broadcast_outvc(outport);
+        return busVirtualChannels[invc].get_broadcast_outvc(outport);
     }
     //Set the outvc for an invc for a specific outport (broadcast mode)
     inline void
     grant_broadcast_outvc(int vc, int outvc)
     {
-        virtualChannels[vc].set_broadcast_outvc(outvc);
+        busVirtualChannels[vc].set_broadcast_outvc(outvc);
     }
     //To check whether the outvcs are allocated for an invc (broadcast mode)
     //allocation needed for HEAD or HEAD_TAIL flits
     inline bool
     is_outvc_allocated(int invc)
     {
-        return virtualChannels[invc].is_outvc_allocated();
+        return busVirtualChannels[invc].is_outvc_allocated();
     }
     // get the id of the inport of the Bus or TSV
     inline int get_id() { return m_id; }
@@ -136,7 +136,7 @@ class TSVInport : public Consumer
     inline Tick
     get_enqueue_time(int invc)
     {
-        return virtualChannels[invc].get_enqueue_time();
+        return busVirtualChannels[invc].get_enqueue_time();
     }
 
     //increment the credit for this inport VC (one more free space)
@@ -146,14 +146,14 @@ class TSVInport : public Consumer
     inline fragment*
     peekTopFlit(int vc)
     {
-        return virtualChannels[vc].peekTopFlit();
+        return busVirtualChannels[vc].peekTopFlit();
     }
 
     //get the top flit from the VC (it peeks and pops the top flit)
     inline fragment*
     getTopFlit(int vc)
     {
-        return virtualChannels[vc].getTopFlit();
+        return busVirtualChannels[vc].getTopFlit();
     }
 
     //returns true if the VC needs a specific pipeline stage
@@ -161,14 +161,14 @@ class TSVInport : public Consumer
     inline bool
     need_stage(int vc, flit_stage stage, Tick time)
     {
-        return virtualChannels[vc].need_stage(stage, time);
+        return busVirtualChannels[vc].need_stage(stage, time);
     }
 
     //returns true if the inport VC is ready at the current_time
     inline bool
     isReady(int invc, Tick curTime)
     {
-        return virtualChannels[invc].isReady(curTime);
+        return busVirtualChannels[invc].isReady(curTime);
     }
 
     //get the InputUnit credit queue
@@ -222,7 +222,7 @@ class TSVInport : public Consumer
     fragmentBuffer creditQueue;
 
     // Input Virtual channels (VCs of the inport)
-    std::vector<VirtualWay> virtualChannels;
+    std::vector<VirtualWay> busVirtualChannels;
 
     // Statistical variables
     //InputUnit buffer write activity

@@ -66,9 +66,9 @@ TSVInport::TSVInport(int id, PortDirection direction, TSV *bus)
     }
 
     // Instantiating the virtual channels
-    virtualChannels.reserve(m_num_vcs);
+    busVirtualChannels.reserve(m_num_vcs);
     for (int i=0; i < m_num_vcs; i++) {
-        virtualChannels.emplace_back(); //initialize a VC object
+        busVirtualChannels.emplace_back(); //initialize a VC object
     }
 }
 
@@ -113,7 +113,7 @@ TSVInport::wakeup()
             (t_flit->get_type() == HEAD_TAIL_)) {
 
             //make sure the VC_state of the VC the flit is in, is IDLE_
-            assert(virtualChannels[vc].get_state() == IDLE_);
+            assert(busVirtualChannels[vc].get_state() == IDLE_);
             //change the state of vc from IDLE_ to ACTIVE_ at
             //the current tick
             set_vc_active(vc, curTick());
@@ -121,12 +121,12 @@ TSVInport::wakeup()
         } else { //the flit is of type BODY/TAIL
             //make sure the VC_state of the VC the flit is in, is ACTIVE_
             //no need for route computation (the route is already set for vc)
-            assert(virtualChannels[vc].get_state() == ACTIVE_);
+            assert(busVirtualChannels[vc].get_state() == ACTIVE_);
         }
 
 
         // Buffer the flit (insert the flit into vc)
-        virtualChannels[vc].insertFlit(t_flit);
+        busVirtualChannels[vc].insertFlit(t_flit);
 
         //determine the Vnet (vnet = vc_id/number_of_VCs_per_Vnet)
         int vnet = vc/m_vc_per_vnet;
@@ -186,7 +186,7 @@ bool
 TSVInport::functionalRead(Packet *pkt, WriteMask &mask)
 {
     bool read = false;
-    for (auto& virtual_channel : virtualChannels) {
+    for (auto& virtual_channel : busVirtualChannels) {
         if (virtual_channel.functionalRead(pkt, mask))
             read = true;
     }
@@ -200,7 +200,7 @@ uint32_t
 TSVInport::functionalWrite(Packet *pkt)
 {
     uint32_t num_functional_writes = 0;
-    for (auto& virtual_channel : virtualChannels) {
+    for (auto& virtual_channel : busVirtualChannels) {
         num_functional_writes += virtual_channel.functionalWrite(pkt);
     }
 
