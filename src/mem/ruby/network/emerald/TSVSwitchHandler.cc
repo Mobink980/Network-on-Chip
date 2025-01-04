@@ -140,11 +140,18 @@ TSVSwitchHandler::arbitrate_inports()
             //the bus this TSVSwitchHandler is a part of
             auto input_unit = m_bus->getInputUnit(inport);
 
+            //============================================================
+            std::cout << "The inport number is (arbitrate_inports): " << input_unit->get_id() <<"\n";
+            std::cout << "The selected input_unit in bus (arbitrate_inports): " << input_unit->get_id() <<"\n";
+            //============================================================
             //if the top flit in invc in input_unit is currently
             //in SwitchAllocation stage
             if (input_unit->need_stage(invc, SA_, curTick())) {
                 // This flit is in SA stage
-
+                //============================================================
+                std::cout << "The selected invc is (arbitrate_inports): " << invc <<"\n";
+                std::cout << "With that invc, we get the outport (arbitrate_inports): " << input_unit->get_outport(invc) <<"\n";
+                //============================================================
                 //get the outport the flit in invc wants to go to
                 int outport = input_unit->get_outport(invc);
                 //get the output vc the flit in invc wants to go to
