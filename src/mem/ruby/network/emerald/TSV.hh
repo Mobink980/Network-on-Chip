@@ -127,6 +127,8 @@ class TSV : public BasicBus, public Consumer
     getInputUnit(unsigned port)
     {
         //make sure the given port number is valid
+        std::cout << "The selected inport in bus (TSV.hh): " << port <<"\n";
+        std::cout << "Total number of inports in bus (TSV.hh): " << m_input_unit.size() <<"\n";
         assert(port < m_input_unit.size());
         return m_input_unit[port].get();
     }
@@ -136,8 +138,8 @@ class TSV : public BasicBus, public Consumer
     getOutputUnit(unsigned port)
     {
         //make sure the given port number is valid
-        std::cout << "The selected outport in bus: " << port <<"\n";
-        std::cout << "Total number of outports in bus: " << m_output_unit.size() <<"\n";
+        std::cout << "The selected outport in bus (TSV.hh): " << port <<"\n";
+        std::cout << "Total number of outports in bus (TSV.hh): " << m_output_unit.size() <<"\n";
         assert(port < m_output_unit.size());
         return m_output_unit[port].get();
     }
