@@ -222,8 +222,7 @@ TSVOutport::insert_flit(fragment *t_flit)
     // std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
     //======================================================
     //schedule consumption event for m_out_link for the next cycle
-    // m_out_link->scheduleEventAbsolute(m_bus->clockEdge(Cycles(1)));
-    m_out_link->scheduleEventAbsolute(m_bus->clockEdge(Cycles(0)));
+    m_out_link->scheduleEventAbsolute(m_bus->clockEdge(Cycles(1)));
 }
 
 bool
