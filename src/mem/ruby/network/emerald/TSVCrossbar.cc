@@ -96,8 +96,8 @@ TSVCrossbar::wakeup()
             //(advancing the pipeline stage: ST_ ==> LT_)
             // t_flit->advance_stage(LT_, m_bus->clockEdge(Cycles(1)));
             // t_flit->set_time(m_bus->clockEdge(Cycles(1)));
-            t_flit->advance_stage(LT_, m_bus->clockEdge(Cycles(0)));
-            t_flit->set_time(m_bus->clockEdge(Cycles(0)));
+            t_flit->advance_stage(LT_, m_bus->clockEdge(Cycles(1)));
+            t_flit->set_time(m_bus->clockEdge(Cycles(1)));
 
             // This will take care of waking up the Network Link
             // in the next cycle
