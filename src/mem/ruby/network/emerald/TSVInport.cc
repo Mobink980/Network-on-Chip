@@ -114,9 +114,19 @@ TSVInport::wakeup()
 
             //make sure the VC_state of the VC the flit is in, is IDLE_
             assert(busVirtualChannels[vc].get_state() == IDLE_);
+          
             //change the state of vc from IDLE_ to ACTIVE_ at
             //the current tick
             set_vc_active(vc, curTick());
+            // Route computation for this vc
+            //(determine the outport for the flit)
+            int outport = m_bus->route_compute(t_flit->get_route(),
+                m_id, m_direction);
+
+            // Update output port in VC
+            // All flits in this packet will use this output port
+            // The output port field in the flit is updated after it wins SA
+            grant_outport(vc, outport); //grant the outport to the VC
 
         } else { //the flit is of type BODY/TAIL
             //make sure the VC_state of the VC the flit is in, is ACTIVE_
