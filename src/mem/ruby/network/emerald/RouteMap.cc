@@ -227,47 +227,6 @@ RouteMap::get_layer(int router_id)
     return 0;
 }
 
-
-// A specific routing for bus which uses static routing (a table)
-int
-RouteMap::outportComputeXY(RouteInfo route,
-                              int inport,
-                              PortDirection inport_dirn)
-{
-    //ensure the flit is coming from the NI 
-    assert(inport_dirn == "Local");
-    //the outport we want to send the flit to
-    //PortDirection is basically a string (ex: north, west, etc.)
-    PortDirection outport_dirn = "Unknown";
-    //number of rows in the mesh topology
-    [[maybe_unused]] int num_rows = m_bus->get_net_ptr()->getNumRows();
-    //number of collumns in the mesh topology
-    int num_cols = m_bus->get_net_ptr()->getNumCols();
-    //number of layers in the mesh topology (default is 1)
-    int num_layers = m_bus->get_net_ptr()->getNumLayers();
-    //bus is only used in 3D architectures
-    assert(num_rows > 0 && num_cols > 0 && num_layers > 0);
-    
-    //id of the destination router
-    int dest_id = route.dest_router;
-    //get the layer where the destination router sits
-    int dest_layer = get_layer(dest_id);
-    //determine the outport direction
-    outport_dirn = "TSV" + std::to_string(dest_layer);
-    //return the outport we computed but in a dirn2idx format
-    return m_outports_dirn2idx[outport_dirn];
-}
-
-// Template for implementing custom routing algorithm
-// using port directions. (Example adaptive)
-int
-RouteMap::outportComputeCustom(RouteInfo route,
-                                 int inport,
-                                 PortDirection inport_dirn)
-{
-    panic("%s placeholder executed", __FUNCTION__);
-}
-
 } // namespace emerald
 } // namespace ruby
 } // namespace gem5
