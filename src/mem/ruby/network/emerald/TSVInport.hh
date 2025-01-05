@@ -85,6 +85,13 @@ class TSVInport : public Consumer
         busVirtualChannels[vc].set_active(curTime);
     }
 
+    //grant the outport to the VC
+    inline void
+    grant_outport(int vc, int outport)
+    {
+        busVirtualChannels[vc].set_outport(outport);
+    }
+
     //select a free VC from the outport for this inport VC
     //(for HEAD/HEAD_TAIL flits)
     inline void
@@ -108,26 +115,6 @@ class TSVInport : public Consumer
     }
 
     //===========================================================
-    //get the outport VC for this inport VC (for BODY/TAIL flits)
-    //in case of broadcast
-    inline int
-    get_broadcast_outvc(int invc, int outport)
-    {
-        return busVirtualChannels[invc].get_broadcast_outvc(outport);
-    }
-    //Set the outvc for an invc for a specific outport (broadcast mode)
-    inline void
-    grant_broadcast_outvc(int vc, int outvc)
-    {
-        busVirtualChannels[vc].set_broadcast_outvc(outvc);
-    }
-    //To check whether the outvcs are allocated for an invc (broadcast mode)
-    //allocation needed for HEAD or HEAD_TAIL flits
-    inline bool
-    is_outvc_allocated(int invc)
-    {
-        return busVirtualChannels[invc].is_outvc_allocated();
-    }
     // get the id of the inport of the Bus or TSV
     inline int get_id() { return m_id; }
     //===========================================================
