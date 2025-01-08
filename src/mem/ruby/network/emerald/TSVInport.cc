@@ -72,6 +72,21 @@ TSVInport::TSVInport(int id, PortDirection direction, TSV *bus)
     }
 }
 
+//Find the layer of a router based on its id
+int
+RouteMap::get_layer(int router_id)
+{
+    int num_rows = m_bus->get_net_ptr()->getNumRows();
+    int num_cols = m_bus->get_net_ptr()->getNumCols();
+    int num_layers = m_bus->get_net_ptr()->getNumLayers();
+    assert(num_rows > 0 && num_cols > 0 && num_layers > 0);
+    //number of routers or RLIs per layer
+    int num_routers_layer = num_rows * num_cols;
+    if (num_layers > 1) { return floor(router_id/num_routers_layer); }
+    //return 0 if we only have one layer
+    return 0;
+}
+
 /*
  * The InputUnit wakeup function reads the input flit from its input link.
  * Each flit arrives with an input VC (VC identifier).
@@ -118,10 +133,13 @@ TSVInport::wakeup()
             //change the state of vc from IDLE_ to ACTIVE_ at
             //the current tick
             set_vc_active(vc, curTick());
+
+            //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             // Route computation for this vc
-            //(determine the outport for the flit)
-            int outport = m_bus->route_compute(t_flit->get_route(),
-                m_id, m_direction);
+            //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            //The outport of a flit in bus is the destination layer of that flit
+            int outport = get_layer(t_flit->get_route().dest_router);
+
 
             // Update output port in VC
             // All flits in this packet will use this output port
