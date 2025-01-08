@@ -117,6 +117,9 @@ class TSVInport : public Consumer
     //===========================================================
     // get the id of the inport of the Bus or TSV
     inline int get_id() { return m_id; }
+
+    //Find the layer of a router based on its id
+    int get_layer(int router_id);
     //===========================================================
 
     //get the time of enqueue for this inport VC
