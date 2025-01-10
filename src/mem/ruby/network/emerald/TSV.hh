@@ -42,7 +42,7 @@
 #include "mem/ruby/network/emerald/CommonTypes.hh"
 #include "mem/ruby/network/emerald/TSVCrossbar.hh"
 #include "mem/ruby/network/emerald/EmeraldNetwork.hh"
-#include "mem/ruby/network/emerald/RouteMap.hh"
+// #include "mem/ruby/network/emerald/RouteMap.hh"
 #include "mem/ruby/network/emerald/TSVSwitchHandler.hh"
 #include "mem/ruby/network/emerald/fragment.hh"
 #include "params/EmeraldBus.hh"
@@ -152,8 +152,6 @@ class TSV : public BasicBus, public Consumer
     //get the direction of an inport
     PortDirection getInportDirection(int inport);
 
-    //compute the route for the flit by having RouteInfo, inport, and PortDirection
-    int route_compute(RouteInfo route, int inport, PortDirection direction);
     //This function grants the switch to an inport, so the flit could pass
     //the crossbar.
     void grant_switch(int inport, fragment *t_flit);
@@ -202,8 +200,7 @@ class TSV : public BasicBus, public Consumer
     //pointer to the EmeraldNetwork
     EmeraldNetwork *m_network_ptr;
 
-    //RoutingUnit of this bus
-    RouteMap routingUnit;
+
     //SwitchAllocator of this bus
     TSVSwitchHandler switchAllocator;
     //CrossbarSwitch of this bus

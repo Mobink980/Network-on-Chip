@@ -56,7 +56,6 @@ Source('TSVCrossbar.cc')
 Source('TSVInport.cc')
 Source('TSVOutport.cc')
 Source('TSVSwitchHandler.cc')
-Source('RouteMap.cc')
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 Source('WayFinder.cc')
 Source('SwitchHandler.cc')

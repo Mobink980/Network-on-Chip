@@ -74,7 +74,7 @@ TSVInport::TSVInport(int id, PortDirection direction, TSV *bus)
 
 //Find the layer of a router based on its id
 int
-RouteMap::get_layer(int router_id)
+TSVInport::get_layer(int router_id)
 {
     int num_rows = m_bus->get_net_ptr()->getNumRows();
     int num_cols = m_bus->get_net_ptr()->getNumCols();

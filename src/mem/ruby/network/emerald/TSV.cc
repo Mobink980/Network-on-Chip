@@ -57,7 +57,7 @@ TSV::TSV(const Params &p)
   : BasicBus(p), Consumer(this), m_latency(p.latency),
     m_virtual_networks(p.virt_nets), m_vc_per_vnet(p.vcs_per_vnet),
     m_num_vcs(m_virtual_networks * m_vc_per_vnet), m_bit_width(p.width),
-    m_network_ptr(nullptr), routingUnit(this), switchAllocator(this),
+    m_network_ptr(nullptr), switchAllocator(this),
     crossbarSwitch(this)
 {
     m_input_unit.clear(); //clear the inports
@@ -154,8 +154,6 @@ TSV::addInPort(PortDirection inport_dirn,
     credit_link->setVcsPerVnet(get_vc_per_vnet());
     //add the input port we created to the bus object
     m_input_unit.push_back(std::shared_ptr<TSVInport>(input_unit));
-    //add the new inport and its direction to the routingUnit
-    routingUnit.addInDirection(inport_dirn, port_num);
 }
 
 //The following function of the TSV class adds one output port or
@@ -203,16 +201,6 @@ TSV::addOutPort(PortDirection outport_dirn,
     out_link->setVcsPerVnet(consumerVcs);
     //add the output port we created to the bus object
     m_output_unit.push_back(std::shared_ptr<TSVOutport>(output_unit));
-
-    //add the route of the routing_table_entry to the routingUnit
-    routingUnit.addRoute(routing_table_entry);
-    //add the weight of the link to the routingUnit
-    //This is for the network link, and since a link connects one
-    //outport to an inport, by giving weight while creating an outport,
-    //we cover the total links in the network.
-    routingUnit.addWeight(link_weight);
-    //add the new outport and its direction to the routingUnit
-    routingUnit.addOutDirection(outport_dirn, port_num);
 }
 
 //Getting the direction of an outport in the bus
@@ -229,13 +217,6 @@ TSV::getInportDirection(int inport)
     return m_input_unit[inport]->get_direction();
 }
 
-//The following function of the bus class computes which outport should
-//be chosen for the flits, based on route, inport, and inport direction.
-int
-TSV::route_compute(RouteInfo route, int inport, PortDirection inport_dirn)
-{
-    return routingUnit.outportCompute(route, inport, inport_dirn);
-}
 
 //This function grants the switch to an inport, so the flit could pass
 //the crossbar.
