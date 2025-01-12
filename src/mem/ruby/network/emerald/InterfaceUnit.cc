@@ -305,12 +305,12 @@ InterfaceUnit::incrementStats(fragment *t_flit)
 {
     //get the vnet of the flit
     int vnet = t_flit->get_vnet();
+    //increment the received flits for the vnet in EmeraldNetwork
+    m_net_ptr->increment_received_flits(vnet);
+  
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     // Latency
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    //increment the received flits for the vnet in EmeraldNetwork
-    m_net_ptr->increment_received_flits(vnet);
-
     //network delay = fragment_dequeue_time - fragment_enqueue_time - Ticks(1_cycle)
     Tick network_delay =
         t_flit->get_dequeue_time() -
@@ -349,10 +349,10 @@ InterfaceUnit::incrementStatsSpecial(fragment *t_flit)
 {
     //get the vnet of the flit
     int vnet = t_flit->get_vnet();
-    //===============================================================
-    // std::cout<<"One flit received.\n";
-    // if (t_flit->is_broadcast()) {std::cout<<"Received flit from bus!\n";}
-    //===============================================================
+
+    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    // Latency
+    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     //network delay for the flit
     Tick network_delay =
         t_flit->get_dequeue_time() -
@@ -364,7 +364,7 @@ InterfaceUnit::incrementStatsSpecial(fragment *t_flit)
     //queueing_delay for the flit
     Tick queueing_delay = src_queueing_delay + dest_queueing_delay;
 
-    //increment the flit network and queuing latency for the vnet in OnyxNetwork
+    //increment the flit network and queuing latency for the vnet in EmeraldNetwork
     m_net_ptr->increment_flit_network_latency(network_delay, vnet);
     m_net_ptr->increment_flit_queueing_latency(queueing_delay, vnet);
 
@@ -564,7 +564,7 @@ InterfaceUnit::wakeup()
             *(iPort->outCreditQueue()->peekTopFlit()),
             iPort->outCreditLink()->name(), clockEdge(Cycles(1)));
             //the credit link of the inport should consume the credit flit
-            //in the next clock edge
+            //in the next clock edge (to send to local router)
             iPort->outCreditLink()->
                 scheduleEventAbsolute(clockEdge(Cycles(1)));
         }
@@ -582,6 +582,7 @@ InterfaceUnit::wakeup()
         fragment* suspended_flit = congested_packets[k].peekTopFlit();
         //find a free vc in destination vnet in niOutVcs
         int vc = calculateVC(suspended_flit->get_vnet()); 
+        // if we could find a free vc in the vnet of suspended flit 
         if (vc != -1) {
           //remove the flit from the vc
           suspended_flit = congested_packets[k].getTopFlit();
@@ -739,7 +740,7 @@ InterfaceUnit::wakeup()
                   outVcState[vc].setState(ACTIVE_, curTick());
                 }
               }
-            }
+            } 
         }
     }
 
@@ -845,7 +846,7 @@ InterfaceUnit::checkStallQueue()
 
                     // If there are no more stalled messages for this vnet, the
                     // callback on it's MessageBuffer is not needed.
-                    if (m_stall_count[vnet] == 0)
+                    if (m_stall_count[vnet] == 0 && m_stall_count_bus[vnet] == 0)
                         outNode_ptr[vnet]->unregisterDequeueCallback();
 
                     //the inport message was enqueued this cycle
@@ -988,10 +989,6 @@ InterfaceUnit::flitisizeMessage(MsgPtr msg_ptr, int vnet)
         // this will return a free output virtual channel
         int vc = calculateVC(vnet); //find a free vc in dest vnet
 
-        //no free vc was found, so we can't flitisize the message
-        if (vc == -1) {
-            return false ;
-        }
         //copy the msg_ptr into new_msg_ptr variable
         MsgPtr new_msg_ptr = msg_ptr->clone();
         //get the destination node id
@@ -1073,7 +1070,7 @@ InterfaceUnit::flitisizeMessage(MsgPtr msg_ptr, int vnet)
         //if the destination layer of the message is the current layer
         if (this_layer) {
           for (int i = 0; i < num_flits; i++) {
-              //a flit was injected into the vnet in the OnyxNetwork
+              //a flit was injected into the vnet in the EmeraldNetwork
               m_net_ptr->increment_injected_flits(vnet);
               //create a new flit and fill its fields with appropriate data
               fragment *fl = new fragment(packet_id,
@@ -1095,7 +1092,7 @@ InterfaceUnit::flitisizeMessage(MsgPtr msg_ptr, int vnet)
         
         } else { //the destination of the message is another layer
           for (int i = 0; i < num_flits; i++) {
-              //a flit was injected into the vnet in the OnyxNetwork
+              //a flit was injected into the vnet in the EmeraldNetwork
               m_net_ptr->increment_injected_flits(vnet);
               //create a new flit and fill its fields with appropriate data
               fragment *fl = new fragment(packet_id,
