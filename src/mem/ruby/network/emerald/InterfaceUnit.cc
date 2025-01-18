@@ -393,12 +393,7 @@ InterfaceUnit::incrementStatsSpecial(fragment *t_flit)
 void
 InterfaceUnit::wakeup()
 { 
-    //=========================================================
-    //=========================================================  
-    //to send the body flits only if the head flit was sent
-    static bool head_flit_successful = false;
-    //=========================================================
-    //=========================================================
+  
     //define an std::ostringstream
     std::ostringstream oss;
     //get the router_id and vnets for all the outports of the NI
@@ -574,38 +569,82 @@ InterfaceUnit::wakeup()
   //========================================================================
     /********** Check congested_packets for retransmission ***********/
     if (!congested_packets.empty()) {
-      //number of suspended packets
-      int num_packets = congested_packets.size();
-      //traverse over all elements in congested_packets and
-      //try to resend them 
-      for (int k = 0; k < num_packets; k++) {
-        fragment* suspended_flit = congested_packets[k].peekTopFlit();
-        //find a free vc in destination vnet in niOutVcs
-        int vc = calculateVC(suspended_flit->get_vnet()); 
-        // if we could find a free vc in the vnet of suspended flit 
-        if (vc != -1) {
-          //remove the flit from the vc
-          suspended_flit = congested_packets[k].getTopFlit();
-          //insert the flit into niOutVcs[vc]
-          niOutVcs[vc].insert(suspended_flit);
-          //after inserting the flit, the state of the vc becomes active
-          outVcState[vc].setState(ACTIVE_, curTick());
-        }
-      }
-      //remove flitBuffers with no flit inside from congested_packets vector
-      for (auto it = congested_packets.begin(); it != congested_packets.end();) {
-          if ((*it).isEmpty()) {
-              it = congested_packets.erase(it);
+        //number of suspended packets
+        int num_packets = congested_packets.size();
+        //traverse over all elements in congested_packets and
+        //try to resend them 
+        for (int k = 0; k < num_packets; k++) {
+          //peek the top flit in the flitBuffer
+          fragment* suspended_flit = congested_packets[k].peekTopFlit();
+          
+          //If the type is HEAD or HEAD_TAIL, we need to find a free vc
+          if (suspended_flit->get_type() == HEAD_TAIL_ || suspended_flit->get_type() == HEAD_) {
+              //find a free vc in destination vnet in niOutVcs
+              int vc = calculateVC(suspended_flit->get_vnet()); 
+              // if we could find a free vc in the vnet of suspended flit 
+              if (vc != -1) {
+                //remove the flit from the vc
+                suspended_flit = congested_packets[k].getTopFlit();
+                //insert the flit into niOutVcs[vc]
+                niOutVcs[vc].insert(suspended_flit);
+                //after inserting the flit, the state of the vc becomes active
+                outVcState[vc].setState(ACTIVE_, curTick());
+  
+                //We need to send a credit back since we could insert into niOutVcs
+                bool free_signal = false;
+                if (suspended_flit->get_type() == HEAD_TAIL_) { free_signal = true; }
+                
+                Affirm *cFlit = new Affirm(suspended_flit->get_vc(), free_signal,
+                                               curTick());
+                //send back the credit to bus
+                ni_inport->sendCredit(cFlit);
+              }          
+          
           } else {
-              ++it;
+              // The flit is BODY or TAIL
+              // Need to find out the right vc in niOutVcs to insert the flit
+              for (auto it = niOutVcs.begin(); it != niOutVcs.end(); ++it) {
+                  if (!it->isEmpty()) { // If the vc is not empty
+                      // Peek the top flit
+                      fragment* topFlit = it->peekTopFlit(); 
+                      if (topFlit) { // Check if topFlit is not null
+                          // If the packet_id is the same for both flits,
+                          // they belong to the same packet
+                          if (topFlit->getPacketID() == suspended_flit->getPacketID()) {
+                              // Insert suspended_flit in the same vc
+                              it->insert(suspended_flit);
+                              // Update stats for this flit (not being ejected)
+                              incrementStatsSpecial(suspended_flit);
+  
+                              //We need to send a credit back since we could insert into niOutVcs
+                              bool free_signal = false;
+                              if (suspended_flit->get_type() == TAIL_) { free_signal = true; }
+                              
+                              Affirm *cFlit = new Affirm(suspended_flit->get_vc(), free_signal,
+                                                             curTick());
+                              //send back the credit to bus
+                              ni_inport->sendCredit(cFlit);
+                          }
+                      } else {
+                          std::cerr << "Warning: Top flit is null!" << std::endl;
+                      }
+                  }
+              }     
           }
-      }
-//      for (int k = num_packets - 1; k >= 0; k--) {
-//          if (congested_packets[k].isEmpty()) {
-//              congested_packets.erase(congested_packets.begin() + k);
-//          }
-//      }
+  
+        }
+        
+        //remove flitBuffers with no flit inside from congested_packets vector
+        for (auto it = congested_packets.begin(); it != congested_packets.end();) {
+            if ((*it).isEmpty()) {
+                it = congested_packets.erase(it);
+            } else {
+                ++it;
+            }
+        }
+
     }
+  
     /**************** Check the incoming flit link ****************/
     DPRINTF(RubyNetwork, "Number of bus inports: %d\n", ni_inports.size());
     for (auto &ni_inport: ni_inports) { //for every NI inport (from bus)
@@ -684,62 +723,114 @@ InterfaceUnit::wakeup()
               //to this NI, then it belongs to some other NI in the current layer
               //and we need to pass it to the router (just like when we do that
               //when the flit was produced in this NI).  
-              //find a free vc in destination vnet in niOutVcs
-              int vc = calculateVC(vnet);  
-              if (t_flit->get_type() == HEAD_) { 
-                //if no free vc could be found, we need to store it
-                if (vc != -1) {
-                  //update flit stats before sending to network
-                  incrementStatsSpecial(t_flit);
-                  //insert the flit into niOutVcs[vc]
-                  niOutVcs[vc].insert(t_flit);
-                  //after inserting the flit, the state of the vc becomes active
-                  outVcState[vc].setState(ACTIVE_, curTick());
-                  //head flit was sent
-                  head_flit_successful = true;
-                } else {
-                  //delete the flit
-                  delete t_flit;
-                  //could not send the head flit
-                  head_flit_successful = false;
-                }
 
-              } else if (t_flit->get_type() == BODY_ || 
-                         t_flit->get_type() == TAIL_) {
-                if (head_flit_successful) {
-                  //update flit stats before sending to network
-                  incrementStatsSpecial(t_flit);
-                  //insert the flit into niOutVcs[vc] 
-                  //No need to refresh vc 
-                  niOutVcs[vc].insert(t_flit);
-                } else {
-                  //delete the flit as body and tail flits are 
-                  //meaningless without the head flit 
-                  delete t_flit;
-                }
-
+              //If the type of the flit is HEAD or HEAD_TAIL
+              if (t_flit->get_type() == HEAD_ || t_flit->get_type() == HEAD_TAIL_) {
+                  //find a free vc in destination vnet in niOutVcs
+                  int vc = calculateVC(vnet);  
+                  // if we could not find a free vc in niOutVcs
+                  // we need to save in congested_packets flitBuffer
+                  if (vc == -1) {
+                    //create a new flitBuffer
+                    fragmentBuffer *buff = new fragmentBuffer();
+                    //insert the received flit into the created flitBuffer
+                    buff->insert(t_flit);
+                    //attach the flitBuffer to the congested_packets vector
+                    congested_packets.push_back(*buff);
+                    
+                  
+                  } else { 
+                    //we did find a free vc in niOutVcs, therefore
+                    //we send the flit into the free vc in niOutVcs
+  
+                    // Update stats for this flit (not being ejected)
+                    incrementStatsSpecial(t_flit);
+                    //push into the free vc
+                    niOutVcs[vc].insert(t_flit);
+                    //after inserting the flit, the state of the vc becomes active
+                    outVcState[vc].setState(ACTIVE_, curTick());
+  
+                    //We need to send a credit back since we could insert into niOutVcs
+                    bool free_signal = false;
+                    if (t_flit->get_type() == HEAD_TAIL_) { free_signal = true; }
+                    
+                    Affirm *cFlit = new Affirm(t_flit->get_vc(), free_signal,
+                                                   curTick());
+                    //send back the credit to bus
+                    ni_inport->sendCredit(cFlit);
+                  }
+                
               } else {
-                //This means that the type of flit is HEAD_TAIL
-                //CREDIT flit does not traverse on the network link
-                //find a free vc in destination vnet in niOutVcs
-                int vc = calculateVC(vnet); 
-                //if no free vc could be found, we need to store it
-                if (vc == -1) {
-                  //insert the flit into the congested_packets
-                  //We can resend these packets if a free vc in 
-                  //niOutVcs becomes available.
-                  fragmentBuffer *buff = new fragmentBuffer();
-                  buff->insert(t_flit);
-                  congested_packets.push_back(*buff);
-                } else {
-                  //update flit stats before sending to network
-                  incrementStatsSpecial(t_flit);
-                  //insert the flit into niOutVcs[vc]
-                  niOutVcs[vc].insert(t_flit);  
-                  //after inserting the flit, the state of the vc becomes active
-                  outVcState[vc].setState(ACTIVE_, curTick());
+                    //Type of the flit is BODY or TAIL
+                    //In this case, we first need to find out whether the HEAD
+                    //of the packet succeeded into niOutVcs or was sent to 
+                    //congested_packets. Then, we need to find the specific vc 
+                    //or flitBuffer to send the rest of the packet.
+                    //We know that all the flits that belong to the same packet have
+                    //the same unique packet_id; we use that to find our packet.
+    
+                    bool packet_found = false; 
+                    // First traverse over the Vcs in niOutVcs
+                    for (auto it = niOutVcs.begin(); it != niOutVcs.end(); ++it) {
+                        if (!it->isEmpty()) { // If the vc is not empty
+                            // Peek the top flit
+                            fragment* topFlit = it->peekTopFlit(); 
+                            if (topFlit) { // Check if topFlit is not null
+                                // If the packet_id is the same for both flits,
+                                // they belong to the same packet
+                                if (topFlit->getPacketID() == t_flit->getPacketID()) {
+                                    // The packet of this flit is found
+                                    packet_found = true;
+                                    // Insert t_flit in the same vc
+                                    it->insert(t_flit);
+                                    // Update stats for this flit (not being ejected)
+                                    incrementStatsSpecial(t_flit);
+
+                                    //We need to send a credit back since we could insert into niOutVcs
+                                    bool free_signal = false;
+                                    if (t_flit->get_type() == TAIL_) { free_signal = true; }
+                                    
+                                    Affirm *cFlit = new Affirm(t_flit->get_vc(), free_signal,
+                                                                   curTick());
+                                    //send back the credit to bus
+                                    ni_inport->sendCredit(cFlit);
+                                }
+                            } else {
+                                std::cerr << "Warning: Top flit is null!" << std::endl;
+                            }
+                        }
+                    }
+    
+                    // If packet was not found in niOutVcs, need to check congested_packets
+                    if (!packet_found) {
+                        // traverse over the flitBuffers in congested_packets
+                        for (auto it = congested_packets.begin(); it != congested_packets.end(); ++it) {
+                            if (!it->isEmpty()) { // If the flitBuffer is not empty
+                                // Peek the top flit
+                                fragment* topFlit = it->peekTopFlit(); 
+                                if (topFlit) { // Check if topFlit is not null
+                                    // If the packet_id is the same for both flits,
+                                    // they belong to the same packet
+                                    if (topFlit->getPacketID() == t_flit->getPacketID()) {
+                                        // The packet of this flit is found
+                                        packet_found = true;
+                                        // Insert t_flit in the same vc
+                                        it->insert(t_flit);
+                                    }
+                                } else {
+                                    std::cerr << "Warning: Top flit is null!" << std::endl;
+                                }
+                            }
+                        }      
+                    }
+    
+                    //If we have a BODY or TAIL flit and can't find its HEAD in either
+                    //niOutVcs or congested_packets, then there is a problem with logic
+                    if (!packet_found) {
+                        fatal("Could not find the packet associated with the BODY or TAIL flit.");
+                    }
                 }
-              }
+                
             } 
         }
     }
