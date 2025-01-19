@@ -39,18 +39,3 @@ class BasicRouter(ClockedObject):
     # only used by garnet (default is 1-cycle latency)
     latency = Param.Cycles(1, "number of cycles inside router")
 
-
-# &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-# BasicBus is a ClockedObject
-class BasicBus(ClockedObject):
-    type = "BasicBus"
-    cxx_header = "mem/ruby/network/BasicRouter.hh"
-    cxx_class = "gem5::ruby::BasicBus"
-
-    bus_id = Param.Int("ID in relation to other busses")
-
-    # only used by garnet (default is 1-cycle latency)
-    latency = Param.Cycles(1, "number of cycles inside bus")
-
-
-# &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&

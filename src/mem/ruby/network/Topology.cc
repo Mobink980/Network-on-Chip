@@ -59,30 +59,17 @@ const int INFINITE_LATENCY = 10000; // Yes, this is a big hack
 // the second m_nodes set of SwitchIDs represent the the output queues
 // of the network.
 
-// Topology::Topology(uint32_t num_nodes, uint32_t num_routers,
-//                    uint32_t num_vnets,
-//                    const std::vector<BasicExtLink *> &ext_links,
-//                    const std::vector<BasicIntLink *> &int_links)
-//     : m_nodes(MachineType_base_number(MachineType_NUM)),
-//       m_number_of_switches(num_routers), m_vnets(num_vnets),
-//       m_ext_link_vector(ext_links), m_int_link_vector(int_links)
-
-//=============================================================
 Topology::Topology(uint32_t num_nodes,
                    uint32_t num_routers,
-                   uint32_t num_busses,
                    uint32_t num_vnets,
                    const std::vector<BasicExtLink *> &ext_links,
                    const std::vector<BasicIntLink *> &int_links)
     : m_nodes(MachineType_base_number(MachineType_NUM)),
       m_number_of_switches(num_routers),
-      m_number_of_busses(num_busses),
       m_vnets(num_vnets),
       m_ext_link_vector(ext_links),
       m_int_link_vector(int_links)
-//=============================================================
 {
-    //std::cout<<"Topology constructor called."<<std::endl;
     // Total nodes/controllers in network
     assert(m_nodes > 1);
 
@@ -271,10 +258,8 @@ Topology::addLink(SwitchID src, SwitchID dest, BasicLink* link,
                   PortDirection dst_inport_dirn)
 {
     //make sure src and dst SwitchIDs are valid
-    //=======================================================
     assert(src <= m_number_of_switches+m_nodes+m_nodes);
     assert(dest <= m_number_of_switches+m_nodes+m_nodes);
-   //=======================================================
 
     //a pair to save the src and dst SwitchIDs
     std::pair<int, int> src_dest_pair;

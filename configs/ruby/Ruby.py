@@ -208,7 +208,8 @@ def setup_memory_controllers(system, ruby, dir_cntrls, options):
 
 
 def create_topology(controllers, options):
-    """Called from create_system in configs/ruby/<protocol>.py
+    """
+    Called from create_system in configs/ruby/<protocol>.py
     Must return an object which is a subclass of BaseTopology
     found in configs/topologies/BaseTopology.py
     This is a wrapper for the legacy topologies.
@@ -236,7 +237,7 @@ def create_system(
     #==============================================================
     # Making different network based on network type
     #==============================================================
-    if options.network == "onyx" or options.network == "emerald":
+    if options.network == "emerald":
         # Create the network object
         (
             network,
@@ -257,7 +258,6 @@ def create_system(
             IntLinkClass,
             ExtLinkClass,
             RouterClass,
-            BusClass,
             InterfaceClass,
         ) = Network.create_network(options, ruby)
         ruby.network = network
@@ -282,7 +282,7 @@ def create_system(
     # Making different network based on network type
     #==============================================================
     # Create the network topology
-    if options.network == "onyx" or options.network == "emerald":
+    if options.network == "emerald":
         topology.makeTopology(
             options, network, IntLinkClass, ExtLinkClass, BusLinkClass,
             RouterClass, BusClass
@@ -290,7 +290,7 @@ def create_system(
     else:
         topology.makeTopology(
             options, network, IntLinkClass, ExtLinkClass,
-            RouterClass, BusClass
+            RouterClass 
         )        
     #==============================================================
 

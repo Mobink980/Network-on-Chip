@@ -49,19 +49,7 @@ class BasicExtLink(BasicLink):
     ext_node = Param.RubyController("External node")
     int_node = Param.BasicRouter("ID of internal node")
     bandwidth_factor = 16  # only used by simple network
-
-#==============================================================
-#==============================================================
-class BasicBusLink(BasicLink):
-    type = "BasicBusLink"
-    cxx_header = "mem/ruby/network/BasicLink.hh"
-    cxx_class = "gem5::ruby::BasicBusLink"
-
-    ext_node = Param.RubyController("External node")
-    int_node = Param.BasicBus("ID of internal node")
-    bandwidth_factor = 16  # only used by simple network
-#==============================================================
-#==============================================================
+    
 
 class BasicIntLink(BasicLink):
     type = "BasicIntLink"

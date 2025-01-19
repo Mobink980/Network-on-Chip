@@ -35,7 +35,6 @@
 
 #include "mem/ruby/network/BasicRouter.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
-#include "params/BasicBusLink.hh"
 #include "params/BasicExtLink.hh"
 #include "params/BasicIntLink.hh"
 #include "params/BasicLink.hh"
@@ -82,18 +81,6 @@ class BasicExtLink : public BasicLink
     friend class Topology;
 };
 
-//============================================
-//============================================
-class BasicBusLink : public BasicLink
-{
-  public:
-    PARAMS(BasicBusLink);
-    BasicBusLink(const Params &p);
-
-    friend class Topology;
-};
-//============================================
-//============================================
 
 class BasicIntLink : public BasicLink
 {

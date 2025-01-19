@@ -53,11 +53,6 @@ BasicLink::print(std::ostream& out) const
 BasicExtLink::BasicExtLink(const Params &p)
     : BasicLink(p) {}
 
-//============================================================
-//BasicBusLink constructor calling BasicLink constructor
-BasicBusLink::BasicBusLink(const Params &p)
-    : BasicLink(p) {}
-//============================================================
 
 //BasicIntLink constructor calling BasicLink constructor
 BasicIntLink::BasicIntLink(const Params &p)

@@ -44,9 +44,6 @@
 #include "mem/ruby/network/garnet/NetworkInterface.hh"
 #include "mem/ruby/network/garnet/NetworkLink.hh"
 #include "mem/ruby/network/garnet/Router.hh"
-//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-#include "mem/ruby/network/garnet/BroadcastLink.hh"
-//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 #include "mem/ruby/system/RubySystem.hh"
 
 //=====================================
@@ -109,20 +106,6 @@ GarnetNetwork::GarnetNetwork(const Params &p)
         // initialize the router's network pointers
         router->init_net_ptr(this);
     }
-
-    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-    // record the busses (setting the busses for the network)
-    for (std::vector<BasicBus*>::const_iterator i =  p.busses.begin();
-         i != p.busses.end(); ++i) { // for each bus
-        // get the bus
-        BroadcastLink* bus = safe_cast<BroadcastLink*>(*i);
-        // push the bus in m_busses vector
-        m_busses.push_back(bus);
-
-        // initialize the bus's network pointers
-        bus->init_net_ptr(this);
-    }
-    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
     // record the network interfaces (setting the NIs for the network)
     for (std::vector<ClockedObject*>::const_iterator i = p.netifs.begin();
@@ -470,16 +453,6 @@ GarnetNetwork::get_router_id(int global_ni, int vnet)
     return m_nis[local_ni]->get_router_id(vnet);
 }
 
-//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-// Total busses in the network
-int
-GarnetNetwork::getNumBusses()
-{
-    return m_busses.size();
-}
-//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-
-
 // for registering the GarnetNetwork stats
 void
 GarnetNetwork::regStats()
@@ -762,13 +735,6 @@ GarnetNetwork::functionalRead(Packet *pkt, WriteMask &mask)
             read = true;
     }
 
-    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-    for (unsigned int i = 0; i < m_busses.size(); i++) {
-        if (m_busses[i]->functionalRead(pkt, mask))
-            read = true;
-    }
-    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-
     for (unsigned int i = 0; i < m_nis.size(); ++i) {
         if (m_nis[i]->functionalRead(pkt, mask))
             read = true;
@@ -797,12 +763,6 @@ GarnetNetwork::functionalWrite(Packet *pkt)
     for (unsigned int i = 0; i < m_routers.size(); i++) {
         num_functional_writes += m_routers[i]->functionalWrite(pkt);
     }
-
-    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-    for (unsigned int i = 0; i < m_busses.size(); i++) {
-        num_functional_writes += m_busses[i]->functionalWrite(pkt);
-    }
-    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
     for (unsigned int i = 0; i < m_nis.size(); ++i) {
         num_functional_writes += m_nis[i]->functionalWrite(pkt);

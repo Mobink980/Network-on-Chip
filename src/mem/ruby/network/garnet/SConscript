@@ -31,16 +31,13 @@ Import('*')
 if not env['CONF']['RUBY']:
     Return()
 
-#=====================================================================
+
 SimObject('GarnetLink.py', enums=['CDCType'], sim_objects=[
     'NetworkLink', 'CreditLink', 'NetworkBridge', 'GarnetIntLink',
     'GarnetExtLink'])
-#=====================================================================
-#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
 SimObject('GarnetNetwork.py', sim_objects=[
-    'GarnetNetwork', 'GarnetNetworkInterface', 'GarnetRouter',
-    'GarnetBroadcastLink'])
-#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+    'GarnetNetwork', 'GarnetNetworkInterface', 'GarnetRouter'])
 
 Source('GarnetLink.cc')
 Source('GarnetNetwork.cc')
@@ -50,13 +47,6 @@ Source('NetworkLink.cc')
 Source('OutVcState.cc')
 Source('OutputUnit.cc')
 Source('Router.cc')
-#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-Source('BroadcastLink.cc')
-Source('BusCrossbarSwitch.cc')
-Source('BusInputUnit.cc')
-Source('BusOutputUnit.cc')
-Source('BusSwitchAllocator.cc')
-#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 Source('RoutingUnit.cc')
 Source('SwitchAllocator.cc')
 Source('CrossbarSwitch.cc')

@@ -67,15 +67,15 @@ def define_options(parser):
     parser.add_argument(
         "--network",
         default="simple",
-        choices=["simple", "garnet", "onyx", "emerald"],
-        help="""'simple'|'garnet' (garnet2.0 will be deprecated.) | 'onyx' | 'emerald'""",
+        choices=["simple", "garnet", "emerald"],
+        help="""'simple'|'garnet' (garnet2.0 will be deprecated.) | 'emerald'""",
     )
     parser.add_argument(
         "--router-latency",
         action="store",
         type=int,
         default=1,
-        help="""number of pipeline stages in the garnet|onyx router.
+        help="""number of pipeline stages in the garnet|emerald router.
             Has to be >= 1.
             Can be over-ridden on a per router basis
             in the topology file.""",
@@ -85,7 +85,7 @@ def define_options(parser):
         action="store",
         type=int,
         default=1,
-        help="""latency of each link the simple/garnet/onyx networks.
+        help="""latency of each link the simple/garnet/emerald networks.
         Has to be >= 1. Can be over-ridden on a per link basis
         in the topology file.""",
     )
@@ -94,7 +94,7 @@ def define_options(parser):
         action="store",
         type=int,
         default=128,
-        help="width in bits for all links inside garnet/onyx.",
+        help="width in bits for all links inside garnet/emerald.",
     )
     parser.add_argument(
         "--vcs-per-vnet",
@@ -102,7 +102,7 @@ def define_options(parser):
         type=int,
         default=4,
         help="""number of virtual channels per virtual network
-            inside garnet/onyx network.""",
+            inside garnet/emerald network.""",
     )
     parser.add_argument(
         "--routing-algorithm",
@@ -111,8 +111,8 @@ def define_options(parser):
         default=0,
         help="""routing algorithm in network.
             0: weight-based table
-            1: XY (for Mesh. see garnet|onyx/RoutingUnit.cc)
-            2: Custom (see garnet|onyx/RoutingUnit.cc""",
+            1: XY (for Mesh. see garnet|emerald/RoutingUnit.cc)
+            2: Custom (see garnet|emerald/RoutingUnit.cc""",
     )
     parser.add_argument(
         "--network-fault-model",
@@ -153,20 +153,9 @@ def create_network(options, ruby):
         IntLinkClass = GarnetIntLink
         ExtLinkClass = GarnetExtLink
         RouterClass = GarnetRouter
-        BusClass = GarnetBroadcastLink
         InterfaceClass = GarnetNetworkInterface
-
     #===========================================================
     #===========================================================
-    elif options.network == "onyx":
-        NetworkClass = OnyxNetwork
-        IntLinkClass = OnyxIntLink
-        ExtLinkClass = OnyxExtLink
-        BusLinkClass = OnyxBusLink
-        RouterClass = OnyxSwitcher
-        BusClass = OnyxBus
-        InterfaceClass = OnyxNetworkInterface
-
     elif options.network == "emerald":
         NetworkClass = EmeraldNetwork
         IntLinkClass = EmeraldIntLink
@@ -177,20 +166,18 @@ def create_network(options, ruby):
         InterfaceClass = EmeraldNetworkInterface
     #===========================================================
     #===========================================================
-
     else:
         NetworkClass = SimpleNetwork
         IntLinkClass = SimpleIntLink
         ExtLinkClass = SimpleExtLink
         RouterClass = Switch
-        BusClass = None
         InterfaceClass = None
 
 #===============================================================
 #===============================================================
     # Instantiate the network object
     # so that the controllers can connect to it.
-    if options.network == "onyx" or options.network == "emerald":
+    if options.network == "emerald":
         network = NetworkClass(
             ruby_system=ruby,
             topology=options.topology,
@@ -216,7 +203,6 @@ def create_network(options, ruby):
         ruby_system=ruby,
         topology=options.topology,
         routers=[],
-        busses=[],
         ext_links=[],
         int_links=[],
         netifs=[],
@@ -226,7 +212,6 @@ def create_network(options, ruby):
         IntLinkClass,
         ExtLinkClass,
         RouterClass,
-        BusClass,
         InterfaceClass,
     )
 #===============================================================
@@ -336,108 +321,6 @@ def init_network(options, network, InterfaceClass):
 
     #=================================================================
     #=================================================================
-    if options.network == "onyx":
-        network.num_rows = options.mesh_rows
-        network.num_columns = options.mesh_columns
-        network.num_layers = options.mesh_layers
-        network.vcs_per_vnet = options.vcs_per_vnet
-        network.ni_flit_size = options.link_width_bits / 8
-        network.routing_algorithm = options.routing_algorithm
-        network.onyx_deadlock_threshold = options.garnet_deadlock_threshold
-
-        # Create Bridges and connect them to the corresponding links
-        for intLink in network.int_links:
-            intLink.src_net_bridge = NetBridge(
-                link=intLink.network_link,
-                vtype="OBJECT_LINK",
-                width=intLink.src_node.width,
-            )
-            intLink.src_cred_bridge = NetBridge(
-                link=intLink.credit_link,
-                vtype="LINK_OBJECT",
-                width=intLink.src_node.width,
-            )
-            intLink.dst_net_bridge = NetBridge(
-                link=intLink.network_link,
-                vtype="LINK_OBJECT",
-                width=intLink.dst_node.width,
-            )
-            intLink.dst_cred_bridge = NetBridge(
-                link=intLink.credit_link,
-                vtype="OBJECT_LINK",
-                width=intLink.dst_node.width,
-            )
-
-        for extLink in network.ext_links:
-            ext_net_bridges = []
-            ext_net_bridges.append(
-                NetBridge(
-                    link=extLink.network_links[0],
-                    vtype="OBJECT_LINK",
-                    width=extLink.width,
-                )
-            )
-            ext_net_bridges.append(
-                NetBridge(
-                    link=extLink.network_links[1],
-                    vtype="LINK_OBJECT",
-                    width=extLink.width,
-                )
-            )
-            extLink.ext_net_bridge = ext_net_bridges
-
-            ext_credit_bridges = []
-            ext_credit_bridges.append(
-                NetBridge(
-                    link=extLink.credit_links[0],
-                    vtype="LINK_OBJECT",
-                    width=extLink.width,
-                )
-            )
-            ext_credit_bridges.append(
-                NetBridge(
-                    link=extLink.credit_links[1],
-                    vtype="OBJECT_LINK",
-                    width=extLink.width,
-                )
-            )
-            extLink.ext_cred_bridge = ext_credit_bridges
-
-            int_net_bridges = []
-            int_net_bridges.append(
-                NetBridge(
-                    link=extLink.network_links[0],
-                    vtype="LINK_OBJECT",
-                    width=extLink.int_node.width,
-                )
-            )
-            int_net_bridges.append(
-                NetBridge(
-                    link=extLink.network_links[1],
-                    vtype="OBJECT_LINK",
-                    width=extLink.int_node.width,
-                )
-            )
-            extLink.int_net_bridge = int_net_bridges
-
-            int_cred_bridges = []
-            int_cred_bridges.append(
-                NetBridge(
-                    link=extLink.credit_links[0],
-                    vtype="OBJECT_LINK",
-                    width=extLink.int_node.width,
-                )
-            )
-            int_cred_bridges.append(
-                NetBridge(
-                    link=extLink.credit_links[1],
-                    vtype="LINK_OBJECT",
-                    width=extLink.int_node.width,
-                )
-            )
-            extLink.int_cred_bridge = int_cred_bridges
-
-
     if options.network == "emerald":
         network.num_rows = options.mesh_rows
         network.num_columns = options.mesh_columns
@@ -555,7 +438,7 @@ def init_network(options, network, InterfaceClass):
         network.netifs = netifs
 
     if options.network_fault_model:
-        assert options.network == "garnet" or options.network == "onyx" or options.network == "emerald"
+        assert options.network == "garnet" or options.network == "emerald"
         network.enable_fault_model = True
         network.fault_model = FaultModel()
 

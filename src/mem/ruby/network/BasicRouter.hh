@@ -34,9 +34,6 @@
 #include <vector>
 
 #include "params/BasicRouter.hh"
-//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-#include "params/BasicBus.hh"
-//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 #include "sim/clocked_object.hh"
 
 namespace gem5
@@ -74,36 +71,6 @@ operator<<(std::ostream& out, const BasicRouter& obj)
     return out;
 }
 
-//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-//BasicBus inherites from ClockedObject
-class BasicBus : public ClockedObject
-{
-  public:
-    PARAMS(BasicBus);
-    BasicBus(const Params &p); //constructor
-
-    //to initialize BasicBus class variables
-    void init();
-
-    //for printing a BasicBus
-    void print(std::ostream& out) const;
-  protected:
-    //
-    // ID in relation to other busses in the system
-    //
-    uint32_t m_id; //bus_id for this bus
-    uint32_t m_latency; //latency of this bus
-};
-
-//for printing a BasicBus
-inline std::ostream&
-operator<<(std::ostream& out, const BasicBus& obj)
-{
-    obj.print(out);
-    out << std::flush;
-    return out;
-}
-//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 
 } // namespace ruby

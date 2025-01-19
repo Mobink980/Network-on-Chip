@@ -56,30 +56,6 @@ BasicRouter::print(std::ostream& out) const
     out << name();
 }
 
-//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-//BasicBus constructor
-BasicBus::BasicBus(const Params &p)
-    : ClockedObject(p)
-{
-    m_id = p.bus_id; // set the bus_id
-    m_latency = p.latency; //set the router latency
-}
-
-//to initialize BasicBus class variables
-//used in derived classes
-void
-BasicBus::init()
-{
-}
-
-//print the BasicBus
-void
-BasicBus::print(std::ostream& out) const
-{
-    out << name();
-}
-//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-
 
 } // namespace ruby
 } // namespace gem5

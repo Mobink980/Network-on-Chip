@@ -55,9 +55,6 @@ namespace garnet
 //We need these classes to create the network
 class NetworkInterface; //Network Interface (NI)
 class Router; //Router
-//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-class BroadcastLink;
-//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 class NetworkLink; //Network Link for forwarding flits
 class NetworkBridge; //Network Bridge for heterogenous architectures
 class CreditLink; //Credit Link for flow-control information
@@ -111,13 +108,6 @@ class GarnetNetwork : public Network
     int getNumRouters();
     //get the id of a router by NetworkInterface and vnet
     int get_router_id(int ni, int vnet);
-
-    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-    //get the number of busses
-    int getNumBusses();
-    //get the id of a bus by Router and vnet
-    int get_bus_id(int ni, int vnet);
-    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 
     // Methods used by Topology to setup the network
@@ -279,9 +269,6 @@ class GarnetNetwork : public Network
 
     std::vector<VNET_type > m_vnet_type; // type of vnet (control, data, etc.)
     std::vector<Router *> m_routers;   // All Routers in Network
-    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-    std::vector<BroadcastLink *> m_busses;   // All Busses in Network
-    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
     std::vector<NetworkLink *> m_networklinks; // All flit links in the network
     std::vector<NetworkBridge *> m_networkbridges; // All network bridges
     std::vector<CreditLink *> m_creditlinks; // All credit links in the network
