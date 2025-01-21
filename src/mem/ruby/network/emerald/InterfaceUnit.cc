@@ -583,7 +583,7 @@ InterfaceUnit::wakeup()
               int vc = calculateVC(suspended_flit->get_vnet()); 
               // if we could find a free vc in the vnet of suspended flit 
               if (vc != -1) {
-                //remove the flit from the vc
+                //remove the flit from the vc in congested_packets
                 suspended_flit = congested_packets[k].getTopFlit();
                 //insert the flit into niOutVcs[vc]
                 niOutVcs[vc].insert(suspended_flit);
@@ -596,8 +596,12 @@ InterfaceUnit::wakeup()
                 
                 Affirm *cFlit = new Affirm(suspended_flit->get_vc(), free_signal,
                                                curTick());
+                //get the correct NetworkInport to send back credit
+                int correct_inport = suspended_flit->get_inport_of_flit();
+                //ensure correct_inport is valid
+                assert(correct_inport >= 0 && correct_inport < ni_inports.size());
                 //send back the credit to bus
-                ni_inport->sendCredit(cFlit);
+                ni_inports[correct_inport]->sendCredit(cFlit);
               }          
           
           } else {
@@ -611,6 +615,8 @@ InterfaceUnit::wakeup()
                           // If the packet_id is the same for both flits,
                           // they belong to the same packet
                           if (topFlit->getPacketID() == suspended_flit->getPacketID()) {
+                              //remove the flit from the vc in congested_packets
+                              suspended_flit = congested_packets[k].getTopFlit();
                               // Insert suspended_flit in the same vc
                               it->insert(suspended_flit);
                               // Update stats for this flit (not being ejected)
@@ -622,9 +628,15 @@ InterfaceUnit::wakeup()
                               
                               Affirm *cFlit = new Affirm(suspended_flit->get_vc(), free_signal,
                                                              curTick());
+                            
+                              //get the correct NetworkInport to send back credit
+                              int correct_inport = suspended_flit->get_inport_of_flit();
+                              //ensure correct_inport is valid
+                              assert(correct_inport >= 0 && correct_inport < ni_inports.size());
                               //send back the credit to bus
-                              ni_inport->sendCredit(cFlit);
+                              ni_inports[correct_inport]->sendCredit(cFlit);
                           }
+                          
                       } else {
                           std::cerr << "Warning: Top flit is null!" << std::endl;
                       }
@@ -647,6 +659,8 @@ InterfaceUnit::wakeup()
   
     /**************** Check the incoming flit link ****************/
     DPRINTF(RubyNetwork, "Number of bus inports: %d\n", ni_inports.size());
+    //To save the NetworkInport of a suspended_flit
+    int inport_of_flit = 0; 
     for (auto &ni_inport: ni_inports) { //for every NI inport (from bus)
         //get the network link for that inport
         GridLink *inNetLink = ni_inport->inNetLink();
@@ -654,6 +668,8 @@ InterfaceUnit::wakeup()
         if (inNetLink->isReady(curTick())) {
             //consume that flit on the network link and put it in t_flit
             fragment *t_flit = inNetLink->consumeLink();
+            //Save the NetworkInport the flit was consumed from its link
+            t_flit->set_suspended_flit_inport(inport_of_flit); 
             //print the flit that was received by the NI
             DPRINTF(RubyNetwork, "Recieved flit:%s\n", *t_flit);
             //make sure the flit width and the bitWidth of the inport
@@ -738,7 +754,6 @@ InterfaceUnit::wakeup()
                     //attach the flitBuffer to the congested_packets vector
                     congested_packets.push_back(*buff);
                     
-                  
                   } else { 
                     //we did find a free vc in niOutVcs, therefore
                     //we send the flit into the free vc in niOutVcs
@@ -833,6 +848,9 @@ InterfaceUnit::wakeup()
                 
             } 
         }
+
+        // Increment the index
+        ++inport_of_flit;
     }
 
     /**************** Check the incoming credit link ****************/

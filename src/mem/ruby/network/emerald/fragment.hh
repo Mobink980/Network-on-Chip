@@ -110,6 +110,13 @@ class fragment
         }
         return false;
     }
+    //To set what NetworkInport a flit is coming from,
+    //so we can later send back a credit if the flit was suspended
+    void set_suspended_flit_inport(int inport) {
+        m_route.inport_of_flit = inport;
+    }
+    //Get the inport of a suspended_flit
+    int get_inport_of_flit() { return m_route.inport_of_flit; }
     //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
     //for couting the hops of a flit till destination

@@ -70,7 +70,7 @@ struct RouteInfo
 {
     RouteInfo()
         : vnet(0), src_ni(0), src_router(0), dest_ni(0), dest_router(0),
-          hops_traversed(0), broadcast(0)
+          hops_traversed(0), broadcast(0), inport_of_flit(0)
     {}
 
     // destination format for table-based routing
@@ -84,6 +84,7 @@ struct RouteInfo
     int dest_router; //id of the dest Router
     int hops_traversed; //number of hops the packet is traversed so far
     int broadcast; //A flag to check whether a flit is coming from a Bus
+    int inport_of_flit; //A flag to save the NetworkInport of a suspended_flit
 };
 //a constant for infinity
 #define INFINITE_ 10000
