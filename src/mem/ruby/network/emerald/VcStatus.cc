@@ -69,19 +69,19 @@ VcStatus::VcStatus(int id, EmeraldNetwork *network_ptr,
     //ensure we have at least one credit for the vc
     assert(m_credit_count >= 1);
 
-    std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
-    std::cout << "Maximum number of credits per vc (in VCStatus.cc): " << m_id <<"\n";
-    std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
+    // std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
+    // std::cout << "Maximum number of credits per vc (in VCStatus.cc): " << m_id <<"\n";
+    // std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
 }
 
 //incrementing credit for the vc
 void
 VcStatus::increment_credit()
 {
-    std::cout << "==========================================================\n";
-    std::cout << "The id of the vc being incremented (in VCStatus.cc): " << m_id <<"\n";
-    std::cout << "The number of credits for this vc (in VCStatus.cc):" << m_credit_count <<"\n";
-    std::cout << "==========================================================\n";
+    // std::cout << "==========================================================\n";
+    // std::cout << "The id of the vc being incremented (in VCStatus.cc): " << m_id <<"\n";
+    // std::cout << "The number of credits for this vc (in VCStatus.cc):" << m_credit_count <<"\n";
+    // std::cout << "==========================================================\n";
     m_credit_count++;
     assert(m_credit_count <= m_max_credit_count);
 }

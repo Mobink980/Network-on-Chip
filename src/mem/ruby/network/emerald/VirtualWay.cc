@@ -43,7 +43,7 @@ namespace emerald
 //VC constructor
 VirtualWay::VirtualWay()
   : inputBuffer(), m_vc_state(IDLE_, Tick(0)), m_output_port(-1),
-    m_enqueue_time(INFINITE_), m_output_vc(-1), m_broadcast_output_vcs()
+    m_enqueue_time(INFINITE_), m_output_vc(-1)
 {
 }
 
