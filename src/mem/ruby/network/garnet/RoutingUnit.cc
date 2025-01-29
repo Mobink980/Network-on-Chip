@@ -257,15 +257,6 @@ RoutingUnit::get_layer(int router_id)
     return 0;
 }
 
-// Generating sequence number 0 to bus_port repeatedly
-int getNextNumber(int bus_port) {
-    static int count = 0; // Initialize count only once
-
-    int result = count % bus_port;
-    count = (count + 1) % bus_port; // Increment count and wrap around
-
-    return result;
-}
 
 // XYZ routing implemented using port directions.
 // Only for reference purpose in a Mesh.
