@@ -353,7 +353,7 @@ RoutingUnit::outportComputeXY(RouteInfo route,
         }
     } else if (z_hops > 0) { //we need to use the bus
         //===============================================================
-        outport_dirn = "Up" + std::to_string(getNextNumber(4));
+        outport_dirn = "Up";
 
         // std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n";
         // std::cout << "The selected bus port is: " <<outport_dirn<< "\n";
