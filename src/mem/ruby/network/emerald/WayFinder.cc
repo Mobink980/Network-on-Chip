@@ -197,11 +197,23 @@ WayFinder::outportCompute(RouteInfo route, int inport,
     //the outport we want to send the flit to
     int outport = -1;
 
+
+    std::cout << "=================================================\n";
+    if (route.broadcast == 1) {
+        std::cout << "This flit was received from bus!! (in WayFinder.cc).\n";
+    }   
+    std::cout << "Source NI of the flit: NI" << route.src_ni <<" (in WayFinder.cc)\n";
+    std::cout << "Destination NI of the flit: NI" << route.dest_ni <<" (in WayFinder.cc)\n";
+    std::cout << "Source router of the flit: R" << route.src_router <<" (in WayFinder.cc)\n";
+    std::cout << "Destination router of the flit: R" << route.dest_router <<" (in WayFinder.cc)\n";
+    std::cout << "Current router: R" << m_router->get_id() <<" (in WayFinder.cc)\n";
+    std::cout << "=================================================\n";
+
+
     //if the flit has reached to the destination router
     //(it needs to be ejected from the network)
     if (route.dest_router == m_router->get_id()) {
-
-        //======================================================
+       
         // std::cout << "=================================================\n";
         // std::cout << "This flit has reached its destination (in WayFinder.cc).\n";
         // std::cout << "Source router of the flit: R" << route.src_router <<"\n";
@@ -209,7 +221,7 @@ WayFinder::outportCompute(RouteInfo route, int inport,
         // std::cout << "Current router: R" << m_router->get_id() <<"\n";
         // std::cout << "Did the flit came from a bus? " << route.broadcast <<"\n";
         // std::cout << "=================================================\n";
-        //======================================================
+        
 
         // Multiple NIs may be connected to this router,
         // all with output port direction = "Local"
