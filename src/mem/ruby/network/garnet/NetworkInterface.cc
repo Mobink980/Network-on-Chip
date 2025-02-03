@@ -501,6 +501,14 @@ NetworkInterface::flitisizeMessage(MsgPtr msg_ptr, int vnet)
     // gets all the destinations associated with this message.
     std::vector<NodeID> dest_nodes = net_msg_dest.getAllDest();
 
+    //==============================================================
+    std::cout << "All the destinations of this Message are: (in NetworkInterface.cc)\n";
+    for(const auto& node : dest_nodes) {
+        std::cout << node << " ";
+    }
+    std::cout << std::endl;
+    //==============================================================
+
     // Number of flits is dependent on the link bandwidth available.
     // This is expressed in terms of bytes/cycle or the flit size
     OutputPort *oPort = getOutportForVnet(vnet);
@@ -508,6 +516,11 @@ NetworkInterface::flitisizeMessage(MsgPtr msg_ptr, int vnet)
     //calculate how many flits is needed (messageSize/link_bitWidth)
     int num_flits = (int)divCeil((float) m_net_ptr->MessageSizeType_to_int(
         net_msg_ptr->getMessageSize()), (float)oPort->bitWidth());
+
+    //==============================================================
+    std::cout << "Number of destinations for this Message are: " << dest_nodes.size() <<" (in NetworkInterface.cc)\n";
+    std::cout << "Number of flits for this Message are: " << num_flits <<" (in NetworkInterface.cc)\n";
+    //==============================================================
 
     //printing the message size, vnet, and the link bandwidth
     DPRINTF(RubyNetwork, "Message Size:%d vnet:%d bitWidth:%d\n",
@@ -571,6 +584,14 @@ NetworkInterface::flitisizeMessage(MsgPtr msg_ptr, int vnet)
         // so that the first router increments it to 0
         route.hops_traversed = -1;
 
+        //==============================================================
+        std::cout << "Information of this flit: (in NetworkInterface.cc)\n";
+        std::cout << "Source NI: NI" << route.src_ni <<" (in NetworkInterface.cc)\n";
+        std::cout << "Destination NI: NI" << route.dest_ni <<" (in NetworkInterface.cc)\n";
+        std::cout << "Source router: R" << route.src_router <<" (in NetworkInterface.cc)\n";
+        std::cout << "Destination router: R" << route.dest_router <<" (in NetworkInterface.cc)\n";
+        //==============================================================
+      
         //a packet was injected into the vnet in the GarnetNetwork
         m_net_ptr->increment_injected_packets(vnet);
         //Keep track of the data traffic and control traffic
