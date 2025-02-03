@@ -59,6 +59,27 @@ class RoutingUnit
                       int inport,
                       PortDirection inport_dirn);
 
+    //====================================================================
+    //In gem5's Garnet network model, the routing tables are usually 
+    //populated during the network initialization phase, after all 
+    //routers and links have been constructed. This happens because 
+    //the routing tables depend on the network topology and the 
+    //connections between routers, which are established after construction.
+    //====================================================================
+    //In gem5, SimObjects have a startup() method that's called after all 
+    //SimObjects have been connected and initialized.
+    //The startup() method in gem5 is called after the simulation has been 
+    //set up but before it starts running. At this point, the routing tables 
+    //should be populated.
+    void startup() override;  // Ensure it's virtual if needed
+    //The RoutingUnit destructor
+    //void destruct() override;
+    //For printing the content of routing table in a router
+    void printRoutingTable() const;
+    void printRoutingTableToFile() const;
+    //====================================================================
+    //====================================================================
+
     // Topology-agnostic Routing Table based routing (default)
     //add a routing_table_entry (a route) to the routing table
     void addRoute(std::vector<NetDest>& routing_table_entry);
