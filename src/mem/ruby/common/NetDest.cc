@@ -274,6 +274,24 @@ NetDest::print(std::ostream& out) const
     out << "]";
 }
 
+// enhanced printing for a NetDest
+// void 
+// NetDest::print(std::ostream& out) const 
+// {
+//     out << "[NetDest (size: " << m_bits.size() << ") ";
+//     for (int i = 0; i < m_bits.size(); i++) {
+//         out << "Group " << i << ": ";
+//         for (int j = 0; j < m_bits[i].getSize(); j++) {
+//             if (m_bits[i].isElement(j)) {
+//                 out << j << " ";
+//             }
+//         }
+//         out << " - ";
+//     }
+//     out << "]";
+// }
+
+
 bool
 NetDest::isEqual(const NetDest& n) const
 {
