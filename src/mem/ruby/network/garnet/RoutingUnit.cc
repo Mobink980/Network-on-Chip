@@ -40,6 +40,9 @@
 #include <cmath>
 #include <string>
 #include <iostream>
+#include <fstream>      // If you decide to write to a file
+#include <string>       // For std::to_string if needed
+
 //==================================
 
 namespace gem5
@@ -58,6 +61,76 @@ RoutingUnit::RoutingUnit(Router *router)
     m_routing_table.clear(); //clear m_routing_table vector
     m_weight_table.clear(); //clear m_weight_table vector
 }
+
+
+//=======================================================================
+//=======================================================================
+//In gem5, SimObjects have a startup() method that's called after all 
+//SimObjects have been connected and initialized.
+//In order for the startup() method to be called, RoutingUnit must be registered 
+//properly as a SimObject component. Ensure that RoutingUnit is derived from SimObject 
+//or from a class that handles startup() calls.
+//If RoutingUnit is not a SimObject but is contained within one (like Router), you might 
+//need to call startup() explicitly from the parent SimObject. In Router.cc:
+//void Router::startup() { m_routingUnit->startup(); }
+void RoutingUnit::startup()
+{
+    // Call the print function
+    //printRoutingTable();
+    printRoutingTableToFile()
+}
+
+//Another approach is to print the routing table at the end of the simulation.
+//The destruct() method is called when the simulation ends and the SimObjects 
+//are being cleaned up. Be aware that at this point, some of the associated 
+//objects might have already been deleted, so ensure that the data you access 
+//is still valid.
+//void RoutingUnit::destruct()
+//{
+    //printRoutingTable();
+//}
+
+//This ensures that the routing tables are printed after the entire network is configured.
+// After setting up all routers and connections
+//for (auto& router : allRouters) {
+    //router->getRoutingUnit()->printRoutingTable();
+//}
+
+//Write routing table into console
+void RoutingUnit::printRoutingTable() const {
+    std::cout << "Routing Table for Router " << m_id << ":\n";
+    for (size_t i = 0; i < m_routing_table.size(); ++i) {
+        const auto& netDestList = m_routing_table[i];
+        std::cout << "  Output Port " << i << ":\n";
+        for (size_t j = 0; j < netDestList.size(); ++j) {
+            const NetDest& netDest = netDestList[j];
+            std::cout << "    Route " << j << ": ";
+            netDest.print(std::cout);  // Directly call NetDest::print
+            std::cout << "\n";
+        }
+    }
+}
+
+//Writing routing table to a File (helps avoid cluttering the console)
+void RoutingUnit::printRoutingTableToFile() const {
+    std::ofstream outFile("routing_table_router_" + std::to_string(m_id) + ".txt");
+    outFile << "Routing Table for Router " << m_id << ":\n";
+    for (size_t i = 0; i < m_routing_table.size(); ++i) {
+        const auto& netDestList = m_routing_table[i];
+        outFile << "  Output Port " << i << ":\n";
+        for (size_t j = 0; j < netDestList.size(); ++j) {
+            const NetDest& netDest = netDestList[j];
+            outFile << "    Route " << j << ": ";
+            netDest.print(outFile);  // Use outFile instead of std::cout
+            outFile << "\n";
+        }
+    }
+    outFile.close();
+}
+
+//=======================================================================
+//=======================================================================
+
 
 //add a routing_table_entry (a route) to the routing table
 void
