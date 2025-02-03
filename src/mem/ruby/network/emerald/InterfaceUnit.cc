@@ -1327,10 +1327,10 @@ InterfaceUnit::flitisizeMessage(MsgPtr msg_ptr, int vnet)
 
         //==============================================================
         std::cout << "Information of this flit: (in InterfaceUnit.cc)\n";
-        std::cout << "Source NI: NI" << route.src_ni <<" (in WayFinder.cc)\n";
-        std::cout << "Destination NI: NI" << route.dest_ni <<" (in WayFinder.cc)\n";
-        std::cout << "Source router: R" << route.src_router <<" (in WayFinder.cc)\n";
-        std::cout << "Destination router: R" << route.dest_router <<" (in WayFinder.cc)\n";
+        std::cout << "Source NI: NI" << route.src_ni <<" (in InterfaceUnit.cc)\n";
+        std::cout << "Destination NI: NI" << route.dest_ni <<" (in InterfaceUnit.cc)\n";
+        std::cout << "Source router: R" << route.src_router <<" (in InterfaceUnit.cc)\n";
+        std::cout << "Destination router: R" << route.dest_router <<" (in InterfaceUnit.cc)\n";
         //==============================================================
 
         //a packet was injected into the vnet in the GarnetNetwork
