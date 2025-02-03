@@ -275,6 +275,13 @@ NetDest::print(std::ostream& out) const
 }
 
 // enhanced printing for a NetDest
+// Benefits of Enhanced Output
+// Clarity: Explicitly lists destination IDs instead of bit patterns.
+
+// Readability: Easier to interpret, especially with larger networks.
+
+// Debugging: Simplifies the process of verifying routing tables and routes.
+  
 // void 
 // NetDest::print(std::ostream& out) const 
 // {
